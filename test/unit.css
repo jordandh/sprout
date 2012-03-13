@@ -1,0 +1,55 @@
+body
+{
+    font-family: "Helvetica Neue", HelveticaNeue, Arial, sans-serif;
+    background-color: #272822;
+}
+
+h1
+{
+    color: cornflowerblue;
+}
+
+.results
+{
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: solid 1px #AAA;
+    min-width: 700px;
+}
+
+.results tr,
+.results td
+{
+    padding: 0;
+    margin: 0;
+}
+
+.results td
+{
+    border: solid 1px #EEE;
+    padding: 0.2em;
+}
+
+.results .header
+{
+    border: solid 1px #AAA;
+    background-color: hsl(219, 81%, 70%);
+    text-shadow: 0 -1px 2px hsla(0, 0%, 0%, 0.25);
+    color: white;
+}
+
+.results .failed
+{
+    background-color: #FFA5A7;
+}
+
+.results .passed
+{
+    background-color: rgb(204, 255, 204);
+}
+
+.results .test-number
+{
+    font-size: 90%;
+    color: hsl(0, 0%, 60%);
+}
