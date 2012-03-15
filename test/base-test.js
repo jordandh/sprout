@@ -180,7 +180,6 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			c.set("name", "Spot");
 			assertSame("attribute has incorrect value", "Spot", c.get("name"));
 			
-			
 			c.set("name", 2);
 			assertSame("attribute has incorrect value", "Spot", c.get("name"));
 		},

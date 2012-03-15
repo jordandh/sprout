@@ -28,6 +28,7 @@ define("pubsub", ["util", "module"], function (_, Module) {
                         listenerInfo.handler.call(listenerInfo.context, e);
                     }
                     catch (ex) {
+                        // TODO: add a way to respond to errors here
                     }
                 });
             }

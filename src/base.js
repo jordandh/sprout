@@ -162,19 +162,10 @@ define("base", ["util"], function (_) {
          */
         getAttributes = function ()
         {
-            var attributes = {},
-                chain = _.prototypes(this);
-                //chain = [],
-                //obj = this;
-            
-            // Build a list of the prototype chain
-            /*while (obj) {
-                chain.push(obj);
-                obj = Object.getPrototypeOf(obj);
-            }*/
+            var attributes = {};
             
             // Grab the values for each attribute in the prototype chain starting from the bottom up
-            _.each(chain.reverse(), function (obj) {
+            _.each(_.prototypes(this).reverse(), function (obj) {
                 _.each(obj.attributes, function (attribute, name) {
                     attributes[name] = attribute;
                 });
@@ -446,7 +437,7 @@ define("base", ["util"], function (_) {
             get: function (name)
             {
                 var names = _.isString(name) ? name.split(".") : null,
-                    attribute, value, values, chain, obj;
+                    attribute, value, values;
                 
                 if (names && names.length > 1) {
                     name = names.shift();
@@ -458,17 +449,9 @@ define("base", ["util"], function (_) {
                 }
                 else if (_.isUndefined(name)) {
                     values = {};
-                    chain = [];
-                    obj = this;
-                    
-                    // Build a list of the prototype chain
-                    while (obj) {
-                        chain.push(obj);
-                        obj = Object.getPrototypeOf(obj);
-                    }
-                    
+
                     // Grab the values for each attribute in the prototype chain starting from the bottom up
-                    _.each(chain.reverse(), function (obj) {
+                    _.each(_.prototypes(this).reverse(), function (obj) {
                         _.each(obj.attributes, function (attribute, name) {
                             values[name] = attribute.value;
                         });
@@ -496,22 +479,21 @@ define("base", ["util"], function (_) {
              */
             getAttribute: function (name)
             {
-                var obj = this,
-                    attribute;
+                var attribute;
                 
                 // Move down the prototype chain searching for the attribute
-                while (obj) {
+                _.all(_.prototypes(this), function (obj) {
                     // If this object in the chain has the attribute then end the search
                     if (obj.hasOwnProperty("attributes") && _.isObject(obj.attributes)) {
                         attribute = obj.attributes[name];
                         
                         if (attribute) {
-                            break;
+                            return false;
                         }
                     }
-                    
-                    obj = Object.getPrototypeOf(obj);
-                }
+
+                    return true;
+                });
                 
                 return attribute;
             },
