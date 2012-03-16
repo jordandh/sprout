@@ -1,4 +1,6 @@
 define("widget", ["util", "jquery", "base"], function (_, $, base) {
+    "use strict";
+    
     var widget = base.extend({
             destructor: function ()
             {

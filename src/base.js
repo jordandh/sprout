@@ -1,4 +1,6 @@
 define("base", ["util"], function (_) {
+    "use strict";
+
     var rgxNumber = /^\d+$/,
         /*
          * addListener
@@ -178,6 +180,8 @@ define("base", ["util"], function (_) {
          */
         getValue = function (name)
         {
+            var attribute;
+            
             if (this.values.hasOwnProperty(name)) {
                 return this.values[name];
             }

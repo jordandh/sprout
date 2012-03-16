@@ -1,4 +1,6 @@
 define("plugin", ["util", "base"], function (_, base) {
+    "use strict";
+
     /**
      * @class plugin
      * Provides functionality for attaching plugins to base objects. Plugins add new functionality to existing objects.
@@ -103,7 +105,7 @@ define("plugin", ["util", "base"], function (_, base) {
             _.each(names, function (name) {
                 delete host[name];
                 _.remove(this.attachedMembers, name);
-            });
+            }, this);
         },
         
         /**
@@ -122,7 +124,7 @@ define("plugin", ["util", "base"], function (_, base) {
                 delete host.attributes[name];
                 
                 _.remove(this.attachedAttributes, name);
-            });
+            }, this);
         }
     });
 });

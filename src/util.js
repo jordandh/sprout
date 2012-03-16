@@ -1,4 +1,6 @@
 define("util", ["underscore"], function (_) {
+    "use strict";
+    
     /**
      * @class util
      * Provides utility functions including the underscore api.

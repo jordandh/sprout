@@ -1,4 +1,6 @@
 define("view", ["util", "widget"], function (_, widget) {
+    "use strict";
+    
     return base.extend({
         contentTag: "ul",
 

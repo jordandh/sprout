@@ -1,4 +1,6 @@
 define("pubsub", ["util", "module"], function (_, Module) {
+    "use strict";
+    
     var topics = [];
     
     /**

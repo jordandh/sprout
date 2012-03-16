@@ -1,4 +1,6 @@
 define("data", ["util", "jquery"], function (_, $) {
+    "use strict";
+    
     /*
      * An object map for converting sync method types to HTTP verbs.
      */

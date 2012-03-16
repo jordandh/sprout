@@ -1,4 +1,6 @@
 define("model", ["util", "base", "data"], function (_, base, data) {
+    "use strict";
+    
     /**
      * Handler for sync errors.
      * @private
