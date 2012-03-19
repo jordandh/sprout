@@ -4,15 +4,19 @@ define("view", ["util", "widget"], function (_, widget) {
     return base.extend({
         contentTag: "ul",
 
-        render: function ()
+        renderContent: function ()
         {
         },
 
-        add: function ()
+        add: function (item, options)
         {
         },
 
         remove: function ()
+        {
+        },
+
+        reset: function ()
         {
         }
     });
