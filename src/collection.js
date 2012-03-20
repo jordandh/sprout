@@ -27,36 +27,6 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
     }
 
     /**
-     * Helper function to create collection functions that modify the collection. Takes care of putting together the items and options parameters and fires an event unless silenced.
-     * @private
-     * @param {String} name The name of the event to fire for the modification.
-     * @param {Function} modify The function to call that modifies the collection.
-     * @return {Function} Returns a function that prepares parameters, fires an event, and calls the modify function.
-     */
-    function createModifier (name, modify)
-    {
-        return function (items, options) {
-            options = options || {};
-            
-            if (items) {
-                items = _.isArray(items) ? items : [items];
-            }
-            else {
-                items = [];
-            }
-            
-            if (options.silent) {
-                modify.call(this, items, options);
-            }
-            else {
-                this.fire(name, { items: items, options: options }, function (e) {
-                    modify.call(this, e.info.items, e.info.options);
-                });
-            }
-        };
-    }
-
-    /**
      * @class collection
      * Represents a list of models that is backed by a resource (usually a server resource). A collection can only communicate with its resource by fetching a list of data models.
      * It locates the resource by using the url function which builds a path.
@@ -234,7 +204,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
              * {Boolean} silent false If true then no event is fired for adding the items. This is false by default.
              * {Number} at undefined The index to insert the items at in the collection. By default items are added to the end of the collection.
              */
-            add: createModifier("add", function (items, options)
+            add: _.createListModifier("add", function (items, options)
             {
                 // Turn any json data into models and listen to sync events
                 items = _.map(items, function (item) {
@@ -271,7 +241,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
              * @options
              * {Boolean} silent false If true then no event is fired for removing the items. This is false by default.
              */
-            remove: createModifier("remove", function (items)
+            remove: _.createListModifier("remove", function (items)
             {
                 _.each(items, function (item) {
                     var index = this.indexOf(item);
@@ -288,7 +258,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
              * @options
              * {Boolean} silent false If true then no event is fired for resetting the items. This is false by default.
              */
-            reset: createModifier("reset", function (items)
+            reset: _.createListModifier("reset", function (items)
             {
                 // Detach event handlers
                 this.each(function (item) {
@@ -367,11 +337,11 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
 
             /**
              * Sorts the items in the collection.
-             * @param {Function} comparator A function that to compare the items with. This function takes one item as a parameter and must return a value by which the model should be ordered relative to others.
+             * @param {Function} comparator A function to compare the items with. This function takes one item as a parameter and must return a value by which the model should be ordered relative to others.
              * @param {Object} options (Optional)
              * @options
-             * {Object} context The context to run the comparator function in. Defaults to the collection.
-             * {Boolean} silent If true then no event is fired for adding the item. This is false by default.
+             * {Object} context collection The context to run the comparator function in. Defaults to the collection.
+             * {Boolean} silent false If true then no event is fired for sorting the items. This is false by default.
              */
             sortBy: function (comparator, options)
             {
@@ -395,7 +365,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
              * @param {Object} options (Optional)
              * @options
              * {Object} context collection The context to run the comparator function in. Defaults to the collection.
-             * {Boolean} silent false If true then no event is fired for adding the item. This is false by default.
+             * {Boolean} silent false If true then no event is fired for sorting the items. This is false by default.
              */
             sort: function (options)
             {

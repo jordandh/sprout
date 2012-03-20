@@ -13,7 +13,8 @@ define("util", ["underscore"], function (_) {
          * @param {Object|Function} iterator A value to remove or a function to call. The function must return a truthy or falsy value. Truthy means to remove the value.
          * @param {Object} context (Optional) The context to run the iterator function in.
          */
-        remove: function (obj, iterator, context) {
+        remove: function (obj, iterator, context)
+        {
             _.all(obj, function (value, index, list) {
                 if (_.isFunction(iterator)) {
                     if (iterator.call(context, value, index, list)) {
@@ -49,7 +50,8 @@ define("util", ["underscore"], function (_) {
          * @param {Object} obj An object to get the prototype chain of.
          * @return {Array} Returns the prototype chain of the object.
          */
-        prototypes: function (obj) {
+        prototypes: function (obj)
+        {
             var chain = [];
 
             while (obj) {
@@ -65,7 +67,8 @@ define("util", ["underscore"], function (_) {
          * @param {Object} obj An object to get the prototype of.
          * @return {Object} Returns the prototype of the object.
          */
-        getPrototypeOf: function (obj) {
+        getPrototypeOf: function (obj)
+        {
             return Object.getPrototypeOf(obj);
         },
 
@@ -75,7 +78,8 @@ define("util", ["underscore"], function (_) {
          * @param {Object} members (Optional) Functions and properties to add to the created object.
          * @return {Object} Returns a new object with the given prototype and members.
          */
-        create: function (prototype, members) {
+        create: function (prototype, members)
+        {
             // If ES5 is not available then use the code below to create an object.
             /*function F () {}
             F.prototype = prototype;
@@ -93,6 +97,35 @@ define("util", ["underscore"], function (_) {
             //obj.super = prototype;
             
             return obj;
+        },
+
+        /**
+         * Helper function to create list functions that modify the list's items. Takes care of putting together the items and options parameters and fires an event unless silenced.
+         * @param {String} name The name of the event to fire for the modification.
+         * @param {Function} modify The function to call that modifies the collection.
+         * @return {Function} Returns a function that prepares parameters, fires an event, and calls the modify function.
+         */
+        createListModifier: function (name, modify)
+        {
+            return function (items, options) {
+                options = options || {};
+                
+                if (items) {
+                    items = _.isArray(items) ? items : [items];
+                }
+                else {
+                    items = [];
+                }
+                
+                if (options.silent) {
+                    modify.call(this, items, options);
+                }
+                else {
+                    this.fire(name, { items: items, options: options }, function (e) {
+                        modify.call(this, e.info.items, e.info.options);
+                    });
+                }
+            };
         }
     });
 

@@ -1,6 +1,12 @@
 define("widget", ["util", "jquery", "base"], function (_, $, base) {
     "use strict";
     
+    /**
+     * @class widget
+     * Widgets are UI controls that are easily themed via css and manipulated via attributes and a jQuery api. The widget object exists to be inherited from.
+     * It provides the basic functionality for a widget to be rendered, styled, and
+     * @extends base
+     */
     var widget = base.extend({
             destructor: function ()
             {
@@ -81,33 +87,46 @@ define("widget", ["util", "jquery", "base"], function (_, $, base) {
                 }
 
                 this.fire("render", { parentNode: parentNode }, function (e) {
-                    var bounding = $("<" + this.boundingTag + ">"),
-                        content = $("<" + this.contentTag + ">");
+                    var bounding, content;
 
                     parentNode = e.info.parentNode;
 
-                    _.each(_.prototypes(this).reverse(), function (proto) {
-                        var name = proto.name;
-                        if (_.isString(name)) {
-                            bounding.addClass(name);
+                    // If the widget was previously rendered
+                    if (this.get("rendered")) {
+                        // Remove the widget from its current parent node and append it to its new parent node
+                        $(this.get("boundingNode")).detach().appendTo(parentNode);
+                        this.set("parentNode", parentNode);
+                    }
+                    // Else this is the first time the widget is being rendered
+                    else {
+                        // Create the bounding and content nodes
+                        bounding = $("<" + this.boundingTag + ">");
+                        content = $("<" + this.contentTag + ">");
+
+                        // Add the class names that belong on this widget
+                        _.each(_.prototypes(this).reverse(), function (proto) {
+                            var name = proto.name;
+                            if (_.isString(name)) {
+                                bounding.addClass(name);
+                            }
+                        });
+
+                        if (this.get("disabled")) {
+                            bounding.addClass("disabled");
                         }
-                    });
+                        if (!this.get("visible")) {
+                            bounding.addClass("hidden");
+                        }
 
-                    if (this.get("disabled")) {
-                        bounding.addClass("disabled");
+                        bounding.append(content).appendTo(parentNode);
+
+                        this.set("boundingNode", bounding.get(0));
+                        this.set("contentNode", content.get(0));
+                        this.set("parentNode", parentNode);
+                        this.set("rendered", true);
+
+                        this.renderContent();
                     }
-                    if (!this.get("visible")) {
-                        bounding.addClass("hidden");
-                    }
-
-                    bounding.append(content).appendTo(parentNode);
-
-                    this.set("boundingNode", bounding.get(0));
-                    this.set("contentNode", content.get(0));
-                    this.set("parentNode", parentNode);
-                    this.set("rendered", true);
-
-                    this.renderContent();
                 });
             },
 
