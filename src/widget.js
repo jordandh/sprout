@@ -31,6 +31,7 @@ define("widget", ["util", "jquery", "base"], function (_, $, base) {
                 },
                 rendered: {
                     value: false,
+                    readOnly: true,
                     validator: _.isBoolean
                 },
                 parentNode: {
@@ -73,7 +74,15 @@ define("widget", ["util", "jquery", "base"], function (_, $, base) {
                 }
             },
 
-            render: function (parentNode)
+            /**
+             * Renders the widget to the dom.
+             * @param {Object} parentNode The dom element to render the widget in.
+             * @param {Object} options
+             * @options
+             * {String|Function} template undefined A string to run through a templater or a function to call that renders the contents of the widget. The function must return a string to insert into the widget and takes the data object from this options parameter as its single argument.
+             * {Object} data undefined The data used when rendering the template.
+             */
+            render: function (parentNode, options)
             {
                 if (_.isString(parentNode)) {
                     parentNode = $(parentNode).get(0);
@@ -86,22 +95,25 @@ define("widget", ["util", "jquery", "base"], function (_, $, base) {
                     };
                 }
 
-                this.fire("render", { parentNode: parentNode }, function (e) {
+                options = options || {};
+
+                this.fire("render", { parentNode: parentNode, options: options }, function (e) {
                     var bounding, content;
 
                     parentNode = e.info.parentNode;
+                    options = e.info.options;
 
                     // If the widget was previously rendered
                     if (this.get("rendered")) {
                         // Remove the widget from its current parent node and append it to its new parent node
                         $(this.get("boundingNode")).detach().appendTo(parentNode);
-                        this.set("parentNode", parentNode);
+                        this.set("parentNode", parentNode, { force: true });
                     }
                     // Else this is the first time the widget is being rendered
                     else {
                         // Create the bounding and content nodes
                         bounding = $("<" + this.boundingTag + ">");
-                        content = $("<" + this.contentTag + ">");
+                        content = $("<" + this.contentTag + ">").addClass("widget-content");
 
                         // Add the class names that belong on this widget
                         _.each(_.prototypes(this).reverse(), function (proto) {
@@ -120,18 +132,35 @@ define("widget", ["util", "jquery", "base"], function (_, $, base) {
 
                         bounding.append(content).appendTo(parentNode);
 
-                        this.set("boundingNode", bounding.get(0));
-                        this.set("contentNode", content.get(0));
-                        this.set("parentNode", parentNode);
-                        this.set("rendered", true);
+                        this.set("boundingNode", bounding.get(0), { force: true });
+                        this.set("contentNode", content.get(0), { force: true });
+                        this.set("parentNode", parentNode, { force: true });
+                        this.set("rendered", true, { force: true });
 
-                        this.renderContent();
+                        this.renderContent(options);
                     }
                 });
             },
 
-            renderContent: function ()
+            /**
+             * Renders the widget's content. This function should not be called directly. The widget object calls this function when the widget is rendered.
+             * Objects that inherit from widget should override this method to render its content. If this function is called it will render a template into the content if options.template is defined.
+             * @private
+             * @param {Object} options This options parameter is the same options parameter passed into widget.render.
+             * @options
+             * {String|Function} template undefined A string to run through a templater or a function to call that renders the contents of the widget. The function must return a string to insert into the widget and takes the data object from this options parameter as its single argument.
+             * {Object} data undefined The data used when rendering the template.
+             */
+            renderContent: function (options)
             {
+                // If the template is a function then call it passing the template data
+                if (_.isFunction(options.template)) {
+                    $(this.get("contentNode")).html(options.template(options.data));
+                }
+                // Else if the template is a string then use the utils.template function to render it
+                else if (_.isString(options.template)) {
+                    $(this.get("contentNode")).html(_.template(options.template, options.data));
+                }
             }
         }),
         /*
@@ -142,7 +171,12 @@ define("widget", ["util", "jquery", "base"], function (_, $, base) {
     // Mixin jQuery functions
     _.each(jQueryMethods, function (methodName) {
         widget[methodName] = function () {
-            return $(this.get("boundingNode"))[methodName].apply($, arguments);
+            if (this.get("rendered")) {
+                var node = $(this.get("boundingNode"));
+                node[methodName].apply(node, arguments);
+            }
+
+            return this;
         };
     });
 
