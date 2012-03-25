@@ -162,7 +162,7 @@ define("view", ["util", "view", "widget/list"], function (_, view, listWidget) {
         },
 
         /**
-         * Renders the view to the dom. 
+         * Renders the view to the dom.
          * @param {Object} parentNode The dom element to render the listview in.
          */
         render: function (parentNode)
