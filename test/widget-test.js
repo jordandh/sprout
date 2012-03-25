@@ -1,4 +1,4 @@
-TestCase("widget", ["jquery", "widget"], function ($, widget) {
+TestCase("widget", ["util", "jquery", "widget"], function (_, $, widget) {
     return {
         setUp: function ()
         {
@@ -15,7 +15,13 @@ TestCase("widget", ["jquery", "widget"], function ($, widget) {
 
         "test widget has jQuery functions": function ()
         {
-            assert(false);
+            var methods = ["addClass", "removeClass", "toggleClass", "css", "height", "innerHeight", "outerHeight", "width", "innerWidth", "outerWidth", "offset", "position", "scrollLeft", "scrollTop"];
+            
+            expectAsserts(methods.length);
+            
+            _.each(methods, function (methodName) {
+                assertFunction(methodName + " is not a method on the collection object", widget[methodName]);
+            });
         },
 
         "test widget.render": function ()
@@ -217,11 +223,6 @@ TestCase("widget", ["jquery", "widget"], function ($, widget) {
             assertSame("There is not one span child in the widget content node.", 1, span.length);
             assertSame("The widget content element's child node is not the correct type of tag", "span", span.get(0).nodeName.toLowerCase());
             assertSame("The span's content is incorrect.", "Hello There Function", span.html());
-        },
-
-        "test widget.on": function ()
-        {
-            assert(false);
         }
     };
 });
