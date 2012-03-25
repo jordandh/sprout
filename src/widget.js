@@ -1,7 +1,5 @@
 define("widget", ["util", "jquery", "base"], function (_, $, base) {
     "use strict";
-
-    // TODO: make it possible to have only a bounding node instead of the bounding / content node structure
     
     /**
      * @class widget
@@ -238,7 +236,7 @@ define("widget", ["util", "jquery", "base"], function (_, $, base) {
                     else {
                         // Create the bounding and content nodes
                         bounding = $("<" + this.boundingTag + ">");
-                        content = $("<" + this.contentTag + ">").addClass("widget-content");
+                        content = _.isString(this.contentTag) ? $("<" + this.contentTag + ">") : bounding;
 
                         // Add the class names that belong on this widget
                         _.each(_.prototypes(this).reverse(), function (proto) {
@@ -255,7 +253,15 @@ define("widget", ["util", "jquery", "base"], function (_, $, base) {
                             bounding.addClass("hidden");
                         }
 
-                        bounding.append(content).appendTo(parentNode);
+                        content.addClass("widget-content");
+
+                        // Add the widget to the parent node
+                        if (content !== bounding) {
+                            bounding.append(content).appendTo(parentNode);
+                        }
+                        else {
+                            bounding.appendTo(parentNode);
+                        }
 
                         this.set("boundingNode", bounding.get(0), { force: true });
                         this.set("contentNode", content.get(0), { force: true });

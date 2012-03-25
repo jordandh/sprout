@@ -191,7 +191,7 @@ TestCase("widget", ["util", "jquery", "widget"], function (_, $, widget) {
             var foo = widget.new();
             foo.render(this.element, {
                 template: function () {
-                    return "<span>Hello Function</span>"
+                    return "<span>Hello Function</span>";
                 }
             });
 
@@ -209,7 +209,7 @@ TestCase("widget", ["util", "jquery", "widget"], function (_, $, widget) {
             var foo = widget.new();
             foo.render(this.element, {
                 template: function (data) {
-                    return "<span>" + data.msg + "</span>"
+                    return "<span>" + data.msg + "</span>";
                 },
                 data: {
                     msg: "Hello There Function"
@@ -223,6 +223,25 @@ TestCase("widget", ["util", "jquery", "widget"], function (_, $, widget) {
             assertSame("There is not one span child in the widget content node.", 1, span.length);
             assertSame("The widget content element's child node is not the correct type of tag", "span", span.get(0).nodeName.toLowerCase());
             assertSame("The span's content is incorrect.", "Hello There Function", span.html());
+        },
+
+        "test widget with null contentTag": function ()
+        {
+            var foo = widget.new();
+            foo.contentTag = null;
+            foo.render(this.element);
+
+            var bounding = $(foo.get("boundingNode")),
+                content = $(foo.get("contentNode"));
+
+            assert("The widget rendered attribute is not true after rendering.", foo.get("rendered"));
+            assertSame("The widget bounding node and content node are not the same.", foo.get("boundingNode"), foo.get("contentNode"));
+            assertSame("The widget bounding element is not the correct type of tag", "div", foo.get("boundingNode").nodeName.toLowerCase());
+            assertSame("The widget content element is not the correct type of tag", "div", foo.get("contentNode").nodeName.toLowerCase());
+            assert("The widget bounding element is missing the widget class name.", bounding.hasClass("widget"));
+            assertFalse("The widget bounding element has the disabled class name.", bounding.hasClass("disabled"));
+            assertFalse("The widget bounding element has the hidden class name.", bounding.hasClass("hidden"));
+            assert("The widget content element is misisng the widget-content class name.", content.hasClass("widget-content"));
         }
     };
 });
