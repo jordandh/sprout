@@ -83,6 +83,8 @@
         "assets/test/model-test.js",
         "assets/test/collection-test.js",
         "assets/test/pubsub-test.js",
-        "assets/test/widget-test.js"
+        "assets/test/widget-test.js",
+        "assets/test/widgets/list-test.js",
+        "assets/test/views/listview-test.js"
     ]);
 }());

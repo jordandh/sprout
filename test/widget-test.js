@@ -8,9 +8,9 @@ TestCase("widget", ["util", "jquery", "widget"], function (_, $, widget) {
 
         tearDown: function ()
         {
-            /*this.node.remove();
+            this.node.remove();
             this.node = null;
-            this.element = null;*/
+            this.element = null;
         },
 
         "test widget has jQuery functions": function ()
@@ -149,6 +149,8 @@ TestCase("widget", ["util", "jquery", "widget"], function (_, $, widget) {
             assert("The widget bounding element did not retain the after-render-test class name.", bounding.hasClass("after-render-test"));
 
             assertSame("The old parent is not empty.", 0, this.element.childNodes.length);
+
+            $(newParentNode).remove();
         },
 
         "test widget.render with template string": function ()

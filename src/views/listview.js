@@ -1,4 +1,4 @@
-define("view", ["util", "view", "widget/list"], function (_, view, listWidget) {
+define("views/listview", ["util", "view", "widgets/list"], function (_, view, listWidget) {
     "use strict";
 
     /**

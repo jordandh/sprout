@@ -1,4 +1,4 @@
-define("view", ["util", "jquery", "widget"], function (_, $, widget) {
+define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
     "use strict";
     
     /**
@@ -9,7 +9,14 @@ define("view", ["util", "jquery", "widget"], function (_, $, widget) {
     function renderItem (view)
     {
         var item = $("<li>");
-        view.render(item.get(0));
+
+        if (_.isString) {
+            item.html(view);
+        }
+        else {
+            view.render(item.get(0));
+        }
+        
         item.appendTo(this.get("contentNode"));
     }
 
