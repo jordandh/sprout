@@ -76,6 +76,7 @@
     function resetAsync ()
     {
         async.count = 0;
+        async.tests = null;
         async.testName = null;
         async.testCaseName = null;
     }
@@ -103,6 +104,7 @@
             async.count = 0;
             async.testName = testName;
             async.testCaseName = testCaseName;
+            async.tests = tests;
             
             // Run test
             tests[testName]();
@@ -155,7 +157,8 @@
         if (async.count === 0) {
             // If an async test just ran
             if (typeof async.testName === "string") {
-                completeAsyncTest(testCaseName, tests, async.testName);
+                //completeAsyncTest(testCaseName, tests, async.testName);
+                completeAsyncTest(async.testCaseName, async.tests, async.testName);
                 resetAsync();
             }
 

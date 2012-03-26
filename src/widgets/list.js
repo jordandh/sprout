@@ -16,7 +16,7 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
         else {
             view.render(item.get(0));
         }
-        
+
         item.appendTo(this.get("contentNode"));
     }
 
@@ -44,7 +44,9 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
             {
                 // Destroy each item
                 this.each(function (item) {
-                    item.destroy();
+                    if (_.isObject(item)) {
+                        item.destroy();
+                    }
                 });
 
                 this.items = null;
@@ -106,8 +108,10 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
                 // If there is a comparator function then insert each item into the sorted array maintaining sort order
                 if (_.isFunction(this.comparator)) {
                     _.each(items, function (item) {
+                        // Add the item to the list
                         this.items.splice(_.sortedIndex(this.items, item, this.comparator), 0, item);
 
+                        // Add the item to the dom
                         if (this.get("rendered")) {
                             renderItem.call(this, item);
                         }
@@ -122,7 +126,10 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
                         this.items.push.apply(this.items, items);
                     }
 
-                    _.each(items, renderItem, this);
+                    // Add the items to the dom
+                    if (this.get("rendered")) {
+                        _.each(items, renderItem, this);
+                    }
                 }
             }),
 
@@ -138,8 +145,18 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
                 _.each(items, function (item) {
                     var index = this.indexOf(item);
                     if (index !== -1) {
-                        this.items[index].destroy();
+                        // Destroy the item
+                        if (_.isObject(item)) {
+                            item.destroy();
+                        }
+
+                        // Remove the item from the list
                         this.items.splice(index, 1);
+
+                        // Remove the item from the dom
+                        if (this.get("rendered")) {
+                            $("li", this.get("contentNode")).eq(index).remove();
+                        }
                     }
                 }, this);
             }),
@@ -155,11 +172,18 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
             {
                 // Destroy each item that is being removed
                 this.each(function (item) {
-                    item.destroy();
+                    if (_.isObject(item)) {
+                        item.destroy();
+                    }
                 });
 
                 // Set the items array equal to a new empty array
                 this.items = [];
+
+                // Clear the dom
+                if (this.get("rendered")) {
+                    $(this.get("contentNode")).empty();
+                }
                 
                 // Add any new items if there are any suppresing the add event since this is a reset event
                 if (items.length > 0) {
