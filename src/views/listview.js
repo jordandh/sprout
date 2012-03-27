@@ -73,12 +73,12 @@ define("views/listview", ["util", "view", "widgets/list"], function (_, view, li
         // If there is a list widget then remove each model from it
         if (list) {
             _.each(e.info.items, function (model) {
-                var cid = model.get("cid");
-
-                // Remove the model from the list widget by finding an item in the list with the same client id
-                list.remove(function (item) {
-                    return item.get("model.cid") === cid;
+                var itemView = list.find(function (view) {
+                    return view.get("model") === model;
                 });
+                
+                // Remove the model from the list widget
+                list.remove(itemView);
             }, this);
         }
     }

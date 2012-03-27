@@ -10,7 +10,7 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
     {
         var item = $("<li>");
 
-        if (_.isString) {
+        if (_.isString(view)) {
             item.html(view);
         }
         else {
@@ -67,6 +67,15 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
              * @type String
              */
             contentTag: "ul",
+
+            /**
+             * The function used to sort the list. By default there is no comparator function.
+             * If this function is defined then items that are added are inserted in sorted order.
+             * This function takes one item as a parameter and must return a value by which the item should be ordered relative to others.
+             * @property
+             * @type Function
+             */
+            comparator: null,
 
             /**
              * Renders the list items into the dom. This function should not be directly called. Instead call list.render.
@@ -246,7 +255,7 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
             {
                 if (!_.isFunction(this.comparator)) {
                     throw {
-                        name: "CollectionSortError",
+                        name: "ListSortError",
                         message: "A comparator function must be defined to sort a collection."
                     };
                 }

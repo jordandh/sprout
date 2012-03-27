@@ -207,14 +207,14 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
             add: _.createListModifier("add", function (items, options)
             {
                 // Turn any json data into models and listen to sync events
-                items = _.map(items, function (item) {
+                _.each(items, function (item, index) {
                     if (!model.isPrototypeOf(item)) {
                         item = this.model.new(item);
                     }
 
                     item.after("sync", afterItemSynced, this);
                     
-                    return item;
+                    items[index] = item;
                 }, this);
 
                 // If there is a comparator function then insert each item into the sorted array maintaining sort order

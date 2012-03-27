@@ -8,9 +8,9 @@ TestCase("widgets/list", ["util", "jquery", "widgets/list"], function (_, $, lis
 
         tearDown: function ()
         {
-            /*this.node.remove();
+            this.node.remove();
             this.node = null;
-            this.element = null;*/
+            this.element = null;
         },
 
         "test list has underscore methods": function () {
@@ -40,9 +40,9 @@ TestCase("widgets/list", ["util", "jquery", "widgets/list"], function (_, $, lis
             l.add("Data");
 
             l.render(this.element);
-
+            
             assertSame("The list does not have the correct number of elements in the dom", 1, l.get("contentNode").childNodes.length);
-            assertSame("The item's content is incorrect", "Data", $("li", l.get("contextNode")).html());
+            assertSame("The item's content is incorrect", "Data", $("li", l.get("contentNode")).html());
         },
 
         "test list.add multiple items before render": function ()
@@ -74,7 +74,7 @@ TestCase("widgets/list", ["util", "jquery", "widgets/list"], function (_, $, lis
             l.add("Data");
 
             assertSame("The list does not have the correct number of elements in the dom", 1, l.get("contentNode").childNodes.length);
-            assertSame("The item's content is incorrect", "Data", $("li", l.get("contextNode")).html());
+            assertSame("The item's content is incorrect", "Data", $("li", l.get("contentNode")).html());
         },
 
         "test list.add multiple items after render": function ()
@@ -234,14 +234,163 @@ TestCase("widgets/list", ["util", "jquery", "widgets/list"], function (_, $, lis
             assertSame("The item's content is incorrect", "Beverly", items.get(1).innerHTML);
         },
 
-        "test list.sortBy": function ()
+        "test list.sort throws an exception with no comparator": function ()
         {
-            assert(false);
+            var l = list.new();
+
+            assertException("sort did not throw correct exception", function () {
+                l.sort();
+            }, "ListSortError");
         },
 
-        "test list.sort": function ()
+        "test list.sortBy before render": function ()
         {
-            assert(false);
+            var l = list.new();
+
+            l.add([
+                "Data",
+                "Worf",
+                "Ryker"
+            ]);
+
+            assertSame("Data is not first item before sort.", "Data", l.at(0));
+            assertSame("Worf is not second item before sort.", "Worf", l.at(1));
+            assertSame("Ryker is not third item before sort.", "Ryker", l.at(2));
+
+            l.comparator = function (item) {
+                return item;
+            };
+            l.sort();
+
+            assertSame("Data is not first item before sort.", "Data", l.at(0));
+            assertSame("Ryker is not third item before sort.", "Ryker", l.at(1));
+            assertSame("Worf is not second item before sort.", "Worf", l.at(2));
+
+            l.render(this.element);
+
+            var items = $("li", l.get("contentNode"));
+
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
+            assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
+            assertSame("The item's content is incorrect", "Worf", items.get(2).innerHTML);
+        },
+
+        "test list.sort before render": function ()
+        {
+            var l = list.new();
+
+            l.add([
+                "Data",
+                "Worf",
+                "Ryker"
+            ]);
+
+            assertSame("Data is not first item before sort.", "Data", l.at(0));
+            assertSame("Worf is not second item before sort.", "Worf", l.at(1));
+            assertSame("Ryker is not third item before sort.", "Ryker", l.at(2));
+
+            var o = {};
+
+            l.sortBy(function (item) {
+                assertSame("context is incorrect", o, this);
+                return item;
+            }, { context: o });
+
+            assertSame("Data is not first item before sort.", "Data", l.at(0));
+            assertSame("Ryker is not third item before sort.", "Ryker", l.at(1));
+            assertSame("Worf is not second item before sort.", "Worf", l.at(2));
+
+            l.render(this.element);
+
+            var items = $("li", l.get("contentNode"));
+
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
+            assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
+            assertSame("The item's content is incorrect", "Worf", items.get(2).innerHTML);
+        },
+
+        "test list.sortBy after render": function ()
+        {
+            var l = list.new();
+
+            l.add([
+                "Data",
+                "Worf",
+                "Ryker"
+            ]);
+
+            assertSame("Data is not first item before sort.", "Data", l.at(0));
+            assertSame("Worf is not second item before sort.", "Worf", l.at(1));
+            assertSame("Ryker is not third item before sort.", "Ryker", l.at(2));
+
+            l.render(this.element);
+
+            var items = $("li", l.get("contentNode"));
+
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
+            assertSame("The item's content is incorrect", "Worf", items.get(1).innerHTML);
+            assertSame("The item's content is incorrect", "Ryker", items.get(2).innerHTML);
+
+            l.comparator = function (item) {
+                return item;
+            };
+            l.sort();
+
+            assertSame("Data is not first item before sort.", "Data", l.at(0));
+            assertSame("Ryker is not third item before sort.", "Ryker", l.at(1));
+            assertSame("Worf is not second item before sort.", "Worf", l.at(2));
+
+            items = $("li", l.get("contentNode"));
+
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
+            assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
+            assertSame("The item's content is incorrect", "Worf", items.get(2).innerHTML);
+        },
+
+        "test list.sort after render": function ()
+        {
+            var l = list.new();
+
+            l.add([
+                "Data",
+                "Worf",
+                "Ryker"
+            ]);
+
+            assertSame("Data is not first item before sort.", "Data", l.at(0));
+            assertSame("Worf is not second item before sort.", "Worf", l.at(1));
+            assertSame("Ryker is not third item before sort.", "Ryker", l.at(2));
+
+            l.render(this.element);
+
+            var items = $("li", l.get("contentNode"));
+
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
+            assertSame("The item's content is incorrect", "Worf", items.get(1).innerHTML);
+            assertSame("The item's content is incorrect", "Ryker", items.get(2).innerHTML);
+
+            var o = {};
+
+            l.sortBy(function (item) {
+                assertSame("context is incorrect", o, this);
+                return item;
+            }, { context: o });
+
+            assertSame("Data is not first item before sort.", "Data", l.at(0));
+            assertSame("Ryker is not third item before sort.", "Ryker", l.at(1));
+            assertSame("Worf is not second item before sort.", "Worf", l.at(2));
+
+            items = $("li", l.get("contentNode"));
+
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
+            assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
+            assertSame("The item's content is incorrect", "Worf", items.get(2).innerHTML);
         }
     };
 });
