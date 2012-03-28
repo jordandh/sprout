@@ -1,4 +1,4 @@
-TestCase("widgets/list", ["util", "jquery", "widgets/list"], function (_, $, list) {
+TestCase("views/list", ["util", "jquery", "views/list"], function (_, $, list) {
     return {
         setUp: function ()
         {
@@ -30,7 +30,7 @@ TestCase("widgets/list", ["util", "jquery", "widgets/list"], function (_, $, lis
 
             l.render(this.element);
 
-            assertSame("The widget content element is not the correct type of tag", "ul", l.get("contentNode").nodeName.toLowerCase());
+            assertSame("The view content element is not the correct type of tag", "ul", l.get("contentNode").nodeName.toLowerCase());
         },
 
         "test list.add before render": function ()

@@ -1,4 +1,4 @@
-TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "views/listview"], function (_, $, model, collection, view, listview) {
+TestCase("controllers/list", ["util", "jquery", "model", "collection", "controller", "controllers/list"], function (_, $, model, collection, controller, listcontroller) {
     var animal = model.extend({
         attributes: {
             name: {},
@@ -10,7 +10,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
         model: animal
     });
 
-    var animalView = view.extend({
+    var animalController = controller.extend({
         attributes: {
             model: { value: null }
         },
@@ -22,7 +22,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
         }
     });
 
-    var shortView = view.extend({
+    var shortController = controller.extend({
         attributes: {
             model: { value: null }
         },
@@ -48,7 +48,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
             this.element = null;
         },
 
-        "test listview.render": function ()
+        "test listcontroller.render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -59,9 +59,9 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
                 }
             ]);
 
-            var lv = listview.new();
+            var lv = listcontroller.new();
             lv.set("collection", col);
-            lv.set("itemView", animalView);
+            lv.set("itemController", animalController);
 
             lv.render(this.element);
 
@@ -73,7 +73,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
         },
 
-        "test listview.collection add before render": function ()
+        "test listcontroller.collection add before render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -84,9 +84,9 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
                 }
             ]);
 
-            var lv = listview.new();
+            var lv = listcontroller.new();
             lv.set("collection", col);
-            lv.set("itemView", animalView);
+            lv.set("itemController", animalController);
 
             col.add({
                 name: "Dot",
@@ -104,7 +104,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
             assertSame("The item's content is incorrect", "<span>Dot is 2 years old.</span>", items.get(2).innerHTML);
         },
 
-        "test listview.collection add after render": function ()
+        "test listcontroller.collection add after render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -115,9 +115,9 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
                 }
             ]);
 
-            var lv = listview.new();
+            var lv = listcontroller.new();
             lv.set("collection", col);
-            lv.set("itemView", animalView);
+            lv.set("itemController", animalController);
 
             lv.render(this.element);
 
@@ -141,7 +141,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
             assertSame("The item's content is incorrect", "<span>Dot is 2 years old.</span>", items.get(2).innerHTML);
         },
 
-        "test listview.collection remove before render": function ()
+        "test listcontroller.collection remove before render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -152,9 +152,9 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
                 }
             ]);
 
-            var lv = listview.new();
+            var lv = listcontroller.new();
             lv.set("collection", col);
-            lv.set("itemView", animalView);
+            lv.set("itemController", animalController);
 
             col.remove(col.find(function (item) {
                 return item.get("name") === "Spot";
@@ -169,7 +169,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(0).innerHTML);
         },
 
-        "test listview.collection remove after render": function ()
+        "test listcontroller.collection remove after render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -180,9 +180,9 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
                 }
             ]);
 
-            var lv = listview.new();
+            var lv = listcontroller.new();
             lv.set("collection", col);
-            lv.set("itemView", animalView);
+            lv.set("itemController", animalController);
 
             lv.render(this.element);
 
@@ -197,7 +197,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(0).innerHTML);
         },
 
-        "test listview.collection reset before render": function ()
+        "test listcontroller.collection reset before render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -208,9 +208,9 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
                 }
             ]);
 
-            var lv = listview.new();
+            var lv = listcontroller.new();
             lv.set("collection", col);
-            lv.set("itemView", animalView);
+            lv.set("itemController", animalController);
 
             col.reset([{
                     name: "Dot",
@@ -235,7 +235,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
             assertSame("The item's content is incorrect", "<span>Voxel is 8 years old.</span>", items.get(2).innerHTML);
         },
 
-        "test listview.collection reset after render": function ()
+        "test listcontroller.collection reset after render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -246,9 +246,9 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
                 }
             ]);
 
-            var lv = listview.new();
+            var lv = listcontroller.new();
             lv.set("collection", col);
-            lv.set("itemView", animalView);
+            lv.set("itemController", animalController);
 
             lv.render(this.element);
 
@@ -273,7 +273,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
             assertSame("The item's content is incorrect", "<span>Voxel is 8 years old.</span>", items.get(2).innerHTML);
         },
 
-        "test listview.itemView": function ()
+        "test listcontroller.itemController": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -284,9 +284,9 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
                 }
             ]);
 
-            var lv = listview.new();
+            var lv = listcontroller.new();
             lv.set("collection", col);
-            lv.set("itemView", animalView);
+            lv.set("itemController", animalController);
 
             lv.render(this.element);
 
@@ -297,7 +297,7 @@ TestCase("views/listview", ["util", "jquery", "model", "collection", "view", "vi
             assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
 
-            lv.set("itemView", shortView);
+            lv.set("itemController", shortController);
 
             items = $("li", l.get("contentNode"));
 

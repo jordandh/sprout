@@ -1,4 +1,4 @@
-define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
+define("views/list", ["util", "jquery", "view"], function (_, $, view) {
     "use strict";
     
     /**
@@ -22,17 +22,17 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
 
     /**
      * @class list
-     * A widget that renders a list of items. Widget items can be views or other widgets.
-     * @extends widget
-     * @namespace widgets
+     * A view that renders a list of items. View items can be view controllers or other views.
+     * @extends view
+     * @namespace views
      */
-    var list = widget.extend({
+    var list = view.extend({
             /**
              * Initializes the list.
              */
             constructor: function ()
             {
-                widget.constructor.call(this);
+                view.constructor.call(this);
 
                 this.items = [];
             },
@@ -51,18 +51,18 @@ define("widgets/list", ["util", "jquery", "widget"], function (_, $, widget) {
 
                 this.items = null;
 
-                widget.destructor.call(this);
+                view.destructor.call(this);
             },
 
             /**
-             * The name of the list widget.
+             * The name of the list view.
              * @property
              * @type String
              */
             name: "list",
 
             /**
-             * The type of tag for the content node of the list widget.
+             * The type of tag for the content node of the list view.
              * @property
              * @type String
              */
