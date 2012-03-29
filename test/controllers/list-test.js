@@ -1,4 +1,4 @@
-TestCase("controllers/list", ["util", "jquery", "model", "collection", "controller", "controllers/list"], function (_, $, model, collection, controller, listcontroller) {
+TestCase("controllers/list", ["util", "jquery", "model", "collection", "viewcontroller", "controllers/list"], function (_, $, model, collection, viewController, listcontroller) {
     var animal = model.extend({
         attributes: {
             name: {},
@@ -10,7 +10,7 @@ TestCase("controllers/list", ["util", "jquery", "model", "collection", "controll
         model: animal
     });
 
-    var animalController = controller.extend({
+    var animalController = viewController.extend({
         attributes: {
             model: { value: null }
         },
@@ -22,7 +22,7 @@ TestCase("controllers/list", ["util", "jquery", "model", "collection", "controll
         }
     });
 
-    var shortController = controller.extend({
+    var shortController = viewController.extend({
         attributes: {
             model: { value: null }
         },

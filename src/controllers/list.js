@@ -1,4 +1,4 @@
-define("controllers/list", ["util", "controller", "views/list"], function (_, controller, listWidget) {
+define("controllers/list", ["util", "viewcontroller", "views/list"], function (_, viewController, listWidget) {
     "use strict";
 
     /**
@@ -114,13 +114,13 @@ define("controllers/list", ["util", "controller", "views/list"], function (_, co
      * @extends controller
      * @namespace controllers
      */
-    return controller.extend({
+    return viewController.extend({
         /**
          * Initializes the list controller.
          */
         constructor: function ()
         {
-            controller.constructor.call(this);
+            viewController.constructor.call(this);
 
             this.set("list", listWidget.new(), { force: true });
         },
@@ -137,7 +137,7 @@ define("controllers/list", ["util", "controller", "views/list"], function (_, co
 
             detachCollection.call(this, this.get("collection"));
 
-            controller.destructor.call(this);
+            viewController.destructor.call(this);
         },
 
         /**
@@ -167,7 +167,7 @@ define("controllers/list", ["util", "controller", "views/list"], function (_, co
          */
         render: function (parentNode)
         {
-            controller.render.call(this, parentNode);
+            viewController.render.call(this, parentNode);
 
             this.get("list").render(parentNode);
         },
