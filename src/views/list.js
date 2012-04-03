@@ -1,4 +1,4 @@
-define("views/list", ["util", "jquery", "view"], function (_, $, view) {
+define("views/list", ["util", "dom", "view"], function (_, $, view) {
     "use strict";
     
     /**

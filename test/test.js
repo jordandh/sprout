@@ -77,6 +77,7 @@
 
     require([
         "assets/test/util-test.js",
+        "assets/test/dom-test.js",
         "assets/test/base-test.js",
         "assets/test/plugin-test.js",
         "assets/test/data-test.js",

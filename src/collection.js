@@ -1,6 +1,6 @@
 define("collection", ["util", "base", "model", "data"], function (_, base, model, data) {
     "use strict";
-    // TODO: add function to get an item by id
+    // TODO: add function to get an item by id that is faster than just doing colleciton.find
     
     /**
      * Handler for sync errors.

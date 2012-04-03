@@ -1,4 +1,4 @@
-TestCase("controllers/list", ["util", "jquery", "model", "collection", "viewcontroller", "controllers/list"], function (_, $, model, collection, viewController, listcontroller) {
+TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontroller", "controllers/list"], function (_, $, model, collection, viewController, listcontroller) {
     var animal = model.extend({
         attributes: {
             name: {},

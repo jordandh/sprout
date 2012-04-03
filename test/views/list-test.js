@@ -1,4 +1,4 @@
-TestCase("views/list", ["util", "jquery", "views/list"], function (_, $, list) {
+TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
     return {
         setUp: function ()
         {

@@ -1,4 +1,4 @@
-define("data", ["util", "jquery"], function (_, $) {
+define("data", ["util", "dom"], function (_, $) {
     "use strict";
     
     /*
