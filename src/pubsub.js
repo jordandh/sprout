@@ -1,4 +1,4 @@
-define("pubsub", ["util", "module"], function (_, Module) {
+define("pubsub", ["util", "pubsub"], function (_, pubsub) {
     "use strict";
     
     var topics = [];
@@ -30,7 +30,19 @@ define("pubsub", ["util", "module"], function (_, Module) {
                         listenerInfo.handler.call(listenerInfo.context, e);
                     }
                     catch (ex) {
-                        // TODO: add a way to respond to errors here
+                        if (message !== "error") {
+                            pubsub.publish("error", {
+                                exception: ex,
+                                info: {
+                                    message: message,
+                                    info: info,
+                                    src: src,
+                                    topic: topic,
+                                    e: e,
+                                    listenerInfo: listenerInfo
+                                }
+                            });
+                        }
                     }
                 });
             }

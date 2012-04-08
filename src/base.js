@@ -1,4 +1,4 @@
-define("base", ["util"], function (_) {
+define("base", ["util", "pubsub"], function (_, pubsub) {
     "use strict";
 
     var rgxNumber = /^\d+$/,
@@ -45,7 +45,15 @@ define("base", ["util"], function (_) {
                     eventInfo.handler.call(eventInfo.context, e);
                 }
                 catch (ex) {
-                    // TODO: publish error?
+                    pubsub.publish("error", {
+                        exception: ex,
+                        info: {
+                            type: type,
+                            e: e,
+                            event: event,
+                            eventInfo: eventInfo
+                        }
+                    }, this);
                 }
             });
         },
@@ -90,6 +98,38 @@ define("base", ["util"], function (_) {
         {
             if (event) {
                 fire.call(this, type, e, event);
+            }
+        },
+        /*
+         * getAttributes
+         */
+        getAttributes = function ()
+        {
+            var attributes = {};
+            
+            // Grab the values for each attribute in the prototype chain starting from the bottom up
+            _.each(_.prototypes(this).reverse(), function (obj) {
+                _.each(obj.attributes, function (attribute, name) {
+                    attributes[name] = attribute;
+                });
+            });
+            
+            return attributes;
+        },
+        /*
+         * getValue
+         */
+        getValue = function (name)
+        {
+            var attribute;
+            
+            if (this.values.hasOwnProperty(name)) {
+                return this.values[name];
+            }
+            
+            attribute = this.getAttribute(name);
+            if (attribute) {
+                return attribute.value;
             }
         },
         /*
@@ -158,38 +198,6 @@ define("base", ["util"], function (_) {
             }
             
             return valueChanged;
-        },
-        /*
-         * getAttributes
-         */
-        getAttributes = function ()
-        {
-            var attributes = {};
-            
-            // Grab the values for each attribute in the prototype chain starting from the bottom up
-            _.each(_.prototypes(this).reverse(), function (obj) {
-                _.each(obj.attributes, function (attribute, name) {
-                    attributes[name] = attribute;
-                });
-            });
-            
-            return attributes;
-        },
-        /*
-         * getValue
-         */
-        getValue = function (name)
-        {
-            var attribute;
-            
-            if (this.values.hasOwnProperty(name)) {
-                return this.values[name];
-            }
-            
-            attribute = this.getAttribute(name);
-            if (attribute) {
-                return attribute.value;
-            }
         },
         /**
          * @class base
