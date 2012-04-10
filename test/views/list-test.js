@@ -391,6 +391,11 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "Worf", items.get(2).innerHTML);
+        },
+
+        "test list.cloud attribute": function ()
+        {
+            assert(false);
         }
     };
 });
