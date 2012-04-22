@@ -30,7 +30,8 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 	});
 	
 	return {
-		"test collection has underscore methods": function () {
+		"test collection has underscore methods": function ()
+		{
 			var methods = ["forEach", "each", "map", "reduce", "reduceRight", "find", "detect", "filter", "select", "reject", "every", "all", "some", "any", "include", "contains",
 						   "invoke", "max", "min", "sortBy", "sortedIndex", "toArray", "size", "first", "initial", "rest", "last", "without", "indexOf", "shuffle", "lastIndexOf",
 						   "isEmpty", "groupBy"];
@@ -748,6 +749,103 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 			assertSame("cat is not first item after sort.", cat, col.at(0));
 			assertSame("cow is not second item after sort.", cow, col.at(1));
 			assertSame("dog is not third item after sort.", dog, col.at(2));
+		},
+
+		"test collection.getById returns model after it is added": function ()
+		{
+			var col = animals.new([{
+					id: "A",
+					name: "Spot",
+					age: 8
+				}, {
+					id: "B",
+					name: "Stripe",
+					age: 10
+				}
+			]);
+
+			var mod = col.at(0),
+				modById = col.getById("A");
+			assertSame("model by id A has incorrect value", mod, modById);
+
+			mod = col.at(1);
+			modById = col.getById("B");
+			assertSame("model by id B has incorrect value", mod, modById);
+		},
+
+		"test collection.getById returns undefined for ids not in collection": function ()
+		{
+			var col = animals.new([{
+					id: "A",
+					name: "Spot",
+					age: 8
+				}, {
+					id: "B",
+					name: "Stripe",
+					age: 10
+				}
+			]);
+
+			var mod = col.at(0),
+				modById = col.getById("A");
+			assertSame("model by id A has incorrect value", mod, modById);
+
+			mod = col.at(1);
+			modById = col.getById("B");
+			assertSame("model by id B has incorrect value", mod, modById);
+
+			modById = col.getById("Not Found");
+			assertUndefined("model by id is not undefined", modById);
+		},
+
+		"test collection.getById returns undefined after model is removed": function ()
+		{
+			var col = animals.new([{
+					id: "A",
+					name: "Spot",
+					age: 8
+				}, {
+					id: "B",
+					name: "Stripe",
+					age: 10
+				}
+			]);
+
+			var mod = col.at(0),
+				modById = col.getById("A");
+			assertSame("model by id A has incorrect value", mod, modById);
+
+			mod = col.at(1);
+			modById = col.getById("B");
+			assertSame("model by id B has incorrect value", mod, modById);
+
+			col.remove(mod);
+			modById = col.getById("B");
+			assertUndefined("model by id is not undefined", modById);
+		},
+
+		"test collection.getById returns undefined after reset": function ()
+		{
+			var col = animals.new([{
+					id: "A",
+					name: "Spot",
+					age: 8
+				}, {
+					id: "B",
+					name: "Stripe",
+					age: 10
+				}
+			]);
+
+			var mod = col.at(0);
+			assertSame("model by id A has incorrect value", mod, col.getById("A"));
+
+			mod = col.at(1);
+			assertSame("model by id B has incorrect value", mod, col.getById("B"));
+
+			col.reset();
+			assertUndefined("model by id A is not undefined", col.getById("A"));
+			assertUndefined("model by id B is not undefined", col.getById("B"));
 		}
 	}
 });

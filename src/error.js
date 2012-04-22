@@ -101,7 +101,7 @@ define("error", ["pubsub", "dom"], function (pubsub, $) {
     pubsub.subscribe("error", function (e) {
         submitError({
             type: "pubsub",
-            exceptions: [e.info.exception],
+            exceptions: e.info.exception ? [e.info.exception] : [],
             info: e.info.info
         });
     });

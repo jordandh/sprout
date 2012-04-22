@@ -86,6 +86,7 @@
         "assets/test/pubsub-test.js",
         "assets/test/view-test.js",
         "assets/test/views/list-test.js",
-        "assets/test/controllers/list-test.js"
+        "assets/test/controllers/list-test.js",
+        "assets/test/datacore-test.js"
     ]);
 }());

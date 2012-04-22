@@ -25,7 +25,7 @@ define("component", ["util", "base"], function (_, base) {
         /**
          * Restarts a component on a page. Child component objects should override this method to define its restart logic.
          */
-        restarts: function ()
+        restart: function ()
         {
         }
 	});

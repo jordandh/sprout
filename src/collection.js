@@ -1,6 +1,5 @@
 define("collection", ["util", "base", "model", "data"], function (_, base, model, data) {
     "use strict";
-    // TODO: add function to get an item by id that is faster than just doing colleciton.find
     
     /**
      * Handler for sync errors.
@@ -117,6 +116,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
             {
                 base.constructor.call(this);
                 this.items = [];
+                this.itemsById = {};
             },
 
             /**
@@ -125,6 +125,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
             destructor: function ()
             {
                 this.items = null;
+                this.itemsById = null;
                 base.destructor.call(this);
             },
 
@@ -195,6 +196,16 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
             {
                 return this.items[index];
             },
+
+            /**
+             * Returns the item with a matching id in the collection.
+             * @param {String} id The id of the item to get.
+             * @return {model} Returns the model with the matching id.
+             */
+            getById: function (id)
+            {
+                return this.itemsById[id];
+            },
             
             /**
              * Adds a model to the collection. Fires an add event.
@@ -208,11 +219,18 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
             {
                 // Turn any json data into models and listen to sync events
                 _.each(items, function (item, index) {
+                    var id;
+
                     if (!model.isPrototypeOf(item)) {
                         item = this.model.new(item);
                     }
 
                     item.after("sync", afterItemSynced, this);
+
+                    id = item.get("id");
+                    if (!_.isUndefined(id)) {
+                        this.itemsById[item.get("id")] = item;
+                    }
                     
                     items[index] = item;
                 }, this);
@@ -246,6 +264,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
                 _.each(items, function (item) {
                     var index = this.indexOf(item);
                     if (index !== -1) {
+                        delete this.itemsById[this.items[index].get("id")];
                         this.items.splice(index, 1);
                     }
                 }, this);
@@ -267,6 +286,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
 
                 // Set the items array equal to a new empty array
                 this.items = [];
+                this.itemsById = {};
                 
                 // Add any new items if there are any suppresing the add event since this is a reset event
                 if (items.length > 0) {
