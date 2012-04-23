@@ -55,22 +55,6 @@ define("views/list", ["util", "dom", "view"], function (_, $, view) {
             },
 
             /**
-             * The attributes for the list.
-             * @property
-             * @type Object
-             */
-            attributes:
-            {
-                /**
-                 * @cfg {Boolean} cloud Whether or not the list is displayed as a word cloud.
-                 * @default false
-                 */
-                cloud: {
-                    value: false
-                }
-            },
-
-            /**
              * The name of the list view.
              * @property
              * @type String
@@ -94,21 +78,6 @@ define("views/list", ["util", "dom", "view"], function (_, $, view) {
             comparator: null,
 
             /**
-             * Handles changing of the cloud attribute. Takes care of adding and removing the cloud class from the bounding node.
-             * @private
-             * @param {Boolean} disabled The new value of the disabled attribute.
-             */
-            cloudChanged: function (cloud)
-            {
-                if (cloud) {
-                    this.addClass("cloud");
-                }
-                else {
-                    this.removeClass("cloud");
-                }
-            },
-
-            /**
              * Renders the list items into the dom. This function should not be directly called. Instead call list.render.
              * @private
              * @param {Object} options This options parameter is the same options parameter passed into view.render.
@@ -118,11 +87,6 @@ define("views/list", ["util", "dom", "view"], function (_, $, view) {
              */
             renderContent: function ()
             {
-                var cloud = this.get("cloud");
-                if (cloud) {
-                    this.addClass("cloud");
-                }
-
                 this.each(renderItem, this);
             },
 

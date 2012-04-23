@@ -1,4 +1,4 @@
-TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontroller", "controllers/list"], function (_, $, model, collection, viewController, listcontroller) {
+TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontroller", "views/datalist"], function (_, $, model, collection, viewController, datalist) {
     var animal = model.extend({
         attributes: {
             name: {},
@@ -48,7 +48,7 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
             this.element = null;
         },
 
-        "test listcontroller.render": function ()
+        "test datalist.render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -59,21 +59,20 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 }
             ]);
 
-            var lv = listcontroller.new();
+            var lv = datalist.new();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
             lv.render(this.element);
 
-            var l = lv.get("list"),
-                items = $("li", l.get("contentNode"));
+            var items = $("li", lv.get("contentNode"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 2, lv.get("contentNode").childNodes.length);
             assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
         },
 
-        "test listcontroller.collection add before render": function ()
+        "test datalist.collection add before render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -84,7 +83,7 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 }
             ]);
 
-            var lv = listcontroller.new();
+            var lv = datalist.new();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -95,16 +94,15 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
 
             lv.render(this.element);
 
-            var l = lv.get("list"),
-                items = $("li", l.get("contentNode"));
+            var items = $("li", lv.get("contentNode"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, lv.get("contentNode").childNodes.length);
             assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "<span>Dot is 2 years old.</span>", items.get(2).innerHTML);
         },
 
-        "test listcontroller.collection add after render": function ()
+        "test datalist.collection add after render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -115,16 +113,15 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 }
             ]);
 
-            var lv = listcontroller.new();
+            var lv = datalist.new();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
             lv.render(this.element);
 
-            var l = lv.get("list"),
-                items = $("li", l.get("contentNode"));
+            var items = $("li", lv.get("contentNode"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 2, lv.get("contentNode").childNodes.length);
             assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
 
@@ -133,15 +130,15 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 age: "2"
             });
 
-            items = $("li", l.get("contentNode"));
+            items = $("li", lv.get("contentNode"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, lv.get("contentNode").childNodes.length);
             assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "<span>Dot is 2 years old.</span>", items.get(2).innerHTML);
         },
 
-        "test listcontroller.collection remove before render": function ()
+        "test datalist.collection remove before render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -152,7 +149,7 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 }
             ]);
 
-            var lv = listcontroller.new();
+            var lv = datalist.new();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -162,14 +159,13 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
 
             lv.render(this.element);
 
-            var l = lv.get("list"),
-                items = $("li", l.get("contentNode"));
+            var items = $("li", lv.get("contentNode"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 1, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 1, lv.get("contentNode").childNodes.length);
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(0).innerHTML);
         },
 
-        "test listcontroller.collection remove after render": function ()
+        "test datalist.collection remove after render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -180,7 +176,7 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 }
             ]);
 
-            var lv = listcontroller.new();
+            var lv = datalist.new();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -190,14 +186,13 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 return item.get("name") === "Spot";
             }));
 
-            var l = lv.get("list"),
-                items = $("li", l.get("contentNode"));
+            var items = $("li", lv.get("contentNode"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 1, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 1, lv.get("contentNode").childNodes.length);
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(0).innerHTML);
         },
 
-        "test listcontroller.collection reset before render": function ()
+        "test datalist.collection reset before render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -208,7 +203,7 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 }
             ]);
 
-            var lv = listcontroller.new();
+            var lv = datalist.new();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -226,16 +221,15 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
 
             lv.render(this.element);
 
-            var l = lv.get("list"),
-                items = $("li", l.get("contentNode"));
+            var items = $("li", lv.get("contentNode"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, lv.get("contentNode").childNodes.length);
             assertSame("The item's content is incorrect", "<span>Dot is 2 years old.</span>", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "<span>Pixel is 4 years old.</span>", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "<span>Voxel is 8 years old.</span>", items.get(2).innerHTML);
         },
 
-        "test listcontroller.collection reset after render": function ()
+        "test datalist.collection reset after render": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -246,7 +240,7 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 }
             ]);
 
-            var lv = listcontroller.new();
+            var lv = datalist.new();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -264,16 +258,15 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 }
             ]);
 
-            var l = lv.get("list"),
-                items = $("li", l.get("contentNode"));
+            var items = $("li", lv.get("contentNode"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, lv.get("contentNode").childNodes.length);
             assertSame("The item's content is incorrect", "<span>Dot is 2 years old.</span>", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "<span>Pixel is 4 years old.</span>", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "<span>Voxel is 8 years old.</span>", items.get(2).innerHTML);
         },
 
-        "test listcontroller.itemController": function ()
+        "test datalist.itemController": function ()
         {
             var col = animals.new([{
                     name: "Spot",
@@ -284,24 +277,23 @@ TestCase("controllers/list", ["util", "dom", "model", "collection", "viewcontrol
                 }
             ]);
 
-            var lv = listcontroller.new();
+            var lv = datalist.new();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
             lv.render(this.element);
 
-            var l = lv.get("list"),
-                items = $("li", l.get("contentNode"));
+            var items = $("li", lv.get("contentNode"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 2, lv.get("contentNode").childNodes.length);
             assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
 
             lv.set("itemController", shortController);
 
-            items = $("li", l.get("contentNode"));
+            items = $("li", lv.get("contentNode"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 2, lv.get("contentNode").childNodes.length);
             assertSame("The item's content is incorrect", "<span>Spot [8]</span>", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "<span>Stripe [10]</span>", items.get(1).innerHTML);
         }

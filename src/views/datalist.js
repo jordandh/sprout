@@ -1,22 +1,21 @@
-define("controllers/list", ["util", "viewcontroller", "views/list"], function (_, viewController, listWidget) {
+define("views/datalist", ["util", "views/list"], function (_, list) {
     "use strict";
 
     /**
      * Detaches all event handlers that are attached to the list controller's collection.
      * @private
-     * @param {Object} list The list view to add the item to.
      * @param {Object} itemController The type of controller to create for the list item.
      * @param {Object} model The model for the list item.
      * @param {Number} at (Optional) The index to add the item at in the list. Defaults to the end of the list.
      */
-    function addItem (list, itemController, model, at)
+    function addItem (itemController, model, at)
     {
         // Create a controller for the item and set its model
         var item = itemController.new();
         item.set("model", model);
 
         // Add the controller to the list view in the correct position
-        list.add(item, { at: at });
+        this.add(item, { at: at });
     }
 
     /**
@@ -25,20 +24,17 @@ define("controllers/list", ["util", "viewcontroller", "views/list"], function (_
      */
     function resetList ()
     {
-        var list = this.get("list"),
-            collection = this.get("collection"),
+        var collection = this.get("collection"),
             itemController = this.get("itemController");
 
-        if (list) {
-            // Remove all the items from the list view
-            list.reset();
+        // Remove all the items from the list view
+        this.reset();
 
-            // If there is a collection and an item controller then add all the items in the collection to the list view
-            if (collection && itemController) {
-                collection.each(function (model) {
-                    addItem.call(this, list, itemController, model);
-                }, this);
-            }
+        // If there is a collection and an item controller then add all the items in the collection to the list view
+        if (collection && itemController) {
+            collection.each(function (model) {
+                addItem.call(this, itemController, model);
+            }, this);
         }
     }
 
@@ -49,14 +45,13 @@ define("controllers/list", ["util", "viewcontroller", "views/list"], function (_
      */
     function afterModelsAdded (e)
     {
-        var list = this.get("list"),
-            itemController = this.get("itemController"),
+        var itemController = this.get("itemController"),
             at = e.info.options.at;
 
         // If there is a list view and an item controller then add each model to the list view
-        if (list && itemController) {
+        if (itemController) {
             _.each(e.info.items, function (model, index) {
-                addItem.call(this, list, itemController, model, _.isNumber(at) ? at + index : null);
+                addItem.call(this, itemController, model, _.isNumber(at) ? at + index : null);
             }, this);
         }
     }
@@ -68,27 +63,20 @@ define("controllers/list", ["util", "viewcontroller", "views/list"], function (_
      */
     function afterModelsRemoved (e)
     {
-        var list = this.get("list");
-
         // If there is a list view then remove each model from it
-        if (list) {
-            _.each(e.info.items, function (model) {
-                var itemController = list.find(function (controller) {
-                    return controller.get("model") === model;
-                });
-                
-                // Remove the item controller from the list view
-                list.remove(itemController);
-            }, this);
-        }
+        _.each(e.info.items, function (model) {
+            // Remove the item controller from the list view
+            this.remove(this.find(function (controller) {
+                return controller.get("model") === model;
+            }));
+        }, this);
     }
 
     /**
      * Handler for when the list controller's collection is reset. Resets the list view with the new models in the collection.
      * @private
-     * @param {Object} e The event object.
      */
-    function afterReset (e)
+    function afterReset ()
     {
         resetList.call(this);
     }
@@ -114,62 +102,20 @@ define("controllers/list", ["util", "viewcontroller", "views/list"], function (_
      * @extends controller
      * @namespace controllers
      */
-    return viewController.extend({
-        /**
-         * Initializes the list controller.
-         */
-        constructor: function ()
-        {
-            viewController.constructor.call(this);
-
-            this.set("list", listWidget.new(), { force: true });
-        },
-
+    /**
+     * @cfg {Object} collection The collection to bind to the list view.
+     */
+    /**
+     * @cfg {Object} itemController The controller object used to render the collection items in the list view.
+     */
+    return list.extend({
         /**
          * Deinitializes the list controller.
          */
         destructor: function ()
         {
-            var list = this.get("list");
-            if (list) {
-                list.destroy();
-            }
-
             detachCollection.call(this, this.get("collection"));
-
-            viewController.destructor.call(this);
-        },
-
-        /**
-         * The attributes for the list controller.
-         * @property
-         * @type Object
-         */
-        attributes: {
-            /**
-             * @cfg {Object} collection The collection to bind to the list view.
-             */
-            /**
-             * @cfg {Object} itemController The controller object used to render the collection items in the list view.
-             */
-            /**
-             * @cfg {Object} list The list view bound to the collection.
-             * @readOnly
-             */
-            list: {
-                readOnly: true
-            }
-        },
-
-        /**
-         * Renders the controller's views to the dom.
-         * @param {Object} parentNode The dom element to render the list controller in.
-         */
-        render: function (parentNode)
-        {
-            viewController.render.call(this, parentNode);
-
-            this.get("list").render(parentNode);
+            list.destructor.call(this);
         },
 
         /**
