@@ -2,7 +2,7 @@ define("views/datalist", ["util", "views/list"], function (_, list) {
     "use strict";
 
     /**
-     * Detaches all event handlers that are attached to the list controller's collection.
+     * Detaches all event handlers that are attached to the datalist's collection.
      * @private
      * @param {Object} itemController The type of controller to create for the list item.
      * @param {Object} model The model for the list item.
@@ -39,7 +39,7 @@ define("views/datalist", ["util", "views/list"], function (_, list) {
     }
 
     /**
-     * Handler for when models are added to the list controller's collection. Adds the new models to the list view.
+     * Handler for when models are added to the datalist's collection. Adds the new models to the list view.
      * @private
      * @param {Object} e The event object.
      */
@@ -57,7 +57,7 @@ define("views/datalist", ["util", "views/list"], function (_, list) {
     }
 
     /**
-     * Handler for when models are removed from the list controller's collection. Removes the models from the list view.
+     * Handler for when models are removed from the datalist's collection. Removes the models from the list view.
      * @private
      * @param {Object} e The event object.
      */
@@ -73,7 +73,7 @@ define("views/datalist", ["util", "views/list"], function (_, list) {
     }
 
     /**
-     * Handler for when the list controller's collection is reset. Resets the list view with the new models in the collection.
+     * Handler for when the datalist's collection is reset. Resets the list view with the new models in the collection.
      * @private
      */
     function afterReset ()
@@ -82,7 +82,7 @@ define("views/datalist", ["util", "views/list"], function (_, list) {
     }
 
     /**
-     * Detaches all event handlers that are attached to the list controller's collection.
+     * Detaches all event handlers that are attached to the datalist's collection.
      * @private
      * @param {Object} collection The collection object to detach the event handlers from.
      */
@@ -96,11 +96,11 @@ define("views/datalist", ["util", "views/list"], function (_, list) {
     }
 
     /**
-     * @class list
-     * A controller that binds a collection to a list view. There are two components to setup when using a list controller: the collection and itemController attributes.
+     * @class datalist
+     * A list view that is bound to a collection. In order to bind a collection to a datalist there are two attributes to set: collection and itemController.
      * Use the collection attribute to specify the data bound to the list. The itemController attribute is then used for rendering each item in the list.
-     * @extends controller
-     * @namespace controllers
+     * @extends list
+     * @namespace views
      */
     /**
      * @cfg {Object} collection The collection to bind to the list view.
@@ -110,7 +110,7 @@ define("views/datalist", ["util", "views/list"], function (_, list) {
      */
     return list.extend({
         /**
-         * Deinitializes the list controller.
+         * Deinitializes the datalist.
          */
         destructor: function ()
         {
