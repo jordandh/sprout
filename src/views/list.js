@@ -17,7 +17,7 @@ define("views/list", ["util", "dom", "view"], function (_, $, view) {
             view.render(item.get(0));
         }
 
-        item.appendTo(this.get("contentNode"));
+        item.appendTo(this.get("element"));
     }
 
     /**
@@ -66,7 +66,7 @@ define("views/list", ["util", "dom", "view"], function (_, $, view) {
              * @property
              * @type String
              */
-            contentTag: "ul",
+            tagName: "ul",
 
             /**
              * The function used to sort the list. By default there is no comparator function.
@@ -169,7 +169,7 @@ define("views/list", ["util", "dom", "view"], function (_, $, view) {
 
                         // Remove the item from the dom
                         if (this.get("rendered")) {
-                            $("li", this.get("contentNode")).eq(index).remove();
+                            $("li", this.get("element")).eq(index).remove();
                         }
                     }
                 }, this);
@@ -196,7 +196,7 @@ define("views/list", ["util", "dom", "view"], function (_, $, view) {
 
                 // Clear the dom
                 if (this.get("rendered")) {
-                    $(this.get("contentNode")).empty();
+                    $(this.get("element")).empty();
                 }
                 
                 // Add any new items if there are any suppresing the add event since this is a reset event
@@ -234,7 +234,7 @@ define("views/list", ["util", "dom", "view"], function (_, $, view) {
                     this.items = _.sortBy(this.items, comparator, options.context || this);
 
                     // Remove the items from the dom
-                    $(this.get("contentNode")).empty();
+                    $(this.get("element")).empty();
 
                     // Render the items in their new order
                     this.each(renderItem, this);

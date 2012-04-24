@@ -32,17 +32,15 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
             foo.render(this.element);
 
-            var bounding = $(foo.get("boundingNode")),
-                content = $(foo.get("contentNode"));
+            var element = $(foo.get("element"));
 
             assert("The view rendered attribute is not true after rendering.", foo.get("rendered"));
             assertSame("The view parent node is incorrect", this.element, foo.get("parentNode"));
-            assertSame("The view bounding element is not the correct type of tag", "div", foo.get("boundingNode").nodeName.toLowerCase());
-            assertSame("The view content element is not the correct type of tag", "div", foo.get("contentNode").nodeName.toLowerCase());
-            assert("The view bounding element is missing the view class name.", bounding.hasClass("view"));
-            assertFalse("The view bounding element has the disabled class name.", bounding.hasClass("disabled"));
-            assertFalse("The view bounding element has the hidden class name.", bounding.hasClass("hidden"));
-            assert("The view content element is misisng the view-content class name.", content.hasClass("view-content"));
+            assertSame("The view bounding element is not the correct type of tag", "div", foo.get("element").nodeName.toLowerCase());
+            assertSame("The view content element is not the correct type of tag", "div", foo.get("element").nodeName.toLowerCase());
+            assert("The view bounding element is missing the view class name.", element.hasClass("view"));
+            assertFalse("The view bounding element has the disabled class name.", element.hasClass("disabled"));
+            assertFalse("The view bounding element has the hidden class name.", element.hasClass("hidden"));
         },
 
         "test view.render when disabled": function ()
@@ -51,11 +49,11 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
             foo.set("disabled", true);
             foo.render(this.element);
 
-            var bounding = $(foo.get("boundingNode"));
+            var element = $(foo.get("element"));
 
-            assert("The view bounding element is missing the view class name.", bounding.hasClass("view"));
-            assert("The view bounding element does not have the disabled class name.", bounding.hasClass("disabled"));
-            assertFalse("The view bounding element has the hidden class name.", bounding.hasClass("hidden"));
+            assert("The view bounding element is missing the view class name.", element.hasClass("view"));
+            assert("The view bounding element does not have the disabled class name.", element.hasClass("disabled"));
+            assertFalse("The view bounding element has the hidden class name.", element.hasClass("hidden"));
         },
 
         "test view.disabled after render": function ()
@@ -64,11 +62,11 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
             foo.render(this.element);
             foo.set("disabled", true);
 
-            var bounding = $(foo.get("boundingNode"));
+            var element = $(foo.get("element"));
 
-            assert("The view bounding element is missing the view class name.", bounding.hasClass("view"));
-            assert("The view bounding element does not have the disabled class name.", bounding.hasClass("disabled"));
-            assertFalse("The view bounding element has the hidden class name.", bounding.hasClass("hidden"));
+            assert("The view bounding element is missing the view class name.", element.hasClass("view"));
+            assert("The view bounding element does not have the disabled class name.", element.hasClass("disabled"));
+            assertFalse("The view bounding element has the hidden class name.", element.hasClass("hidden"));
         },
 
         "test view.render when not visible": function ()
@@ -77,11 +75,11 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
             foo.set("visible", false);
             foo.render(this.element);
 
-            var bounding = $(foo.get("boundingNode"));
+            var element = $(foo.get("element"));
 
-            assert("The view bounding element is missing the view class name.", bounding.hasClass("view"));
-            assertFalse("The view bounding element has the disabled class name.", bounding.hasClass("disabled"));
-            assert("The view bounding element does not have the hidden class name.", bounding.hasClass("hidden"));
+            assert("The view bounding element is missing the view class name.", element.hasClass("view"));
+            assertFalse("The view bounding element has the disabled class name.", element.hasClass("disabled"));
+            assert("The view bounding element does not have the hidden class name.", element.hasClass("hidden"));
         },
 
         "test view.visible after render": function ()
@@ -90,11 +88,11 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
             foo.render(this.element);
             foo.set("visible", false);
 
-            var bounding = $(foo.get("boundingNode"));
+            var element = $(foo.get("element"));
 
-            assert("The view bounding element is missing the view class name.", bounding.hasClass("view"));
-            assertFalse("The view bounding element has the disabled class name.", bounding.hasClass("disabled"));
-            assert("The view bounding element does not have the hidden class name.", bounding.hasClass("hidden"));
+            assert("The view bounding element is missing the view class name.", element.hasClass("view"));
+            assertFalse("The view bounding element has the disabled class name.", element.hasClass("disabled"));
+            assert("The view bounding element does not have the hidden class name.", element.hasClass("hidden"));
         },
 
         "test view.addClass": function ()
@@ -102,18 +100,18 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
             var foo = view.new();
             foo.render(this.element);
 
-            var bounding = $(foo.get("boundingNode"));
+            var element = $(foo.get("element"));
 
-            assert("The view bounding element is missing the view class name.", bounding.hasClass("view"));
-            assertFalse("The view bounding element has the disabled class name.", bounding.hasClass("disabled"));
-            assertFalse("The view bounding element has the hidden class name.", bounding.hasClass("hidden"));
+            assert("The view bounding element is missing the view class name.", element.hasClass("view"));
+            assertFalse("The view bounding element has the disabled class name.", element.hasClass("disabled"));
+            assertFalse("The view bounding element has the hidden class name.", element.hasClass("hidden"));
 
             foo.addClass("test");
 
-            assert("The view bounding element is missing the view class name.", bounding.hasClass("view"));
-            assertFalse("The view bounding element has the disabled class name.", bounding.hasClass("disabled"));
-            assertFalse("The view bounding element has the hidden class name.", bounding.hasClass("hidden"));
-            assert("The view bounding element is missing the test class name.", bounding.hasClass("test"));
+            assert("The view bounding element is missing the view class name.", element.hasClass("view"));
+            assertFalse("The view bounding element has the disabled class name.", element.hasClass("disabled"));
+            assertFalse("The view bounding element has the hidden class name.", element.hasClass("hidden"));
+            assert("The view bounding element is missing the test class name.", element.hasClass("test"));
         },
 
         "test view.destroy": function ()
@@ -135,18 +133,18 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
             foo.render(this.element);
             foo.addClass("after-render-test");
 
-            var bounding = $(foo.get("boundingNode"));
+            var element = $(foo.get("element"));
 
             assertSame("The view parent node is incorrect.", this.element, foo.get("parentNode"));
-            assert("The view bounding element is missing the after-render-test class name.", bounding.hasClass("after-render-test"));
+            assert("The view bounding element is missing the after-render-test class name.", element.hasClass("after-render-test"));
 
             var newParentNode = $("<div></div>").appendTo(document.body);
 
             foo.render(newParentNode);
 
-            assertSame("The bounding node did not remain the same", bounding.get(0), foo.get("boundingNode"));
+            assertSame("The bounding node did not remain the same", element.get(0), foo.get("element"));
             assertSame("The view parent node is not the new parent.", newParentNode, foo.get("parentNode"));
-            assert("The view bounding element did not retain the after-render-test class name.", bounding.hasClass("after-render-test"));
+            assert("The view bounding element did not retain the after-render-test class name.", element.hasClass("after-render-test"));
 
             assertSame("The old parent is not empty.", 0, this.element.childNodes.length);
 
@@ -162,7 +160,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
             foo.addClass("template-string");
 
-            var span = $("span", foo.get("contentNode"));
+            var span = $("span", foo.get("element"));
 
             assertSame("There is not one span child in the view content node.", 1, span.length);
             assertSame("The view content element's child node is not the correct type of tag", "span", span.get(0).nodeName.toLowerCase());
@@ -181,7 +179,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
             foo.addClass("template-string-data");
 
-            var span = $("span", foo.get("contentNode"));
+            var span = $("span", foo.get("element"));
 
             assertSame("There is not one span child in the view content node.", 1, span.length);
             assertSame("The view content element's child node is not the correct type of tag", "span", span.get(0).nodeName.toLowerCase());
@@ -199,7 +197,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
             foo.addClass("template-function");
 
-            var span = $("span", foo.get("contentNode"));
+            var span = $("span", foo.get("element"));
 
             assertSame("There is not one span child in the view content node.", 1, span.length);
             assertSame("The view content element's child node is not the correct type of tag", "span", span.get(0).nodeName.toLowerCase());
@@ -220,30 +218,11 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
             foo.addClass("template-function");
 
-            var span = $("span", foo.get("contentNode"));
+            var span = $("span", foo.get("element"));
 
             assertSame("There is not one span child in the view content node.", 1, span.length);
             assertSame("The view content element's child node is not the correct type of tag", "span", span.get(0).nodeName.toLowerCase());
             assertSame("The span's content is incorrect.", "Hello There Function", span.html());
-        },
-
-        "test view with null contentTag": function ()
-        {
-            var foo = view.new();
-            foo.contentTag = null;
-            foo.render(this.element);
-
-            var bounding = $(foo.get("boundingNode")),
-                content = $(foo.get("contentNode"));
-
-            assert("The view rendered attribute is not true after rendering.", foo.get("rendered"));
-            assertSame("The view bounding node and content node are not the same.", foo.get("boundingNode"), foo.get("contentNode"));
-            assertSame("The view bounding element is not the correct type of tag", "div", foo.get("boundingNode").nodeName.toLowerCase());
-            assertSame("The view content element is not the correct type of tag", "div", foo.get("contentNode").nodeName.toLowerCase());
-            assert("The view bounding element is missing the view class name.", bounding.hasClass("view"));
-            assertFalse("The view bounding element has the disabled class name.", bounding.hasClass("disabled"));
-            assertFalse("The view bounding element has the hidden class name.", bounding.hasClass("hidden"));
-            assert("The view content element is misisng the view-content class name.", content.hasClass("view-content"));
         }
     };
 });

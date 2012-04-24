@@ -3,52 +3,43 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
     
     /**
      * @class view
-     * Widgets are UI controls that are easily themed via css and manipulated via attributes and a jQuery api. The view object exists to be inherited from or used to load templates.
+     * Views are UI controls that are easily themed via css and manipulated via attributes and a jQuery api. The view object exists to be inherited from or used to load templates.
      * It provides the basic functionality for a view to be rendered and styled.
-     * Every view is rendered with consistent markup accessible through the boundingNode and contentNode attributes.
+     * Every view is rendered with consistent markup accessible through the element attribute.
      * The standard view box model is a bounding node wrapping a content node.
      * The markup for a simple view:
      * <pre><code>
-     *     &lt;div class="view">
-     *     &nbsp;&nbsp;&lt;div class="view-content">&lt;/div>
-     *     &lt;/div>
+     *     &lt;div class="view">&lt;/div>
      * </code></pre>
-     * Most views will use this model, however, it is possible to flatten the markup so that there is only one node:
-     * <pre><code>
-     *     &lt;div class="view view-content">&lt;/div>
-     * </code></pre>
-     * This can be done by setting the contentTag of an object that inherits from view or a view instance to null.
-     * When inheriting from view there are a few things that need to be done. Your view needs a unique name. A view's name is used for adding classes to the view's markup.
-     * Your view may also need to define a boundingTag and contentTag. Both tag types default to a div. Usually only the contentTag needs to be overridden.
-     * And lastly the renderContent function most likely needs to be overridden. This function should render the view into the content node.
+     * When inheriting from view there are a few things that need to be done. Your view needs a unique name. A view's name is used for adding classes to the view's element.
+     * Your view may also need to define a tagName. The tagName defaults to div.
+     * And lastly the renderContent function most likely needs to be overridden. This function should render the contents of the view into the view's element.
      * Here is a simple example of a button view:
      * <pre><code>
      *     var button = view.extend({
      *         &nbsp;&nbsp;name: "button",
-     *         &nbsp;&nbsp;contentTag: "button",
+     *         &nbsp;&nbsp;tagName: "button",
      *         &nbsp;&nbsp;attributes: {
      *             &nbsp;&nbsp;&nbsp;&nbsp;label: { value: "", validator: _.isString }
      *         &nbsp;&nbsp;},
      *         &nbsp;&nbsp;renderContent: function () {
-     *             &nbsp;&nbsp;&nbsp;&nbsp;$(this.get("contentNode")).html(this.get("label"));
+     *             &nbsp;&nbsp;&nbsp;&nbsp;$(this.get("element")).html(this.get("label"));
      *         &nbsp;&nbsp;}
      *     });
      * </code></pre>
-     * The above example creates a button view whose content tag is button. When rendered it sets the text of the button using its label attribute.
+     * The above example creates a button view whose tag name is button. When rendered it sets the text of the button using its label attribute.
      * <pre><code>
      *     var btn = button.new({ label: "Hello" });
      *     btn.render(document.body);
      * </code></pre>
      * The above code creates a button view and renders it to the body. The markup created is as follows:
      * <pre><code>
-     *     &lt;div class="view button">
-     *     &nbsp;&nbsp;&lt;button class="view-content">Hello&lt;/button>
-     *     &lt;/div>
+     *     &lt;button class="view button">Hello&lt;/button>
      * </code></pre>
      * If inheriting from view is a little more than you need then the view object can be used to render templates.
      * <pre><code>
      *     var v = view.new();
-     *     v.name = "template-example";
+     *     v.name = "template-example"; // optional but can make css selector targeting easier
      *     v.render(document.body, {
      *         &nbsp;&nbsp;template: '&lt;image src="<%=src%>">&lt;/image>&lt;span class="template-example-caption"><%=caption%>&lt;/span>',
      *         &nbsp;&nbsp;data: {
@@ -60,10 +51,8 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
      * The above code creates the following markup:
      * <pre><code>
      *     &lt;div class="view template-example">
-     *     &nbsp;&nbsp;&lt;div class="view-content">
-     *     &nbsp;&nbsp;&nbsp;&nbsp;&lt;image src="/images/example.png">&lt;/image>
-     *     &nbsp;&nbsp;&nbsp;&nbsp;&lt;span class="template-example-caption">Example&lt;/span>
-     *     &nbsp;&nbsp;&lt;/div>
+     *     &nbsp;&nbsp;&lt;image src="/images/example.png">&lt;/image>
+     *     &nbsp;&nbsp;&lt;span class="template-example-caption">Example&lt;/span>
      *     &lt;/div>
      * </code></pre>
      * @extends base
@@ -74,14 +63,7 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
              */
             destructor: function ()
             {
-                var parentNode = this.get("parentNode"),
-                    boundingNode = this.get("boundingNode");
-
-                if (parentNode && boundingNode) {
-                    //parentNode.removeChild(boundingNode);
-                    $(boundingNode).remove();
-                }
-
+                $(this.get("element")).remove();
                 base.destructor.call(this);
             },
 
@@ -127,38 +109,22 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
                     readOnly: true
                 },
                 /**
-                 * @cfg {Element} boundingNode The top level dom element of the view.
+                 * @cfg {Element} element The top level dom element of the view.
                  * @default null
                  * @readOnly
                  */
-                boundingNode: {
+                element: {
                     value: null,
                     readOnly: true
                 },
-                /**
-                 * @cfg {Element} contentNode The second level dom element of the view. The actual content of the view is in this element.
-                 * @default null
-                 * @readOnly
-                 */
-                contentNode: {
-                    value: null,
-                    readOnly: true
-                }
             },
 
             /**
-             * The tag type of the bounding dom element. This is used when the view is rendered.
+             * The tag type of the view's top level dom element. This is used when the view is rendered.
              * @property
              * @type String
              */
-            boundingTag: "div",
-
-            /**
-             * The tag type of the content dom element. This is used when the view is rendered. Set this to null in an object that inherits from view or a view instance to flatten the view box model to just one dom element.
-             * @property
-             * @type String
-             */
-            contentTag: "div",
+            tagName: "div",
 
             /**
              * The name of the view. When a view is rendered the bounding node automatically is given class names from all the objects in the view's hierarchy.
@@ -221,7 +187,7 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
                 options = options || {};
 
                 this.fire("render", { parentNode: parentNode, options: options }, function (e) {
-                    var bounding, content;
+                    var element;
 
                     parentNode = e.info.parentNode;
                     options = e.info.options;
@@ -229,42 +195,31 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
                     // If the view was previously rendered
                     if (this.get("rendered")) {
                         // Remove the view from its current parent node and append it to its new parent node
-                        $(this.get("boundingNode")).detach().appendTo(parentNode);
+                        $(this.get("element")).detach().appendTo(parentNode);
                         this.set("parentNode", parentNode, { force: true });
                     }
                     // Else this is the first time the view is being rendered
                     else {
-                        // Create the bounding and content nodes
-                        bounding = $("<" + this.boundingTag + ">");
-                        content = _.isString(this.contentTag) ? $("<" + this.contentTag + ">") : bounding;
+                        element = $("<" + this.tagName + ">");
 
                         // Add the class names that belong on this view
                         _.each(_.prototypes(this).reverse(), function (proto) {
                             var name = proto.name;
                             if (_.isString(name)) {
-                                bounding.addClass(name);
+                                element.addClass(name);
                             }
                         });
 
                         if (this.get("disabled")) {
-                            bounding.addClass("disabled");
+                            element.addClass("disabled");
                         }
                         if (!this.get("visible")) {
-                            bounding.addClass("hidden");
+                            element.addClass("hidden");
                         }
 
-                        content.addClass("view-content");
+                        element.appendTo(parentNode);
 
-                        // Add the view to the parent node
-                        if (content !== bounding) {
-                            bounding.append(content).appendTo(parentNode);
-                        }
-                        else {
-                            bounding.appendTo(parentNode);
-                        }
-
-                        this.set("boundingNode", bounding.get(0), { force: true });
-                        this.set("contentNode", content.get(0), { force: true });
+                        this.set("element", element.get(0), { force: true });
                         this.set("parentNode", parentNode, { force: true });
                         this.set("rendered", true, { force: true });
 
@@ -286,11 +241,11 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
             {
                 // If the template is a function then call it passing the template data
                 if (_.isFunction(options.template)) {
-                    $(this.get("contentNode")).html(options.template(options.data));
+                    $(this.get("element")).html(options.template(options.data));
                 }
                 // Else if the template is a string then use the utils.template function to render it
                 else if (_.isString(options.template)) {
-                    $(this.get("contentNode")).html(_.template(options.template, options.data));
+                    $(this.get("element")).html(_.template(options.template, options.data));
                 }
             }
         }),
@@ -303,8 +258,8 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
     _.each(jQueryMethods, function (methodName) {
         view[methodName] = function () {
             if (this.get("rendered")) {
-                var node = $(this.get("boundingNode"));
-                node[methodName].apply(node, arguments);
+                var element = $(this.get("element"));
+                element[methodName].apply(element, arguments);
             }
 
             return this;

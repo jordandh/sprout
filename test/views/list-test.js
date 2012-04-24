@@ -30,7 +30,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
 
-            assertSame("The view content element is not the correct type of tag", "ul", l.get("contentNode").nodeName.toLowerCase());
+            assertSame("The view content element is not the correct type of tag", "ul", l.get("element").nodeName.toLowerCase());
         },
 
         "test list.add before render": function ()
@@ -41,8 +41,8 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
             
-            assertSame("The list does not have the correct number of elements in the dom", 1, l.get("contentNode").childNodes.length);
-            assertSame("The item's content is incorrect", "Data", $("li", l.get("contentNode")).html());
+            assertSame("The list does not have the correct number of elements in the dom", 1, l.get("element").childNodes.length);
+            assertSame("The item's content is incorrect", "Data", $("li", l.get("element")).html());
         },
 
         "test list.add multiple items before render": function ()
@@ -57,9 +57,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Worf", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(2).innerHTML);
@@ -73,8 +73,8 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.add("Data");
 
-            assertSame("The list does not have the correct number of elements in the dom", 1, l.get("contentNode").childNodes.length);
-            assertSame("The item's content is incorrect", "Data", $("li", l.get("contentNode")).html());
+            assertSame("The list does not have the correct number of elements in the dom", 1, l.get("element").childNodes.length);
+            assertSame("The item's content is incorrect", "Data", $("li", l.get("element")).html());
         },
 
         "test list.add multiple items after render": function ()
@@ -89,9 +89,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
                 "Ryker"
             ]);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Worf", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(2).innerHTML);
@@ -111,9 +111,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
         },
@@ -132,9 +132,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 1, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 1, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Ryker", items.get(0).innerHTML);
         },
 
@@ -152,9 +152,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.remove("Worf");
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
         },
@@ -173,9 +173,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.remove(["Worf", "Data"]);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 1, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 1, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Ryker", items.get(0).innerHTML);
         },
 
@@ -196,9 +196,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Picard", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Beverly", items.get(1).innerHTML);
         },
@@ -215,9 +215,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Worf", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(2).innerHTML);
@@ -227,9 +227,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
                 "Beverly"
             ]);
 
-            items = $("li", l.get("contentNode"));
+            items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 2, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Picard", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Beverly", items.get(1).innerHTML);
         },
@@ -268,9 +268,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "Worf", items.get(2).innerHTML);
@@ -303,9 +303,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "Worf", items.get(2).innerHTML);
@@ -327,9 +327,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Worf", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(2).innerHTML);
@@ -343,9 +343,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
             assertSame("Ryker is not third item before sort.", "Ryker", l.at(1));
             assertSame("Worf is not second item before sort.", "Worf", l.at(2));
 
-            items = $("li", l.get("contentNode"));
+            items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "Worf", items.get(2).innerHTML);
@@ -367,9 +367,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             l.render(this.element);
 
-            var items = $("li", l.get("contentNode"));
+            var items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Worf", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(2).innerHTML);
@@ -385,9 +385,9 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
             assertSame("Ryker is not third item before sort.", "Ryker", l.at(1));
             assertSame("Worf is not second item before sort.", "Worf", l.at(2));
 
-            items = $("li", l.get("contentNode"));
+            items = $("li", l.get("element"));
 
-            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("contentNode").childNodes.length);
+            assertSame("The list does not have the correct number of elements in the dom", 3, l.get("element").childNodes.length);
             assertSame("The item's content is incorrect", "Data", items.get(0).innerHTML);
             assertSame("The item's content is incorrect", "Ryker", items.get(1).innerHTML);
             assertSame("The item's content is incorrect", "Worf", items.get(2).innerHTML);
