@@ -26,7 +26,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.render": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
 
             assertFalse("The view rendered attribute is not false before rendering.", foo.get("rendered"));
 
@@ -45,7 +45,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.render when disabled": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.set("disabled", true);
             foo.render(this.element);
 
@@ -58,7 +58,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.disabled after render": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.render(this.element);
             foo.set("disabled", true);
 
@@ -71,7 +71,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.render when not visible": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.set("visible", false);
             foo.render(this.element);
 
@@ -84,7 +84,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.visible after render": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.render(this.element);
             foo.set("visible", false);
 
@@ -97,7 +97,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.addClass": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.render(this.element);
 
             var element = $(foo.get("element"));
@@ -116,7 +116,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.destroy": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.render(this.element);
             foo.addClass("destroy-test");
 
@@ -129,7 +129,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.render after render": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.render(this.element);
             foo.addClass("after-render-test");
 
@@ -153,7 +153,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.render with template string": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.render(this.element, {
                 template: "<span>Hello</span>"
             });
@@ -169,7 +169,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.render with template string and data": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.render(this.element, {
                 template: "<span><%=msg%></span>",
                 data: {
@@ -188,7 +188,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.render with template function": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.render(this.element, {
                 template: function () {
                     return "<span>Hello Function</span>";
@@ -206,7 +206,7 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
 
         "test view.render with template function and data": function ()
         {
-            var foo = view.new();
+            var foo = view.create();
             foo.render(this.element, {
                 template: function (data) {
                     return "<span>" + data.msg + "</span>";

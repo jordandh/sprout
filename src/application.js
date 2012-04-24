@@ -12,7 +12,7 @@ define("application", ["util", "base"], function (_, base) {
         this.get("components")[component.name] = component;
 
         require([component.path], function (module) {
-            var comp = module.new();
+            var comp = module.create();
             comp.start();
             component.module = comp;
         });

@@ -204,26 +204,26 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
          * Represents the base object to inherit from. Object inheritance is done through true prototypal inheritance instead of mimicking classical inheritance.
          * One does not need to understand the details in how these two styles differ in order to use this inheritance model.
          * For more information on both inheritance styles visit http://javascript.crockford.com/prototypal.html
-         * There are two key methods on the base object used for following the prototypal inheritance model: new and extend.
-         * Calling new on the base object will return an object whose prototype points to base. Or in other words new returns an instance of base.
+         * There are two key methods on the base object used for following the prototypal inheritance model: create and extend.
+         * Calling create on the base object will return an object whose prototype points to base. Or in other words create returns an instance of base.
          * <pre><code>
-         *     var obj = base.new();
+         *     var obj = base.create();
          * </code></pre>
-         * Calling extend on the base object will return an object whose prototype points to base. This may sound identical to the new method and that is because they are identical.
+         * Calling extend on the base object will return an object whose prototype points to base. This may sound identical to the create method and that is because they are identical.
          * In prototypal inheritance you are inheriting from objects so creating and inheriting from an object are the same thing.
          * <pre><code>
          *     var animal = base.extend();
          * </code></pre>
-         * Now the extend and new methods do differ in parameters. The extend method optionally takes an object of methods and properties to add to the newly created object.
+         * Now the extend and create methods do differ in parameters. The extend method optionally takes an object of methods and properties to add to the newly created object.
          * <pre><code>
          *     var animal = base.extend({
          *         speak: function () { console.log("..."); }
          *     });
          * </code></pre>
          * The animal object now contains the speak method and all methods/properties inherited from base.
-         * An animal instance can be created by calling new on the animal object.
+         * An animal instance can be created by calling create on the animal object.
          * <pre><code>
-         *     var pet = animal.new();
+         *     var pet = animal.create();
          * </code></pre>
          * The cat object is created and its prototype points to animal and animal's prototype points to base. Or in other words the cat object is an instance of an animal object.
          *
@@ -245,7 +245,7 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
          * To call the parent's method you simply call the method on the parent object using call or apply passing in this as the context.
          * That wraps up how prototypal inheritance is used via the base object.
          * The base object provides other functionality including attributes, events, constructors/destructors, plugins, and reference counting.
-         * When an object is made using the new method its constructor method is automatically called. This method is named constructor and can be overridden by any child objects.
+         * When an object is made using the create method its constructor method is automatically called. This method is named constructor and can be overridden by any child objects.
          * When an object is destroyed the destructor method is called. This method is named destructor and can also be overridden just like any other method.
          *
          * Attributes
@@ -283,7 +283,7 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
              * @param {Object} attributes A key/value hash of atrributes to set on the object after it is created.
              * @return {Object} Returns a new instance of this object.
              */
-            new: function (attributes)
+            create: function (attributes)
             {
                 var instance = _.create(this);
                 instance.constructor.apply(instance, arguments);
@@ -394,7 +394,7 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                     var plugins = this.get("plugins");
                     
                     if (_.isUndefined(plugins[e.info.plugin.name])) {
-                        plugins[e.info.plugin.name] = e.info.plugin.new(this);
+                        plugins[e.info.plugin.name] = e.info.plugin.create(this);
                     }
                 });
             },

@@ -26,7 +26,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.render(this.element);
 
@@ -35,7 +35,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.add before render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add("Data");
 
@@ -47,7 +47,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.add multiple items before render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",
@@ -67,7 +67,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.add after render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.render(this.element);
 
@@ -79,7 +79,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.add multiple items after render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.render(this.element);
 
@@ -99,7 +99,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.remove before render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",
@@ -120,7 +120,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.remove multiple items before render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",
@@ -140,7 +140,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.remove after render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",
@@ -161,7 +161,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.remove multiple items after render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",
@@ -181,7 +181,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.reset before render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",
@@ -205,7 +205,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.reset after render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",
@@ -236,7 +236,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.sort throws an exception with no comparator": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             assertException("sort did not throw correct exception", function () {
                 l.sort();
@@ -245,7 +245,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.sortBy before render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",
@@ -278,7 +278,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.sort before render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",
@@ -313,7 +313,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.sortBy after render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",
@@ -353,7 +353,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
         "test list.sort after render": function ()
         {
-            var l = list.new();
+            var l = list.create();
 
             l.add([
                 "Data",

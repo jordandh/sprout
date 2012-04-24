@@ -10,14 +10,14 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 	
 	return {
 		"test base.constructor": function () {
-			var c = Base.new();
+			var c = Base.create();
 			assert("c is destroyed", !c.get("destroyed"));
 			assert("c does not have its own attributes property", c.hasOwnProperty("attributes"));
 			assertObject("attributes is not an object", c.attributes);
 		},
 		
 		"test base.destructor": function () {
-			var c = Base.new();
+			var c = Base.create();
 			
 			assert("c is destroyed.", !c.get("destroyed"));
 			
@@ -30,7 +30,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.fire": function () {
 			expectAsserts(2);
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.on("test", function (e) {
 				assert("foo does not equal bar", e.info.foo === "bar");
@@ -45,7 +45,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.fire async": function () {
 			expectAsserts(2);
 
-			var c = Base.new();
+			var c = Base.create();
 
 			c.after("test", function (e) {
 				assertSame("foo does not equal foobar in after handler", "bar", e.info.foo);
@@ -60,7 +60,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.before": function () {
 			expectAsserts(1);
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.before("test", function (e) {
 				assert("foo does not equal bar", e.info.foo === "bar");
@@ -72,7 +72,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.on": function () {
 			expectAsserts(1);
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.on("test", function (e) {
 				assert("foo does not equal bar", e.info.foo === "bar");
@@ -84,7 +84,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.after": function () {
 			expectAsserts(1);
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.after("test", function (e) {
 				assert("foo does not equal bar", e.info.foo === "bar");
@@ -96,7 +96,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.before preventDefault and preventedAction": function () {
 			expectAsserts(2);
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.before("test", function (e) {
 				assert("foo does not equal bar", e.info.foo === "bar");
@@ -116,7 +116,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 				assert("foo does not equal bar", e.info.foo === "bar");
 			};
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.before("test", handler);
 			
@@ -134,7 +134,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 				assert("foo does not equal bar", e.info.foo === "bar");
 			};
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.on("test", handler);
 			
@@ -152,7 +152,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 				assert("foo does not equal bar", e.info.foo === "bar");
 			};
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.after("test", handler);
 			
@@ -164,13 +164,13 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		},
 		
 		"test base.attributes default value": function () {
-			var c = Base.new();
+			var c = Base.create();
 			
 			assertFalse("attribute has incorrect value", c.get("destroyed"));
 		},
 		
 		"test base.attributes validator": function () {
-			var c = Animal.new();
+			var c = Animal.create();
 			
 			assertSame("attribute has incorrect value", "", c.get("name"));
 			
@@ -185,7 +185,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		},
 		
 		"test base.attributes readOnly": function () {
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.attributes.test = {
 				value: 1,
@@ -201,7 +201,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.attributes setter": function () {
 			expectAsserts(3);
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.attributes.test = {
 				value: 1,
@@ -217,7 +217,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		},
 		
 		"test base.attributes setter returning a value": function () {
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.attributes.test = {
 				value: 1,
@@ -233,7 +233,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		},
 		
 		"test base.attributes setter returning undefined": function () {
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.attributes.test = {
 				value: 1,
@@ -250,7 +250,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.attributes handler with <attribute name>Changed function": function () {
 			expectAsserts(5);
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo",
@@ -290,7 +290,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 				}
 			});
 			
-			var cat = Cat.new();
+			var cat = Cat.create();
 			cat.set("name", "Spot");
 			cat.set("age", 8);
 			
@@ -306,7 +306,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		},
 		
 		"test base.get": function () {
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.attributes.test = {
 				value: 1,
@@ -320,12 +320,12 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			var Zoo = Base.extend({
 				attributes: {
 					animal: {
-						value: Animal.new()
+						value: Animal.create()
 					}
 				}
 			});
 			
-			var zoo = Zoo.new();
+			var zoo = Zoo.create();
 			zoo.get("animal").set("name", "Harry");
 			
 			assertSame("attribute value is incorrect", "Harry", zoo.get("animal.name"));
@@ -335,18 +335,18 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			var Zoo = Base.extend({
 				attributes: {
 					animal: {
-						value: Animal.new()
+						value: Animal.create()
 					}
 				}
 			});
 			
-			var zoo = Zoo.new();
+			var zoo = Zoo.create();
 			
 			assertUndefined("attribute value is incorrect", zoo.get("animal.species"));
 		},
 		
 		"test base.set": function () {
-			var c = Base.new();
+			var c = Base.create();
 			
 			c.attributes.test = {
 				value: 1
@@ -370,7 +370,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			
 			var error = null;
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo"
@@ -407,7 +407,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.set before event preventDefault": function () {
 			var error = null;
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo"
@@ -440,7 +440,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			
 			var error = null;
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo"
@@ -479,7 +479,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			
 			var error = null;
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo"
@@ -518,7 +518,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			
 			var error = null;
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo"
@@ -557,7 +557,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.set generic before change event preventDefault": function () {
 			var error = null;
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo"
@@ -592,7 +592,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			
 			var error = null;
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo"
@@ -633,7 +633,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			
 			var error = null;
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo"
@@ -674,7 +674,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			
 			var error = null;
 			
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo"
@@ -719,7 +719,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		},
 		
 		"test base.set forcefully": function () {
-			var c = Base.new();
+			var c = Base.create();
 			
 			var o = {
 				name: "foo"
@@ -737,7 +737,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		
 		"test base.set on non-existant attribute": function ()
 		{
-			var c = Base.new();
+			var c = Base.create();
 			
 			assertUndefined("test attribute is not undefined", c.get("test"));
 			
@@ -748,7 +748,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 		"test base.extend isPrototypeOf": function () {
 			var Animal = Base.extend({}),
 				Snake = Animal.extend({}),
-				snake = Snake.new();
+				snake = Snake.create();
 			
 			assert("Snake is not a prototype of instance", Snake.isPrototypeOf(snake));
 			assert("Animal is not a prototype of instance", Animal.isPrototypeOf(snake));
@@ -770,7 +770,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 				}
 			});
 			
-			var snake = Snake.new();
+			var snake = Snake.create();
 			
 			assertSame("Snake constructor was not called", "reptile", snake.species);
 			assert("Animal constructor was not called", snake.alive);
@@ -800,7 +800,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 				}
 			});
 			
-			var snake = Snake.new();
+			var snake = Snake.create();
 			snake.destroy();
 			
 			assertSame("Snake destructor was not called", "dead reptile", snake.species);
@@ -822,7 +822,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 				}
 			});
 			
-			var snake = Snake.new();
+			var snake = Snake.create();
 			
 			assertSame("method return value is incorrect", "Hsss. I'm alive.", snake.talk());
 		},
@@ -842,12 +842,12 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 				}
 			});
 			
-			var snake = Snake.new();
+			var snake = Snake.create();
 			
 			assertFalse("property value is incorrect", snake.alive);
 		},
 		
-		"test base.new attributes parameter": function ()
+		"test base.create attributes parameter": function ()
 		{
 			var Animal = Base.extend({
 				attributes: {
@@ -856,7 +856,7 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 				}
 			});
 			
-			var b = Animal.new({
+			var b = Animal.create({
 				name: "Chewie",
 				age: 42
 			});

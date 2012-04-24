@@ -17,7 +17,7 @@ TestCase("data", ["model", "data"], function (model, data) {
 
 			var error = null;
 
-			var mod = foo.new();
+			var mod = foo.create();
 
 			mod.before("sync", function (e) {
 				try {
@@ -49,7 +49,7 @@ TestCase("data", ["model", "data"], function (model, data) {
 
 			var error = null;
 
-			var mod = foo.new();
+			var mod = foo.create();
 
 			mod.before("sync", function (e) {
 				try {
@@ -83,7 +83,7 @@ TestCase("data", ["model", "data"], function (model, data) {
 
 			var error = null;
 
-			var mod = foo.new();
+			var mod = foo.create();
 
 			mod.before("sync", function (e) {
 				try {
@@ -117,7 +117,7 @@ TestCase("data", ["model", "data"], function (model, data) {
 
 			var error = null;
 
-			var mod = foo.new();
+			var mod = foo.create();
 
 			mod.before("sync", function (e) {
 				try {
@@ -147,7 +147,7 @@ TestCase("data", ["model", "data"], function (model, data) {
 		"test data.sync 404": function () {
 			expectAsserts(5);
 
-			var mod = bar.new();
+			var mod = bar.create();
 
 			mod.after("sync", async(function (e) {
 				assertSame("status has incorrect value", "error", e.info.status);
@@ -165,7 +165,7 @@ TestCase("data", ["model", "data"], function (model, data) {
 		{
 			expectAsserts(2);
 
-			var mod = foo.new();
+			var mod = foo.create();
 
 			mod.before("sync", function (e) {
 				assertSame("method value is incorrect", "read", e.info.method);
@@ -182,7 +182,7 @@ TestCase("data", ["model", "data"], function (model, data) {
 
 			var error = null;
 
-			var mod = bar.new();
+			var mod = bar.create();
 
 			data.sync("read", mod, { url: "/assets/test/data-test.json" }).done(async(function (data, status, xhr) {
 				try {

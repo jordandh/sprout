@@ -54,9 +54,9 @@ define("model", ["util", "base", "data"], function (_, base, data) {
          * @param {Object} json A key/value hash of model atrributes to set on the model after it is created.
          * @return {Object} Returns a new instance of this model.
          */
-        new: function (json)
+        create: function (json)
         {
-            var instance = base.new.call(this);
+            var instance = base.create.call(this);
             if (json) {
                 instance.parse(json);
             }
@@ -128,7 +128,7 @@ define("model", ["util", "base", "data"], function (_, base, data) {
                 var attribute = this.getAttribute(name);
                 
                 if (attribute && (attribute.model || attribute.collection)) {
-                    this.set(name, (attribute.model || attribute.collection).new(value));
+                    this.set(name, (attribute.model || attribute.collection).create(value));
                 }
                 else {
                     this.set(name, value);
@@ -143,11 +143,11 @@ define("model", ["util", "base", "data"], function (_, base, data) {
         clone: function ()
         {
             // TODO: may want to do this instead (which would make this a deep copy):
-            // return Object.getPrototypeOf(this).new(this.toJSON());
+            // return Object.getPrototypeOf(this).create(this.toJSON());
             // This is not the fastest way to do it since it turns everything into JSON just to turn it back into new models.
             
-            //var clone = this.super.new();
-            var clone = Object.getPrototypeOf(this).new();
+            //var clone = this.super.create();
+            var clone = Object.getPrototypeOf(this).create();
             
             _.each(this.get(), function (value, name) {
                 // Do not copy all attributes to clone

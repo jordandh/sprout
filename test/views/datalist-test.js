@@ -50,7 +50,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
 
         "test datalist.render": function ()
         {
-            var col = animals.new([{
+            var col = animals.create([{
                     name: "Spot",
                     age: 8
                 }, {
@@ -59,7 +59,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
                 }
             ]);
 
-            var lv = datalist.new();
+            var lv = datalist.create();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -74,7 +74,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
 
         "test datalist.collection add before render": function ()
         {
-            var col = animals.new([{
+            var col = animals.create([{
                     name: "Spot",
                     age: 8
                 }, {
@@ -83,7 +83,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
                 }
             ]);
 
-            var lv = datalist.new();
+            var lv = datalist.create();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -104,7 +104,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
 
         "test datalist.collection add after render": function ()
         {
-            var col = animals.new([{
+            var col = animals.create([{
                     name: "Spot",
                     age: 8
                 }, {
@@ -113,7 +113,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
                 }
             ]);
 
-            var lv = datalist.new();
+            var lv = datalist.create();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -140,7 +140,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
 
         "test datalist.collection remove before render": function ()
         {
-            var col = animals.new([{
+            var col = animals.create([{
                     name: "Spot",
                     age: 8
                 }, {
@@ -149,7 +149,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
                 }
             ]);
 
-            var lv = datalist.new();
+            var lv = datalist.create();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -167,7 +167,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
 
         "test datalist.collection remove after render": function ()
         {
-            var col = animals.new([{
+            var col = animals.create([{
                     name: "Spot",
                     age: 8
                 }, {
@@ -176,7 +176,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
                 }
             ]);
 
-            var lv = datalist.new();
+            var lv = datalist.create();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -194,7 +194,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
 
         "test datalist.collection reset before render": function ()
         {
-            var col = animals.new([{
+            var col = animals.create([{
                     name: "Spot",
                     age: 8
                 }, {
@@ -203,7 +203,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
                 }
             ]);
 
-            var lv = datalist.new();
+            var lv = datalist.create();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -231,7 +231,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
 
         "test datalist.collection reset after render": function ()
         {
-            var col = animals.new([{
+            var col = animals.create([{
                     name: "Spot",
                     age: 8
                 }, {
@@ -240,7 +240,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
                 }
             ]);
 
-            var lv = datalist.new();
+            var lv = datalist.create();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 
@@ -268,7 +268,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
 
         "test datalist.itemController": function ()
         {
-            var col = animals.new([{
+            var col = animals.create([{
                     name: "Spot",
                     age: 8
                 }, {
@@ -277,7 +277,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
                 }
             ]);
 
-            var lv = datalist.new();
+            var lv = datalist.create();
             lv.set("collection", col);
             lv.set("itemController", animalController);
 

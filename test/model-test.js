@@ -74,9 +74,9 @@ TestCase("model", ["model"], function (model) {
 	});
 	
 	return {
-		"test model.new": function ()
+		"test model.create": function ()
 		{
-			var mod = simple.new({
+			var mod = simple.create({
 				one: 11,
 				two: 12,
 				three: 13
@@ -89,7 +89,7 @@ TestCase("model", ["model"], function (model) {
 		},
 		
 		"test model.clone on model object": function () {
-			var mod = model.new(),
+			var mod = model.create(),
 				clone = mod.clone();
 			
 			assert("cloned model is not a child of model.", model.isPrototypeOf(clone));
@@ -99,8 +99,8 @@ TestCase("model", ["model"], function (model) {
 		},
 		
 		"test model.clone on child of model object": function () {
-			var mod = foo.new(),
-				obj = model.new();
+			var mod = foo.create(),
+				obj = model.create();
 			
 			mod.set("name", "funbar");
 			mod.set("species", "vulcan");
@@ -130,7 +130,7 @@ TestCase("model", ["model"], function (model) {
 		
 		"test model.toJSON": function ()
 		{
-			var mod = foo.new(),
+			var mod = foo.create(),
 				json = mod.toJSON();
 			
 			assertObject("json is not an object.", json);
@@ -145,8 +145,8 @@ TestCase("model", ["model"], function (model) {
 		
 		"test model.toJSON with model attribute": function ()
 		{
-			var mod = foo.new(),
-				b = bar.new();
+			var mod = foo.create(),
+				b = bar.create();
 			
 			mod.set("obj", b);
 			
@@ -183,7 +183,7 @@ TestCase("model", ["model"], function (model) {
 		
 		"test model.parse": function ()
 		{
-			var mod = simple.new();
+			var mod = simple.create();
 			
 			mod.parse({
 				one: 11,
@@ -198,7 +198,7 @@ TestCase("model", ["model"], function (model) {
 		
 		"test model.parse with model attributes": function ()
 		{
-			var mod = complex.new();
+			var mod = complex.create();
 			
 			mod.parse({
 				a: {
@@ -229,14 +229,14 @@ TestCase("model", ["model"], function (model) {
 
 		"test model.isNew on new model": function ()
 		{
-			var mod = foobar.new();
+			var mod = foobar.create();
 
 			assert("model is not new", mod.isNew());
 		},
 
 		"test model.isNew on existing model": function ()
 		{
-			var mod = foobar.new({
+			var mod = foobar.create({
 				id: 1
 			});
 
@@ -245,14 +245,14 @@ TestCase("model", ["model"], function (model) {
 
 		"test model.url on new model": function ()
 		{
-			var mod = foobar.new();
+			var mod = foobar.create();
 
 			assertSame("url has incorrect value", "foobars", mod.url());
 		},
 
 		"test model.url on existing model": function ()
 		{
-			var mod = foobar.new({
+			var mod = foobar.create({
 				id: 1
 			});
 
@@ -263,7 +263,7 @@ TestCase("model", ["model"], function (model) {
 		{
 			expectAsserts(2);
 
-			var mod = foobar.new({
+			var mod = foobar.create({
 				name: "Data",
 				email: "data@starfleet.com",
 				age: 26
@@ -281,7 +281,7 @@ TestCase("model", ["model"], function (model) {
 		{
 			expectAsserts(8);
 
-			var mod = foobar.new({
+			var mod = foobar.create({
 				name: "Data",
 				email: "data@starfleet.com",
 				age: 26
@@ -313,7 +313,7 @@ TestCase("model", ["model"], function (model) {
 		{
 			expectAsserts(2);
 
-			var mod = foobar.new({
+			var mod = foobar.create({
 				name: "Worf",
 				email: "worf@starfleet.com",
 				age: 36
@@ -332,7 +332,7 @@ TestCase("model", ["model"], function (model) {
 		{
 			expectAsserts(5);
 
-			var mod = foobar.new({
+			var mod = foobar.create({
 				name: "Worf",
 				email: "worf@starfleet.com",
 				age: 36
@@ -342,7 +342,7 @@ TestCase("model", ["model"], function (model) {
 				var id = mod.get("id");
 				assertNumber("id is not a number", mod.get("id"));
 
-				var worf = foobar.new({
+				var worf = foobar.create({
 					id: id
 				});
 
@@ -361,7 +361,7 @@ TestCase("model", ["model"], function (model) {
 		{
 			expectAsserts(3);
 
-			var mod = foobar.new({
+			var mod = foobar.create({
 				name: "Data",
 				email: "data@starfleet.com",
 				age: 26
@@ -378,8 +378,7 @@ TestCase("model", ["model"], function (model) {
 		{
 			expectAsserts(7);
 
-
-			var mod = foobar.new({
+			var mod = foobar.create({
 				name: "Data",
 				email: "data@starfleet.com",
 				age: 26
@@ -410,7 +409,7 @@ TestCase("model", ["model"], function (model) {
 		{
 			expectAsserts(4);
 
-			var mod = foobar.new({
+			var mod = foobar.create({
 				name: "Worf",
 				email: "worf@starfleet.com",
 				age: 36
@@ -433,7 +432,7 @@ TestCase("model", ["model"], function (model) {
 		{
 			expectAsserts(4);
 
-			var mod = foobar.new({
+			var mod = foobar.create({
 				name: "Worf",
 				email: "worf@starfleet.com",
 				age: 36
@@ -443,7 +442,7 @@ TestCase("model", ["model"], function (model) {
 				var id = mod.get("id");
 				assertNumber("id is not a number", mod.get("id"));
 
-				var worf = foobar.new({
+				var worf = foobar.create({
 					id: id
 				});
 
@@ -461,7 +460,7 @@ TestCase("model", ["model"], function (model) {
 		{
 			expectAsserts(8);
 
-			var mod = foobar.new({
+			var mod = foobar.create({
 				name: "Data",
 				email: "data@starfleet.com",
 				age: 26

@@ -43,9 +43,9 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 			});
 		},
 		
-		"test collection.new": function ()
+		"test collection.create": function ()
 		{
-			var col = animals.new([{
+			var col = animals.create([{
 					name: "Spot",
 					age: 8
 				}, {
@@ -64,7 +64,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.count": function ()
 		{
-			var col = animals.new([{
+			var col = animals.create([{
 					name: "Spot",
 					age: 8
 				}, {
@@ -78,14 +78,14 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.at": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
-			var cat = animal.new({
+			var cat = animal.create({
 				name: "Spot",
 				age: 8
 			});
 			
-			var dog = animal.new({
+			var dog = animal.create({
 				name: "Stripe",
 				age: 10
 			});
@@ -99,11 +99,11 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.add single model": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
-			var mod = animal.new({
+			var mod = animal.create({
 				name: "Spot",
 				age: 8
 			});
@@ -119,16 +119,16 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.add multiple models": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
-			var cat = animal.new({
+			var cat = animal.create({
 				name: "Spot",
 				age: 8
 			});
 			
-			var dog = animal.new({
+			var dog = animal.create({
 				name: "Stripe",
 				age: 10
 			});
@@ -150,7 +150,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.add single json data": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
@@ -166,7 +166,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.add multiple json data": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
@@ -187,7 +187,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.reset": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
@@ -211,7 +211,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.reset with new items": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
@@ -245,23 +245,23 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.remove first item": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
-			var cat = animal.new({
+			var cat = animal.create({
 				name: "Spot",
 				age: 8
 			});
 			col.add(cat);
 			
-			var dog = animal.new({
+			var dog = animal.create({
 				name: "Stripe",
 				age: 10
 			});
 			col.add(dog);
 			
-			var cow = animal.new({
+			var cow = animal.create({
 				name: "Bessy",
 				age: 9
 			});
@@ -278,23 +278,23 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.remove middle item": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
-			var cat = animal.new({
+			var cat = animal.create({
 				name: "Spot",
 				age: 8
 			});
 			col.add(cat);
 			
-			var dog = animal.new({
+			var dog = animal.create({
 				name: "Stripe",
 				age: 10
 			});
 			col.add(dog);
 			
-			var cow = animal.new({
+			var cow = animal.create({
 				name: "Bessy",
 				age: 9
 			});
@@ -311,23 +311,23 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.remove last item": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
-			var cat = animal.new({
+			var cat = animal.create({
 				name: "Spot",
 				age: 8
 			});
 			col.add(cat);
 			
-			var dog = animal.new({
+			var dog = animal.create({
 				name: "Stripe",
 				age: 10
 			});
 			col.add(dog);
 			
-			var cow = animal.new({
+			var cow = animal.create({
 				name: "Bessy",
 				age: 9
 			});
@@ -344,29 +344,29 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.remove does nothing if item not found": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
-			var cat = animal.new({
+			var cat = animal.create({
 				name: "Spot",
 				age: 8
 			});
 			col.add(cat);
 			
-			var dog = animal.new({
+			var dog = animal.create({
 				name: "Stripe",
 				age: 10
 			});
 			col.add(dog);
 			
-			var cow = animal.new({
+			var cow = animal.create({
 				name: "Bessy",
 				age: 9
 			});
 			col.add(cow);
 			
-			var rat = animal.new({
+			var rat = animal.create({
 				name: "Fuzz",
 				age: 2
 			});
@@ -382,16 +382,16 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		},
 		
 		"test collection.toJSON": function () {
-			var col = animals.new();
+			var col = animals.create();
 			
-			var mod = animal.new({
+			var mod = animal.create({
 				id: 1,
 				name: "Spot",
 				age: 8
 			});
 			col.add(mod);
 			
-			mod = animal.new({
+			mod = animal.create({
 				id: 2,
 				name: "Stripe",
 				age: 10
@@ -413,7 +413,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		},
 		
 		"test collection.parse with collection attributes": function () {
-			var mod = zoo.new();
+			var mod = zoo.create();
 			
 			mod.parse({
 				name: "Big Zoo",
@@ -443,7 +443,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.pluck": function ()
 		{
-			var col = animals.new([{
+			var col = animals.create([{
 					name: "Spot",
 					age: 8
 				}, {
@@ -461,7 +461,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		
 		"test collection.pluck on non-existant attribute name returns all undefined values in array": function ()
 		{
-			var col = animals.new([{
+			var col = animals.create([{
 					name: "Spot",
 					age: 8
 				}, {
@@ -481,26 +481,26 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		{
 			expectAsserts(1);
 
-			var col = foobars.new();
+			var col = foobars.create();
 
 			col.fetch().done(async(function () {
 				assertSame("collection has incorrect item count", 2, col.count());
 			}));
 		},
 
-		"test collection.create with model": function ()
+		"test collection.make with model": function ()
 		{
 			expectAsserts(5);
 
-			var col = foobars.new();
+			var col = foobars.create();
 
-			var mod = foobar.new({
+			var mod = foobar.create({
 				name: "Data",
 				email: "data@starfleet.com",
 				age: 26
 			});
 
-			col.create(mod).done(async(function () {
+			col.make(mod).done(async(function () {
 				assertSame("collection has incorrect item count", 1, col.count());
 				
 				var data = col.get(0);
@@ -513,11 +513,11 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 			}));
 		},
 
-		"test collection.create with json data": function ()
+		"test collection.make with json data": function ()
 		{
 			expectAsserts(5);
 
-			var col = foobars.new();
+			var col = foobars.create();
 
 			var json = {
 				name: "Data",
@@ -525,7 +525,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 				age: 26
 			};
 
-			col.create(json).done(async(function () {
+			col.make(json).done(async(function () {
 				assertSame("collection has incorrect item count", 1, col.count());
 				
 				var data = col.get(0);
@@ -540,11 +540,11 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 
 		"test collection removes new model after it is deleted": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
-			var cat = animal.new({
+			var cat = animal.create({
 				name: "Spot",
 				age: 8
 			});
@@ -561,7 +561,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		{
 			expectAsserts(3);
 
-			var col = foobars.new();
+			var col = foobars.create();
 
 			var json = {
 				name: "Data",
@@ -571,7 +571,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
-			col.create(json).done(async(function () {
+			col.make(json).done(async(function () {
 				assertSame("collection count is incorrect before delete.", 1, col.count());
 
 				var data = col.get(0);
@@ -585,7 +585,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		{
 			expectAsserts(3);
 
-			var col = foobars.new();
+			var col = foobars.create();
 
 			var json = {
 				name: "Data",
@@ -595,7 +595,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 			
 			assertSame("collection count is incorrect.", 0, col.count());
 			
-			col.create(json).done(async(function () {
+			col.make(json).done(async(function () {
 				assertSame("collection count is incorrect before delete.", 1, col.count());
 
 				var data = col.get(0);
@@ -609,7 +609,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 		{
 			expectAsserts(8);
 
-			var col = animals.new();
+			var col = animals.create();
 
 			col.after("error", async(function (e) {
 				assertSame("event name is incorrect", "error", e.name);
@@ -628,7 +628,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 
 		"test collection.sort throws an exception with no comparator": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 
 			assertException("sort did not throw correct exception", function () {
 				col.sort();
@@ -637,21 +637,21 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 
 		"test collection.sort": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
-			var cat = animal.new({
+			var cat = animal.create({
 				name: "Spot",
 				age: 8
 			});
 			col.add(cat);
 			
-			var dog = animal.new({
+			var dog = animal.create({
 				name: "Stripe",
 				age: 10
 			});
 			col.add(dog);
 			
-			var cow = animal.new({
+			var cow = animal.create({
 				name: "Bessy",
 				age: 9
 			});
@@ -673,21 +673,21 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 
 		"test collection.add on sorted array": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
-			var cow = animal.new({
+			var cow = animal.create({
 				name: "Bessy",
 				age: 9
 			});
 			col.add(cow);
 
-			var cat = animal.new({
+			var cat = animal.create({
 				name: "Spot",
 				age: 8
 			});
 			col.add(cat);
 			
-			var dog = animal.new({
+			var dog = animal.create({
 				name: "Stripe",
 				age: 10
 			});
@@ -701,7 +701,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 				return item.get("name");
 			};
 
-			var rat = animal.new({
+			var rat = animal.create({
 				name: "Rodney",
 				age: 1
 			});
@@ -715,21 +715,21 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 
 		"test collection.sortBy": function ()
 		{
-			var col = animals.new();
+			var col = animals.create();
 			
-			var cat = animal.new({
+			var cat = animal.create({
 				name: "Spot",
 				age: 8
 			});
 			col.add(cat);
 			
-			var dog = animal.new({
+			var dog = animal.create({
 				name: "Stripe",
 				age: 10
 			});
 			col.add(dog);
 			
-			var cow = animal.new({
+			var cow = animal.create({
 				name: "Bessy",
 				age: 9
 			});
@@ -753,7 +753,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 
 		"test collection.getById returns model after it is added": function ()
 		{
-			var col = animals.new([{
+			var col = animals.create([{
 					id: "A",
 					name: "Spot",
 					age: 8
@@ -775,7 +775,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 
 		"test collection.getById returns undefined for ids not in collection": function ()
 		{
-			var col = animals.new([{
+			var col = animals.create([{
 					id: "A",
 					name: "Spot",
 					age: 8
@@ -800,7 +800,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 
 		"test collection.getById returns undefined after model is removed": function ()
 		{
-			var col = animals.new([{
+			var col = animals.create([{
 					id: "A",
 					name: "Spot",
 					age: 8
@@ -826,7 +826,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 
 		"test collection.getById returns undefined after reset": function ()
 		{
-			var col = animals.new([{
+			var col = animals.create([{
 					id: "A",
 					name: "Spot",
 					age: 8

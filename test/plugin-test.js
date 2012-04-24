@@ -31,14 +31,14 @@ TestCase("plugin", ["base", "plugin"], function (Base, Plugin) {
 		},
 		
 		"test plugin.name": function () {
-			var o = Base.new();
+			var o = Base.create();
 			o.plug(this.TestPlugin);
 			
 			assertObject("plugin name not used correctly", o.get("plugins").TestPlugin);
 		},
 		
 		"test plugin.attachMembers": function () {
-			var o = Base.new();
+			var o = Base.create();
 			o.plug(this.TestPlugin);
 			
 			assertSame("foo member was not attached", 1, o.foo);
@@ -46,7 +46,7 @@ TestCase("plugin", ["base", "plugin"], function (Base, Plugin) {
 		},
 		
 		"test plugin.attachAttributes": function () {
-			var o = Base.new();
+			var o = Base.create();
 			o.plug(this.TestPlugin);
 			
 			assertSame("foo member was not attached", 1, o.get("foo"));
@@ -54,7 +54,7 @@ TestCase("plugin", ["base", "plugin"], function (Base, Plugin) {
 		},
 		
 		"test plugin.detachMembers": function () {
-			var o = Base.new();
+			var o = Base.create();
 			o.plug(this.TestPlugin);
 			
 			assertSame("foo member was not attached", 1, o.foo);
@@ -67,7 +67,7 @@ TestCase("plugin", ["base", "plugin"], function (Base, Plugin) {
 		},
 		
 		"test plugin.detachAttributes": function () {
-			var o = Base.new();
+			var o = Base.create();
 			o.plug(this.TestPlugin);
 			
 			assertSame("foo member was not attached", 1, o.get("foo"));
@@ -80,7 +80,7 @@ TestCase("plugin", ["base", "plugin"], function (Base, Plugin) {
 		},
 		
 		"test plugin detaches when unplugged": function () {
-			var o = Base.new();
+			var o = Base.create();
 			o.plug(this.TestPlugin);
 			
 			assertSame("foo member was not attached", 1, o.foo);
@@ -97,7 +97,7 @@ TestCase("plugin", ["base", "plugin"], function (Base, Plugin) {
 		},
 		
 		"test plugin is destroyed when host is destroyed": function () {
-			var o = Base.new();
+			var o = Base.create();
 			o.plug(this.TestPlugin);
 			
 			var plugin = o.get("plugins").TestPlugin;

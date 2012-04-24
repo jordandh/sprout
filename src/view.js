@@ -29,7 +29,7 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
      * </code></pre>
      * The above example creates a button view whose tag name is button. When rendered it sets the text of the button using its label attribute.
      * <pre><code>
-     *     var btn = button.new({ label: "Hello" });
+     *     var btn = button.create({ label: "Hello" });
      *     btn.render(document.body);
      * </code></pre>
      * The above code creates a button view and renders it to the body. The markup created is as follows:
@@ -38,7 +38,7 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
      * </code></pre>
      * If inheriting from view is a little more than you need then the view object can be used to render templates.
      * <pre><code>
-     *     var v = view.new();
+     *     var v = view.create();
      *     v.name = "template-example"; // optional but can make css selector targeting easier
      *     v.render(document.body, {
      *         &nbsp;&nbsp;template: '&lt;image src="<%=src%>">&lt;/image>&lt;span class="template-example-caption"><%=caption%>&lt;/span>',

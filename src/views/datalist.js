@@ -11,7 +11,7 @@ define("views/datalist", ["util", "views/list"], function (_, list) {
     function addItem (itemController, model, at)
     {
         // Create a controller for the item and set its model
-        var item = itemController.new();
+        var item = itemController.create();
         item.set("model", model);
 
         // Add the controller to the list view in the correct position

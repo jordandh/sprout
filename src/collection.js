@@ -100,9 +100,9 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
              * @param {Object} json An array of models or model json data to add to the collection after it is created.
              * @return {Object} Returns a new instance of this collection.
              */
-            new: function (json)
+            create: function (json)
             {
-                var instance = base.new.call(this);
+                var instance = base.create.call(this);
                 if (json) {
                     instance.parse(json);
                 }
@@ -222,7 +222,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
                     var id;
 
                     if (!model.isPrototypeOf(item)) {
-                        item = this.model.new(item);
+                        item = this.model.create(item);
                     }
 
                     item.after("sync", afterItemSynced, this);
@@ -332,8 +332,8 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
              * A convenience method for creating a model, saving it to its resource, and once saved adding it to this collection.
              * This method is equivalent to doing this:
              * <pre><code>
-             *     var col = foobars.new(),
-             *         mod = foobar.new({ name: "Data" });
+             *     var col = foobars.create(),
+             *         mod = foobar.create({ name: "Data" });
              *
              *     mod.save().done(function () {
              *         col.add(mod);
@@ -346,10 +346,10 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
              * {Boolean} silent false If true then no event is fired for adding the item. This is false by default.
              * {Number} at undefined The index to insert the items at in the collection. By default the item is added to the end of the collection.
              */
-            create: function (mod, options)
+            make: function (mod, options)
             {
                 if (!model.isPrototypeOf(mod)) {
-                    mod = this.model.new(mod);
+                    mod = this.model.create(mod);
                 }
 
                 return mod.save(options).done(_.bind(this.add, this, mod, options));
