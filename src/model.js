@@ -198,9 +198,11 @@ define("model", ["util", "base", "data"], function (_, base, data) {
         /**
          * Saves a model's attributes to its resource. If the model is new then the model is updated on its resource.
          * If the model is not new then the model is created on its resource.
+         * @param {Object} attributes Attributes to set on the model. Use options.wait to set the attributes only after the model has been saved to its resource.
          * @param {Object} options Equivalent to the option parameter for jQuery's ajax function.
          * @options
          * {String} url model.url() Overrides the url used to sync the model with its resource. The default url is model.url().
+         * {Boolean} wait false If true then any attributes passed in are not set until after the model has been saved to its resource.
          * @return {Promise} Returns a promise for the save request.
          */
         save: function (attributes, options)
