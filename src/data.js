@@ -77,7 +77,7 @@ define("data", ["util", "dom"], function (_, $) {
 			// When sending data to save or create send as JSON
 			if (method === "create" || method === "update") {
 				options.contentType = "application/json";
-				options.data = JSON.stringify(model.toJSON());
+				options.data = JSON.stringify(options.data || model.toJSON());
 			}
 			
 			// Don't process data for GET requests

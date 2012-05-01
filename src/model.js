@@ -203,9 +203,39 @@ define("model", ["util", "base", "data"], function (_, base, data) {
          * {String} url model.url() Overrides the url used to sync the model with its resource. The default url is model.url().
          * @return {Promise} Returns a promise for the save request.
          */
-        save: function (options)
+        save: function (attributes, options)
         {
-            return (this.sync || data.sync)(this.isNew() ? "create" : "update", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
+            var promise;
+
+            options = options || {};
+
+            // If attributes are being set on this save
+            if (attributes) {
+                // If the attributes should be set only after the server returns with a success
+                if (options.wait) {
+                    // Then send over the model's current state with the new attribute values
+                    options.data = _.extend(this.toJSON(), attributes);
+                }
+                else {
+                    // Else just set the attribtues on the model now
+                    this.set(attributes);
+                }
+            }
+
+            promise = (this.sync || data.sync)(this.isNew() ? "create" : "update", this, options).fail(_.bind(onSyncFailed, this));
+            promise.done(_.bind(function (json) {
+                // If the attributes should be set after the server returns with a success
+                if (options.wait && attributes) {
+                    // Then change the results from the server to include the attributes
+                    json = _.extend(attributes, json);
+                }
+
+                this.parse(json);
+            }, this));
+
+            return promise;
+
+            //return (this.sync || data.sync)(this.isNew() ? "create" : "update", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
         },
         
         /**

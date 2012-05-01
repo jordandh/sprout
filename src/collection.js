@@ -352,7 +352,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
                     mod = this.model.create(mod);
                 }
 
-                return mod.save(options).done(_.bind(this.add, this, mod, options));
+                return mod.save(null, options).done(_.bind(this.add, this, mod, options));
             },
 
             /**
