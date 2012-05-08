@@ -344,6 +344,24 @@ TestCase("base", ["underscore", "base"], function (_, Base) {
 			
 			assertUndefined("attribute value is incorrect", zoo.get("animal.species"));
 		},
+
+		"test base.get nonexistent attribute calls miss": function () {
+			var Cat = Animal.extend({
+				miss: function (name) {
+					return "Missing Attribute";
+				}
+			});
+			
+			var cat = Cat.create();
+			
+			assertSame("get did not receive its value from miss method", "Missing Attribute", cat.get("missing"));
+		},
+
+		"test base.get nonexistent attribute": function () {
+			var animal = Animal.create();
+			
+			assertUndefined("get returned incorrect value", animal.get("missing"));
+		},
 		
 		"test base.set": function () {
 			var c = Base.create();

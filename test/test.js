@@ -83,6 +83,8 @@
         "assets/test/data-test.js",
         "assets/test/model-test.js",
         "assets/test/collection-test.js",
+        "assets/test/database-test.js",
+        "assets/test/viewmodel-test.js",
         "assets/test/pubsub-test.js",
         "assets/test/view-test.js",
         "assets/test/views/list-test.js",

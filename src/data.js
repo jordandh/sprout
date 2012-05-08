@@ -12,7 +12,7 @@ define("data", ["util", "dom"], function (_, $) {
 	};
 
     /**
-     * Handler for a successful transaction.
+     * Handler for an unsuccessful transaction.
      * @private
      * @param {Object} e The event object passed to event action functions.
      * @param {Function} fireAfter The fire after function used in firing async events.

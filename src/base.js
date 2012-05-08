@@ -133,6 +133,13 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
             }
         },
         /*
+         * hasAttribute
+         */
+        hasAttribute = function (name)
+        {
+            return this.values.hasOwnProperty(name) || this.getAttribute(name);
+        },
+        /*
          * setAttribute
          */
         setAttribute = function (name, value, options)
@@ -478,8 +485,16 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                             return this.at(parseInt(name, 10));
                         }
                     }
+                    // TODO: call this.miss for attributes that do not exist
                     else {
-                        return getValue.call(this, name);
+                        value = getValue.call(this, name);
+
+                        if (_.isUndefined(value) && _.isFunction(this.miss) && !hasAttribute.call(this, name)) {
+                            return this.miss(name);
+                        }
+
+                        return value;
+                        //return getValue.call(this, name);
                     }
                 }
             },
