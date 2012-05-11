@@ -37,6 +37,10 @@ define("database", ["util", "dom", "base", "collection"], function (_, $, base, 
         fireAfter();
     }
 
+    /**
+     * @class database
+     * @extends base
+     */
     var database = base.extend({
             /**
              * Initializes the database.
@@ -68,6 +72,13 @@ define("database", ["util", "dom", "base", "collection"], function (_, $, base, 
                 return col;
             },
 
+            /**
+             * Override to parse new data. The viewmodel should fill itself out at this point. By parsing the json data from the new data the viewmodel can determine what models to add to itself.
+             * @param {Object} payload A JSON object containing the data from the request.
+             * @param {Object} viewModel The viewmodel requesting the data.
+             * @param {String} url The url for the request.
+             * @return {Object} Returns the json data from the payload that belongs to the viewmodel.
+             */
             parse: function (payload, viewModel, url)
             {
                 var expires = viewModel.expires,
@@ -100,6 +111,18 @@ define("database", ["util", "dom", "base", "collection"], function (_, $, base, 
                 return viewModelData;
             },
 
+            /**
+             * Carries out a read transaction for a viewmodel. AJAX is used to communicate with the server resource.
+             * A sync event is fired on behalf of the viewmodel and a promise object is returned for handling success and fail scenarios.
+             * Success callbacks are passed three arguments. The first argument is the response data.
+             * The second argument is the status text. The third argument is the jQuery xhr object.
+             * Failed callbacks are passed three arguments as well. The first argument is the jQuery xhr object.
+             * The second argument is the status text which can be "timeout", "error", "abort", or "parsererror".
+             * The third argument is the error thrown; when an HTTP error occurs, errorThrown receives the textual portion of the HTTP status, such as "Not Found" or "Internal Server Error."
+             * @param {Object} viewModel The viewmodel requesting the data.
+             * @param {Object} options (Optional) Equivalent to the option parameter for jQuery's ajax function.
+             * @return {Promise} Returns a promise for the sync transaction.
+             */
             sync: function (viewModel, options)
             {
                 var expires = viewModel.expires,
@@ -135,9 +158,14 @@ define("database", ["util", "dom", "base", "collection"], function (_, $, base, 
         }),
         databases = [];
 
+    /**
+     * @class dbms
+     * Provides functionality for accessing databases.
+     * @singleton
+     */
     return {
         /**
-         * The name of the default database. This is used by viewModels that do not have their db attribute set.
+         * The name of the default database. This is used by viewmodels that do not have their db attribute set.
          * @property
          * @type String
          */

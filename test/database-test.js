@@ -1,4 +1,4 @@
-TestCase("database", ["viewmodel", "database"], function (viewModel, database) {
+TestCase("database", ["viewmodel", "database"], function (viewModel, dbms) {
     var foo = viewModel.extend({
         rootUrl: "/assets/test/database-test.json",
         expires: 30 * 60 * 1000
@@ -11,11 +11,11 @@ TestCase("database", ["viewmodel", "database"], function (viewModel, database) {
     
     return {
         "test database.get": function () {
-            var db = database.get("test-get");
+            var db = dbms.get("test-get");
             
             assertObject("get did not create a database", db);
 
-            var db2 = database.get("test-get");
+            var db2 = dbms.get("test-get");
 
             assertObject("get did not return a database", db);
             assertSame("get did not return same database", db, db2);
@@ -26,7 +26,7 @@ TestCase("database", ["viewmodel", "database"], function (viewModel, database) {
 
             var error = null;
 
-            var db = database.get("test-sync"),
+            var db = dbms.get("test-sync"),
                 vm = foo.create();
 
             vm.before("sync", function (e) {
@@ -58,7 +58,7 @@ TestCase("database", ["viewmodel", "database"], function (viewModel, database) {
 
             var error = null;
 
-            var db = database.get("test-sync"),
+            var db = dbms.get("test-sync"),
                 vm = foo.create();
 
             db.sync(vm).done(async(function (data, status) {
@@ -85,7 +85,7 @@ TestCase("database", ["viewmodel", "database"], function (viewModel, database) {
                 expires: 0
             });
 
-            var db = database.get("test-sync"),
+            var db = dbms.get("test-sync"),
                 vm = foobar.create();
 
             db.sync(vm).done(async(function (data, status) {
@@ -105,7 +105,7 @@ TestCase("database", ["viewmodel", "database"], function (viewModel, database) {
                 rootUrl: "/assets/test/database-test.json?cb=test-no-expires"
             });
 
-            var db = database.get("test-sync"),
+            var db = dbms.get("test-sync"),
                 vm = foobar.create();
 
             db.sync(vm).done(async(function (data, status) {
@@ -128,7 +128,7 @@ TestCase("database", ["viewmodel", "database"], function (viewModel, database) {
                 expires: 5 * 1000
             });
 
-            var db = database.get("test-sync"),
+            var db = dbms.get("test-sync"),
                 vm = foobar.create(),
                 syncCount = 0;
 
@@ -171,7 +171,7 @@ TestCase("database", ["viewmodel", "database"], function (viewModel, database) {
                 expires: 30 * 60 * 1000
             });
 
-            var db = database.get("test-sync"),
+            var db = dbms.get("test-sync"),
                 vm = foobar.create();
 
             vm.after("sync", async(function (e) {
@@ -194,7 +194,7 @@ TestCase("database", ["viewmodel", "database"], function (viewModel, database) {
                 expires: 30 * 60 * 1000
             });
 
-            var db = database.get("test-sync"),
+            var db = dbms.get("test-sync"),
                 vm = foobar.create();
 
             vm.before("sync", function (e) {
@@ -212,7 +212,7 @@ TestCase("database", ["viewmodel", "database"], function (viewModel, database) {
 
             var error = null;
 
-            var db = database.get("test-sync"),
+            var db = dbms.get("test-sync"),
                 vm = bar.create();
 
             db.sync(vm, { url: "/assets/test/database-url-override-test.json" }).done(async(function (data, status) {
