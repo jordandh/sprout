@@ -22,7 +22,8 @@ define("viewmodel", ["util", "base", "database"], function (_, base, database) {
      */
     function getUrlValue (match, name)
     {
-        return this.get(name) || match;
+        var value = this.get(name);
+        return _.isUndefined(value) ? match : value;
     }
 
     return base.extend({

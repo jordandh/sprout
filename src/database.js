@@ -1,4 +1,4 @@
-define("viewModel", ["util", "dom", "base", "collection"], function (_, $, base, collection) {
+define("database", ["util", "dom", "base", "collection"], function (_, $, base, collection) {
     "use strict";
 
     /**
@@ -28,36 +28,10 @@ define("viewModel", ["util", "dom", "base", "collection"], function (_, $, base,
      * @param {Function} fireAfter The fire after function used in firing async events.
      * @param {Object} payload The data from the request.
      */
-    function onAjaxSuccess (e, deferred, fireAfter, payload)
+    function onAjaxSuccess (e, deferred, fireAfter, payload, status, xhr)
     {
-        var expires = e.src.expires,
-            viewModelData = payload.data;
-
-        // Put the models in the tables
-        _.each(payload.tables, function (models, tableName) {
-            var col = this.get(tableName);
-
-            _.each(models, function (modelData) {
-                // Update an existing model otherwise add as a new model
-                var mod = col.getById(modelData.id);
-                if (mod) {
-                    mod.parse(modelData);
-                }
-                else {
-                    col.add(modelData);
-                }
-            }, this);
-        }, this);
-
-        // Cache the data
-        if (_.isNumber(expires) && expires > 0) {
-            this.cache[e.info.options.url] = {
-                data: viewModelData,
-                time: new Date()
-            };
-        }
-
-        deferred.resolve(viewModelData);
+        var viewModelData = this.parse(payload, e.src, e.info.options.url);
+        deferred.resolve(viewModelData, status, xhr);
 
         e.info.status = "success";
         fireAfter();
@@ -94,10 +68,43 @@ define("viewModel", ["util", "dom", "base", "collection"], function (_, $, base,
                 return col;
             },
 
+            parse: function (payload, viewModel, url)
+            {
+                var expires = viewModel.expires,
+                    viewModelData = payload.data;
+
+                // Put the models in the tables
+                _.each(payload.tables, function (models, tableName) {
+                    var col = this.get(tableName);
+
+                    _.each(models, function (modelData) {
+                        // Update an existing model otherwise add as a new model
+                        var mod = col.getById(modelData.id);
+                        if (mod) {
+                            mod.parse(modelData);
+                        }
+                        else {
+                            col.add(modelData);
+                        }
+                    }, this);
+                }, this);
+
+                // Cache the data
+                if (!_.isNumber(expires) || expires > 0) {
+                    this.cache[url] = {
+                        data: viewModelData,
+                        time: new Date()
+                    };
+                }
+
+                return viewModelData;
+            },
+
             sync: function (viewModel, options)
             {
                 var expires = viewModel.expires,
                     deferred = $.Deferred(),
+                    db = this,
                     cachedData;
                 
                 options = options || {};
@@ -108,16 +115,16 @@ define("viewModel", ["util", "dom", "base", "collection"], function (_, $, base,
                     options.url = viewModel.url();
                 }
 
-                cachedData = this.cache(options.url);
+                cachedData = this.cache[options.url];
 
                 // If the data is cached and it never expires or it hasn't expired
                 if (!_.isUndefined(cachedData) && (!_.isNumber(expires) || new Date() - cachedData.time < expires)) {
-                    deferred.resolve(cachedData.data);
+                    deferred.resolve(cachedData.data, "success", null);
                 }
                 else {
                     // Fire the sync event as an async event
                     viewModel.fire("sync", { options: options }, function (e, fireAfter) {
-                        $.ajax(e.info.options).done(_.bind(onAjaxSuccess, null, e, deferred, fireAfter)).fail(_.bind(onAjaxError, null, e, deferred, fireAfter));
+                        $.ajax(e.info.options).done(_.bind(onAjaxSuccess, db, e, deferred, fireAfter)).fail(_.bind(onAjaxError, db, e, deferred, fireAfter));
                     }, /* Prevented Action */ function (e) {
                         deferred.reject(null, "abort", null);
                     }, true);
