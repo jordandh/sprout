@@ -1,4 +1,4 @@
-TestCase("viewmodel", ["viewmodel", "database"], function (viewModel, database) {
+TestCase("viewmodel", ["util", "viewmodel", "database"], function (_, viewModel, database) {
     var foo = viewModel.extend({
         rootUrl: "/assets/test/viewmodel-test.json",
         expires: 30 * 60 * 1000,
@@ -70,7 +70,7 @@ TestCase("viewmodel", ["viewmodel", "database"], function (viewModel, database) 
 
             vm.fetch({ url: "/assets/test/does-not-exist-test" }).fail(async(function (xhr, status, error) {
                 assertSame("status value is incorrect.", "error", status);
-                assertSame("error value is incorrect.", "Not Found", error);
+                assertSame("error value is incorrect.", "Not Found", _.trim(error));
                 assertObject("xhr is not an object.", xhr);
             }));
         },
@@ -91,7 +91,7 @@ TestCase("viewmodel", ["viewmodel", "database"], function (viewModel, database) 
 
             vm.fetch({ url: "/assets/test/does-not-exist-test" }).fail(async(function (xhr, status, error) {
                 assertSame("status value is incorrect.", "error", status);
-                assertSame("error value is incorrect.", "Not Found", error);
+                assertSame("error value is incorrect.", "Not Found", _.trim(error));
                 assertObject("xhr is not an object.", xhr);
             }));
         }

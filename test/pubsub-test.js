@@ -1,4 +1,4 @@
-TestCase("pubsub", ["underscore", "pubsub"], function (_, pubsub) {
+TestCase("pubsub", ["util", "pubsub"], function (_, pubsub) {
     return {
         "test pubsub.subscribe": function ()
         {

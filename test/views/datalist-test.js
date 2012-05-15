@@ -68,8 +68,8 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
             var items = $("li", lv.get("element"));
 
             assertSame("The list does not have the correct number of elements in the dom", 2, lv.get("element").childNodes.length);
-            assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
+            assertSame("The item's content is incorrect", "<span>spot is 8 years old.</span>", items.get(0).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>stripe is 10 years old.</span>", items.get(1).innerHTML.toLowerCase());
         },
 
         "test datalist.collection add before render": function ()
@@ -97,9 +97,9 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
             var items = $("li", lv.get("element"));
 
             assertSame("The list does not have the correct number of elements in the dom", 3, lv.get("element").childNodes.length);
-            assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Dot is 2 years old.</span>", items.get(2).innerHTML);
+            assertSame("The item's content is incorrect", "<span>spot is 8 years old.</span>", items.get(0).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>stripe is 10 years old.</span>", items.get(1).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>dot is 2 years old.</span>", items.get(2).innerHTML.toLowerCase());
         },
 
         "test datalist.collection add after render": function ()
@@ -122,8 +122,8 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
             var items = $("li", lv.get("element"));
 
             assertSame("The list does not have the correct number of elements in the dom", 2, lv.get("element").childNodes.length);
-            assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
+            assertSame("The item's content is incorrect", "<span>spot is 8 years old.</span>", items.get(0).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>stripe is 10 years old.</span>", items.get(1).innerHTML.toLowerCase());
 
             col.add({
                 name: "Dot",
@@ -133,9 +133,9 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
             items = $("li", lv.get("element"));
 
             assertSame("The list does not have the correct number of elements in the dom", 3, lv.get("element").childNodes.length);
-            assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Dot is 2 years old.</span>", items.get(2).innerHTML);
+            assertSame("The item's content is incorrect", "<span>spot is 8 years old.</span>", items.get(0).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>stripe is 10 years old.</span>", items.get(1).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>dot is 2 years old.</span>", items.get(2).innerHTML.toLowerCase());
         },
 
         "test datalist.collection remove before render": function ()
@@ -162,7 +162,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
             var items = $("li", lv.get("element"));
 
             assertSame("The list does not have the correct number of elements in the dom", 1, lv.get("element").childNodes.length);
-            assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(0).innerHTML);
+            assertSame("The item's content is incorrect", "<span>stripe is 10 years old.</span>", items.get(0).innerHTML.toLowerCase());
         },
 
         "test datalist.collection remove after render": function ()
@@ -189,7 +189,7 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
             var items = $("li", lv.get("element"));
 
             assertSame("The list does not have the correct number of elements in the dom", 1, lv.get("element").childNodes.length);
-            assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(0).innerHTML);
+            assertSame("The item's content is incorrect", "<span>stripe is 10 years old.</span>", items.get(0).innerHTML.toLowerCase());
         },
 
         "test datalist.collection reset before render": function ()
@@ -224,9 +224,9 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
             var items = $("li", lv.get("element"));
 
             assertSame("The list does not have the correct number of elements in the dom", 3, lv.get("element").childNodes.length);
-            assertSame("The item's content is incorrect", "<span>Dot is 2 years old.</span>", items.get(0).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Pixel is 4 years old.</span>", items.get(1).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Voxel is 8 years old.</span>", items.get(2).innerHTML);
+            assertSame("The item's content is incorrect", "<span>dot is 2 years old.</span>", items.get(0).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>pixel is 4 years old.</span>", items.get(1).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>voxel is 8 years old.</span>", items.get(2).innerHTML.toLowerCase());
         },
 
         "test datalist.collection reset after render": function ()
@@ -261,9 +261,9 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
             var items = $("li", lv.get("element"));
 
             assertSame("The list does not have the correct number of elements in the dom", 3, lv.get("element").childNodes.length);
-            assertSame("The item's content is incorrect", "<span>Dot is 2 years old.</span>", items.get(0).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Pixel is 4 years old.</span>", items.get(1).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Voxel is 8 years old.</span>", items.get(2).innerHTML);
+            assertSame("The item's content is incorrect", "<span>dot is 2 years old.</span>", items.get(0).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>pixel is 4 years old.</span>", items.get(1).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>voxel is 8 years old.</span>", items.get(2).innerHTML.toLowerCase());
         },
 
         "test datalist.itemController": function ()
@@ -286,16 +286,16 @@ TestCase("views/datalist", ["util", "dom", "model", "collection", "viewcontrolle
             var items = $("li", lv.get("element"));
 
             assertSame("The list does not have the correct number of elements in the dom", 2, lv.get("element").childNodes.length);
-            assertSame("The item's content is incorrect", "<span>Spot is 8 years old.</span>", items.get(0).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Stripe is 10 years old.</span>", items.get(1).innerHTML);
+            assertSame("The item's content is incorrect", "<span>spot is 8 years old.</span>", items.get(0).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>stripe is 10 years old.</span>", items.get(1).innerHTML.toLowerCase());
 
             lv.set("itemController", shortController);
 
             items = $("li", lv.get("element"));
 
             assertSame("The list does not have the correct number of elements in the dom", 2, lv.get("element").childNodes.length);
-            assertSame("The item's content is incorrect", "<span>Spot [8]</span>", items.get(0).innerHTML);
-            assertSame("The item's content is incorrect", "<span>Stripe [10]</span>", items.get(1).innerHTML);
+            assertSame("The item's content is incorrect", "<span>spot [8]</span>", items.get(0).innerHTML.toLowerCase());
+            assertSame("The item's content is incorrect", "<span>stripe [10]</span>", items.get(1).innerHTML.toLowerCase());
         }
     };
 });

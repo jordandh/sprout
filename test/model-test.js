@@ -1,4 +1,4 @@
-TestCase("model", ["model"], function (model) {
+TestCase("model", ["util", "model"], function (_, model) {
 	var foo = model.extend({
 		attributes: {
 			name: {
@@ -273,7 +273,7 @@ TestCase("model", ["model"], function (model) {
 				assertNumber("id is not a number", mod.get("id"));
 				assertFalse("model is still new", mod.isNew());
 
-				mod.delete();
+				mod.erase();
 			}));
 		},
 
@@ -304,7 +304,7 @@ TestCase("model", ["model"], function (model) {
 					assertSame("email has incorrect value", "lore@starfleet.com", mod.get("email"));
 					assertSame("age has incorrect value", 27, mod.get("age"));
 
-					mod.delete();
+					mod.erase();
 				}));
 			}));
 		},
@@ -331,7 +331,7 @@ TestCase("model", ["model"], function (model) {
 				assertSame("email has incorrect value.", "lore@android.com", mod.get("email"));
 				assertSame("age has incorrect value.", 27, mod.get("age"));
 
-				mod.delete();
+				mod.erase();
 			}));
 
 			assertSame("name has incorrect value.", "Lore", mod.get("name"));
@@ -361,7 +361,7 @@ TestCase("model", ["model"], function (model) {
 				assertSame("email has incorrect value.", "lore@android.com", mod.get("email"));
 				assertSame("age has incorrect value.", 27, mod.get("age"));
 
-				mod.delete();
+				mod.erase();
 			}));
 
 			assertSame("name has incorrect value.", "Data", mod.get("name"));
@@ -369,7 +369,7 @@ TestCase("model", ["model"], function (model) {
 			assertSame("age has incorrect value.", 26, mod.get("age"));
 		},
 
-		"test model.delete": function ()
+		"test model.erase": function ()
 		{
 			expectAsserts(2);
 
@@ -382,7 +382,7 @@ TestCase("model", ["model"], function (model) {
 			mod.save().done(async(function () {
 				assertNumber("id is not a number", mod.get("id"));
 
-				mod.delete().done(async(function () {
+				mod.erase().done(async(function () {
 					assertNumber("id is not a number", mod.get("id"));
 				}));
 			}));
@@ -412,7 +412,7 @@ TestCase("model", ["model"], function (model) {
 					assertSame("email has incorrect value", "worf@starfleet.com", worf.get("email"));
 					assertSame("age has incorrect value", 36, worf.get("age"));
 
-					worf.delete();
+					worf.erase();
 				}));
 			}));
 		},
@@ -429,7 +429,7 @@ TestCase("model", ["model"], function (model) {
 
 			mod.save(null, { url: "/assets/test/does-not-exist-test" }).fail(async(function (xhr, status, error) {
 				assertSame("status value is incorrect.", "error", status);
-				assertSame("error value is incorrect.", "Not Found", error);
+				assertSame("error value is incorrect.", "Not Found", _.trim(error));
 				assertObject("xhr is not an object.", xhr);
 			}));
 		},
@@ -457,10 +457,10 @@ TestCase("model", ["model"], function (model) {
 
 				mod.save(null, { url: "/assets/test/does-not-exist-test" }).fail(async(function (xhr, status, error) {
 					assertSame("status value is incorrect.", "error", status);
-					assertSame("error value is incorrect.", "Not Found", error);
+					assertSame("error value is incorrect.", "Not Found", _.trim(error));
 					assertObject("xhr is not an object.", xhr);
 
-					mod.delete();
+					mod.erase();
 				}));
 			}));
 		},
@@ -478,12 +478,12 @@ TestCase("model", ["model"], function (model) {
 			mod.save().done(async(function () {
 				assertNumber("id is not a number", mod.get("id"));
 
-				mod.delete({ url: "/assets/test/does-not-exist-test" }).fail(async(function (xhr, status, error) {
+				mod.erase({ url: "/assets/test/does-not-exist-test" }).fail(async(function (xhr, status, error) {
 					assertSame("status value is incorrect.", "error", status);
-					assertSame("error value is incorrect.", "Not Found", error);
+					assertSame("error value is incorrect.", "Not Found", _.trim(error));
 					assertObject("xhr is not an object.", xhr);
 
-					mod.delete();
+					mod.erase();
 				}));
 			}));
 		},
@@ -508,10 +508,10 @@ TestCase("model", ["model"], function (model) {
 
 				mod.fetch({ url: "/assets/test/does-not-exist-test" }).fail(async(function (xhr, status, error) {
 					assertSame("status value is incorrect.", "error", status);
-					assertSame("error value is incorrect.", "Not Found", error);
+					assertSame("error value is incorrect.", "Not Found", _.trim(error));
 					assertObject("xhr is not an object.", xhr);
 
-					mod.delete();
+					mod.erase();
 				}));
 			}));
 		},
@@ -536,7 +536,7 @@ TestCase("model", ["model"], function (model) {
 
 			mod.save(null, { url: "/assets/test/does-not-exist-test" }).fail(async(function (xhr, status, error) {
 				assertSame("status value is incorrect.", "error", status);
-				assertSame("error value is incorrect.", "Not Found", error);
+				assertSame("error value is incorrect.", "Not Found", _.trim(error));
 				assertObject("xhr is not an object.", xhr);
 			}));
 		}

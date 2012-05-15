@@ -1,4 +1,4 @@
-TestCase("collection", ["underscore", "collection", "model"], function (_, collection, model) {
+TestCase("collection", ["util", "collection", "model"], function (_, collection, model) {
 	var animal = model.extend({
 		attributes: {
 			name: {},
@@ -509,7 +509,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 				assertSame("email has incorrect value", "data@starfleet.com", data.get("email"));
 				assertSame("age has incorrect value", 26, data.get("age"));
 
-				data.delete();
+				data.erase();
 			}));
 		},
 
@@ -534,11 +534,11 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 				assertSame("email has incorrect value", "data@starfleet.com", data.get("email"));
 				assertSame("age has incorrect value", 26, data.get("age"));
 
-				data.delete();
+				data.erase();
 			}));
 		},
 
-		"test collection removes new model after it is deleted": function ()
+		"test collection removes new model after it is erased": function ()
 		{
 			var col = animals.create();
 			
@@ -550,14 +550,14 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 			});
 			col.add(cat);
 
-			assertSame("collection count is incorrect before delete.", 1, col.count());
+			assertSame("collection count is incorrect before erase.", 1, col.count());
 
-			cat.delete();
+			cat.erase();
 
-			assertSame("collection count is incorrect after delete.", 0, col.count());
+			assertSame("collection count is incorrect after erase.", 0, col.count());
 		},
 
-		"test collection removes existing model after it is deleted": function ()
+		"test collection removes existing model after it is erased": function ()
 		{
 			expectAsserts(3);
 
@@ -572,16 +572,16 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 			assertSame("collection count is incorrect.", 0, col.count());
 			
 			col.make(json).done(async(function () {
-				assertSame("collection count is incorrect before delete.", 1, col.count());
+				assertSame("collection count is incorrect before erase.", 1, col.count());
 
 				var data = col.get(0);
-				data.delete().done(async(function () {
-					assertSame("collection count is incorrect after delete.", 0, col.count());
+				data.erase().done(async(function () {
+					assertSame("collection count is incorrect after erase.", 0, col.count());
 				}));
 			}));
 		},
 
-		"test collection does not remove model after a failed delete": function ()
+		"test collection does not remove model after a failed erase": function ()
 		{
 			expectAsserts(3);
 
@@ -596,11 +596,11 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 			assertSame("collection count is incorrect.", 0, col.count());
 			
 			col.make(json).done(async(function () {
-				assertSame("collection count is incorrect before delete.", 1, col.count());
+				assertSame("collection count is incorrect before erase.", 1, col.count());
 
 				var data = col.get(0);
-				data.delete().done(async(function () {
-					assertSame("collection count is incorrect after delete.", 0, col.count());
+				data.erase().done(async(function () {
+					assertSame("collection count is incorrect after erase.", 0, col.count());
 				}));
 			}));
 		},
@@ -621,7 +621,7 @@ TestCase("collection", ["underscore", "collection", "model"], function (_, colle
 
 			col.fetch({ url: "/assets/test/does-not-exist-test" }).fail(async(function (xhr, status, error) {
 				assertSame("status value is incorrect.", "error", status);
-				assertSame("error value is incorrect.", "Not Found", error);
+				assertSame("error value is incorrect.", "Not Found", _.trim(error));
 				assertObject("xhr is not an object.", xhr);
 			}));
 		},

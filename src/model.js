@@ -10,7 +10,7 @@ define("model", ["util", "base", "data"], function (_, base, data) {
      */
     function onSyncFailed (xhr, status, error)
     {
-        this.fire("error", { xhr: xhr, status: status, error: error });
+        this.fire("error", { xhr: xhr, status: _.trim(status), error: _.trim(error) });
     }
 
     /**
@@ -147,7 +147,8 @@ define("model", ["util", "base", "data"], function (_, base, data) {
             // This is not the fastest way to do it since it turns everything into JSON just to turn it back into new models.
             
             //var clone = this.super.create();
-            var clone = Object.getPrototypeOf(this).create();
+            //var clone = Object.getPrototypeOf(this).create();
+            var clone = _.getPrototypeOf(this).create();
             
             _.each(this.get(), function (value, name) {
                 // Do not copy all attributes to clone
@@ -247,7 +248,7 @@ define("model", ["util", "base", "data"], function (_, base, data) {
          * {String} url model.url() Overrides the url used to sync the model with its resource. The default url is model.url().
          * @return {Promise} Returns a promise for the delete request.
          */
-        delete: function (options)
+        erase: function (options)
         {
             return (this.sync || data.sync)("delete", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
         }

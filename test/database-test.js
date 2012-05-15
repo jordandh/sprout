@@ -1,4 +1,4 @@
-TestCase("database", ["viewmodel", "database"], function (viewModel, dbms) {
+TestCase("database", ["util", "viewmodel", "database"], function (_, viewModel, dbms) {
     var foo = viewModel.extend({
         rootUrl: "/assets/test/database-test.json",
         expires: 30 * 60 * 1000
@@ -181,7 +181,7 @@ TestCase("database", ["viewmodel", "database"], function (viewModel, dbms) {
 
             db.sync(vm).fail(async(function (xhr, status, error) {
                 assertSame("status value is incorrect.", "error", status);
-                assertSame("error value is incorrect.", "Not Found", error);
+                assertSame("error value is incorrect.", "Not Found", _.trim(error));
                 assertObject("xhr is not an object.", xhr);
             }));
         },

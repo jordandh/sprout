@@ -5,10 +5,10 @@ define("data", ["util", "dom"], function (_, $) {
      * An object map for converting sync method types to HTTP verbs.
      */
 	var methodToType = {
-		read: "GET",
-		update: "PUT",
-		create: "POST",
-		delete: "DELETE"
+		"read": "GET",
+		"update": "PUT",
+		"create": "POST",
+		"delete": "DELETE"
 	};
 
     /**
@@ -22,8 +22,8 @@ define("data", ["util", "dom"], function (_, $) {
      */
 	function onAjaxError (e, fireAfter, xhr, status, error)
 	{
-		e.info.status = status;
-		e.info.error = error;
+		e.info.status = _.trim(status);
+		e.info.error = _.trim(error);
 		fireAfter();
 	}
 

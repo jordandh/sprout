@@ -10,7 +10,7 @@ define("viewmodel", ["util", "base", "database"], function (_, base, database) {
      */
     function onSyncFailed (xhr, status, error)
     {
-        this.fire("error", { xhr: xhr, status: status, error: error });
+        this.fire("error", { xhr: xhr, status: _.trim(status), error: _.trim(error) });
     }
 
     /**

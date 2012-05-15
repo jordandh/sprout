@@ -1,4 +1,4 @@
-TestCase("data", ["model", "data"], function (model, data) {
+TestCase("data", ["util", "model", "data"], function (_, model, data) {
 	var foo = model.extend({
 		url: function () {
 			return "/assets/test/data-test.json";
@@ -156,7 +156,7 @@ TestCase("data", ["model", "data"], function (model, data) {
 
 			data.sync("read", mod).fail(async(function (xhr, status, error) {
 				assertSame("status value is incorrect.", "error", status);
-				assertSame("error value is incorrect.", "Not Found", error);
+				assertSame("error value is incorrect.", "Not Found", _.trim(error));
 				assertObject("xhr is not an object.", xhr);
 			}));
 		},

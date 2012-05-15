@@ -13,6 +13,9 @@ define("database", ["util", "dom", "base", "collection"], function (_, $, base, 
      */
     function onAjaxError (e, deferred, fireAfter, xhr, status, error)
     {
+        status = _.trim(status);
+        error = _.trim(error);
+
         deferred.reject(xhr, status, error);
 
         e.info.status = status;

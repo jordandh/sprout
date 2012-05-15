@@ -1,4 +1,4 @@
-TestCase("util", ["util"], function (_) {
+TestCase("util", ["util", "base"], function (_, base) {
 	return {
 		"test _.remove first item from array": function ()
 		{
@@ -141,21 +141,71 @@ TestCase("util", ["util"], function (_) {
 			assertSame("array has incorrect item value", 3, a[1]);
 		},
 
+		"test _.trim": function ()
+		{
+			assertSame("string is not trimmed", "hello test", _.trim("  hello test     \n\t\r"));
+		},
+
 		"test _.prototypes": function ()
 		{
-			var p = {};
+			/*var p = {};
 			var f = function () {};
 			f.prototype = p;
 
-			var o = new f();
+			var o = new f();*/
+
+
+			var a = base.extend({});
+			var b = a.extend({});
+			var o = b.create();
 
 			var chain = _.prototypes(o);
 			
 			assertArray("prototypes did not return an array", chain);
-			assertSame("the number of prototypes in the chain is incorrect", 3, chain.length);
+			assertSame("the number of prototypes in the chain is incorrect", 5, chain.length);
 			assertSame("o is not in the prototype chain", o, chain[0]);
-			assertSame("o is not in the prototype chain", p, chain[1]);
-			assertSame("Object is not in the prototype chain", Object.prototype, chain[2]);
+			assertSame("b is not in the prototype chain", b, chain[1]);
+			assertSame("a is not in the prototype chain", a, chain[2]);
+			assertSame("base is not in the prototype chain", base, chain[3]);
+			assertSame("Object is not in the prototype chain", Object.prototype, chain[4]);
+		},
+
+		"test _.create dontEnum properties": function ()
+		{
+			var dontEnumMethods = [
+		        "constructor",
+		        "toString",
+		        "valueOf",
+		        "toLocaleString",
+		        "prototype",
+		        "isPrototypeOf",
+		        "propertyIsEnumerable",
+		        "hasOwnProperty",
+		        "length",
+		        "unique"
+		    ];
+			var o = {
+		        "constructor": function () { return "0"},
+		        "toString": function () { return "1"},
+		        "valueOf": function () { return "2"},
+		        "toLocaleString": function () { return "3"},
+		        "prototype": function () { return "4"},
+		        "isPrototypeOf": function () { return "5"},
+		        "propertyIsEnumerable": function () { return "6"},
+		        "hasOwnProperty": function () { return "7"},
+		        "length": function () { return "8"},
+		        "unique": function () { return "9"}
+			};
+
+			var obj = _.create(o)
+
+			var result = [];
+
+			for (var i = 0, length = dontEnumMethods.length; i < length; i += 1) {
+				result.push(obj[dontEnumMethods[i]]());
+			}
+
+			assertSame("result does not work for all properties", "0123456789", result.join(""));
 		}
 	};
 });

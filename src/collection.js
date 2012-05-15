@@ -10,7 +10,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
      */
     function onSyncFailed (xhr, status, error)
     {
-        this.fire("error", { xhr: xhr, status: status, error: error });
+        this.fire("error", { xhr: xhr, status: _.trim(status), error: _.trim(error) });
     }
 
     /**
@@ -229,7 +229,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
 
                     id = item.get("id");
                     if (!_.isUndefined(id)) {
-                        this.itemsById[item.get("id")] = item;
+                        this.itemsById[id] = item;
                     }
                     
                     items[index] = item;

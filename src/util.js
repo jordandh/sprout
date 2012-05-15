@@ -1,6 +1,19 @@
 define("util", ["underscore"], function (_) {
     "use strict";
 
+    var dontEnumMethods = [
+        "constructor",
+        "toString",
+        "valueOf",
+        "toLocaleString",
+        "prototype",
+        "isPrototypeOf",
+        "propertyIsEnumerable",
+        "hasOwnProperty",
+        "length",
+        "unique"
+    ];
+
     /**
      * @class util
      * Provides utility functions including the underscore api.
@@ -46,6 +59,16 @@ define("util", ["underscore"], function (_) {
         },
 
         /**
+         * Returns a copy of the provided string with no white space at the beginning or end.
+         * @param {String} str The string to trim.
+         * @return {String} Returns a copy of the provided string with no white space at the beginning or end.
+         */
+        trim: function (str)
+        {
+            return str.replace(/^\s*(\S*(?:\s+\S+)*)\s*$/, "$1");
+        },
+
+        /**
          * Returns the prototype chain of an object. The first item in the array is the object and subsequent values are the prototypes up the chain.
          * @param {Object} obj An object to get the prototype chain of.
          * @return {Array} Returns the prototype chain of the object.
@@ -69,7 +92,7 @@ define("util", ["underscore"], function (_) {
          */
         getPrototypeOf: function (obj)
         {
-            return Object.getPrototypeOf ? Object.getPrototypeOf(obj) : obj.super;
+            return Object.getPrototypeOf ? Object.getPrototypeOf(obj) : obj.prototypeObject;
         },
 
         /**
@@ -88,19 +111,42 @@ define("util", ["underscore"], function (_) {
 
             if (Object.create) {
                 obj = Object.create(prototype);
+
+                if (members) {
+                    _.each(members, function (value, name) {
+                        obj[name] = value;
+                    });
+                }
             }
             else {
                 F = function () {};
                 F.prototype = prototype;
                 obj = new F();
-                obj.super = prototype;
+                obj.prototypeObject = prototype;
+
+                if (members) {
+                    _.each(members, function (value, name) {
+                        obj[name] = value;
+                    });
+
+                    // Fix for don't enum bug in IE8
+                    _.each(dontEnumMethods, function (name) {
+                        /*var method = members[name];
+                        if (!_.isUndefined(method)) {
+                            obj[name] = method;
+                        }*/
+                        if (members.hasOwnProperty(name)) {
+                            obj[name] = members[name];
+                        }
+                    });
+                }
             }
             
-            if (members) {
+            /*if (members) {
                 _.each(members, function (value, name) {
                     obj[name] = value;
                 });
-            }
+            }*/
             
             // If ES5 is not available then super needs to be set on the object so that _.getPrototypeOf can use it.
             //obj.super = prototype;

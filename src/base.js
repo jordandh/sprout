@@ -347,6 +347,11 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                     destroyed: true
                 };
             },
+
+            /*
+             * Support for non-ES5 browsers
+             */
+            prototypeObject: Object.prototype,
             
             /**
              * The attributes for the object.

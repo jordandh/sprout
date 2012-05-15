@@ -1,4 +1,4 @@
-TestCase("base", ["underscore", "base"], function (_, Base) {
+TestCase("base", ["util", "base"], function (_, Base) {
 	var Animal = Base.extend({
 		attributes: {
 			name: {
