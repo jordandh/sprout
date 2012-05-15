@@ -69,7 +69,7 @@ define("util", ["underscore"], function (_) {
          */
         getPrototypeOf: function (obj)
         {
-            return Object.getPrototypeOf(obj);
+            return Object.getPrototypeOf ? Object.getPrototypeOf(obj) : obj.super;
         },
 
         /**
@@ -84,8 +84,17 @@ define("util", ["underscore"], function (_) {
             /*function F () {}
             F.prototype = prototype;
             var obj = new F();*/
+            var obj, F;
 
-            var obj = Object.create(prototype);
+            if (Object.create) {
+                obj = Object.create(prototype);
+            }
+            else {
+                F = function () {};
+                F.prototype = prototype;
+                obj = new F();
+                obj.super = prototype;
+            }
             
             if (members) {
                 _.each(members, function (value, name) {

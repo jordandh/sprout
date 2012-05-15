@@ -141,7 +141,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
              * @property
              * @type model
              */
-            model: null,
+            model: model,
 
             /**
              * The function used to sort the collection. By default there is no comparator function.

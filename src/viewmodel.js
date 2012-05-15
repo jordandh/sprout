@@ -107,11 +107,23 @@ define("viewmodel", ["util", "base", "database"], function (_, base, database) {
         expires: null,
 
         /**
+         * Parses a JSON object representation of the viewmodel's attributes.
          * Override to parse new data. The viewmodel should fill itself out at this point. By parsing the json data from the new data the viewmodel can determine what models to add to itself.
+         * Usually you override this function and first call viewmodel.parse to read in the json data. Then you use that data to grab more data from the database.
          * @param {Object} json A JSON object of the viewmodel's new data.
          */
         parse: function (json)
         {
+            _.each(json, function (value, name) {
+                var attribute = this.getAttribute(name);
+                
+                if (attribute && (attribute.model || attribute.collection)) {
+                    this.set(name, (attribute.model || attribute.collection).create(value));
+                }
+                else {
+                    this.set(name, value);
+                }
+            }, this);
         },
 
         /**

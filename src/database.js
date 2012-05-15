@@ -67,7 +67,7 @@ define("database", ["util", "dom", "base", "collection"], function (_, $, base, 
              */
             miss: function (name)
             {
-                var col = collection.new();
+                var col = collection.create();
                 this.set(name, col);
                 return col;
             },
