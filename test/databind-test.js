@@ -1,0 +1,954 @@
+TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmodel"], function (_, $, databind, model, collection, viewmodel) {
+    var Author = model.extend({
+        attributes: {
+            fullName: {
+                get: function () {
+                    return this.get("firstName") + " " + this.get("lastName");
+                },
+                uses: ["firstName", "lastName"]
+            }
+        }
+    });
+
+    var Authors = collection.extend({
+        model: Author
+    });
+
+    var AuthorsViewModel = viewmodel.extend({
+    })
+
+    return {
+        setUp: function () {
+            this.node = $("<div></div>").appendTo(document.body);
+            this.element = this.node.get(0);
+
+            this.author = Author.create({
+                firstName: "William",
+                lastName: "Riker",
+                title: "<b>Number One</b>",
+                url: "/Riker",
+                away: true,
+                popular: true
+            });
+
+            this.authors = Authors.create([{
+                    firstName: "William",
+                    lastName: "Riker",
+                    title: "<b>Number One</b>",
+                    url: "/Riker",
+                    away: true,
+                    popular: true
+                }, {
+                    firstName: "Deanna",
+                    lastName: "Troi",
+                    title: "<b>Counselor</b>",
+                    url: "/Troi",
+                    away: true,
+                    popular: true
+                }, {
+                    firstName: "Beverly",
+                    lastName: "Crusher",
+                    title: "<b>Doctor</b>",
+                    url: "/Crusher",
+                    away: true,
+                    popular: true
+                }
+            ]);
+
+            this.authorsViewModel = AuthorsViewModel.create();
+            this.authorsViewModel.set("authors", this.authors);
+        },
+
+        tearDown: function () {
+            //this.node.remove();
+            this.node = null;
+            this.element = null;
+            this.author.destroy();
+            this.author = null;
+            this.authors.destroy();
+            this.authors = null;
+            this.authorsViewModel.destroy();
+            this.authorsViewModel = null;
+        },
+
+        "test databind.applyBindings": function () {
+            var template = "<span data-bind='text: firstName'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            var metaData = databind.getMetaData($("span", this.element).get(0));
+            assertObject("element metaData does not exist", metaData);
+
+            var binderMetaData = metaData["text:firstName"];
+            assertObject("2nd binder metaData does not exist", binderMetaData);
+
+            binderMetaData = metaData["text:.firstName"];
+            assertObject("1st binder metaData does not exist", binderMetaData);
+
+            assertFunction("1st binder metaData does not have a listener", binderMetaData.listener);
+
+            var listeners = this.author.events.firstnamechange.after;
+            var foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+
+            assert("meta data function is not a listener on the view model", foundListener);
+        },
+
+        "test databind.removeBindings": function () {
+            var template = "<span data-bind='text: firstName'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            var metaData = databind.getMetaData($("span", this.element).get(0));
+            assertObject("element metaData does not exist", metaData);
+
+            var binderMetaData = metaData["text:firstName"];
+            assertObject("2nd binder metaData does not exist", binderMetaData);
+
+            binderMetaData = metaData["text:.firstName"];
+            assertObject("1st binder metaData does not exist", binderMetaData);
+
+            assertFunction("1st binder metaData does not have a listener", binderMetaData.listener);
+
+            var listeners = this.author.events.firstnamechange.after;
+            var foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+
+            assert("meta data function is not a listener on the view model", foundListener);
+
+            databind.removeBindings(this.element);
+
+            metaData = databind.getMetaData($("span", this.element).get(0));
+            assertUndefined("element metaData exists after bindings were removed", metaData);
+
+            listeners = this.author.events.firstnamechange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+
+            assertFalse("meta data listener function was not removed from the view model", foundListener);
+        },
+
+        "test databindings.text": function () {
+            var template = "<span data-bind='text: firstName'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("data bound text value is incorrect", this.author.get("firstName"), $("span", this.element).text());
+
+            this.author.set("firstName", "Will");
+
+            assertSame("data bound text value is incorrect after change", "Will", $("span", this.element).text());
+        },
+
+        "test databindings.html": function () {
+            var template = "<span data-bind='html: title'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("data bound html value is incorrect", this.author.get("title"), $("span", this.element).html());
+
+            this.author.set("title", "<i>Number One</i>");
+
+            assertSame("data bound html value is incorrect after change", "<i>Number One</i>", $("span", this.element).html());
+        },
+
+        "test databindings.attr": function () {
+            var template = "<a data-bind='href: url'></a>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("data bound attr value is incorrect", this.author.get("url"), $("a", this.element).attr("href"));
+
+            this.author.set("url", "/William");
+
+            assertSame("data bound attr value is incorrect after change", "/William", $("a", this.element).attr("href"));
+        },
+
+        "test databindings.attr remove with boolean": function () {
+            var template = "<input data-bind='disabled: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound attr value is incorrect", $("input", this.element).get(0).hasAttribute("disabled"));
+
+            this.author.set("away", false);
+
+            assertFalse("data bound attr value is incorrect after change", $("input", this.element).get(0).hasAttribute("disabled"));
+        },
+
+        "test databindings.attr remove with null": function () {
+            var template = "<input data-bind='disabled: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound attr value is incorrect", $("input", this.element).get(0).hasAttribute("disabled"));
+
+            this.author.set("away", null);
+
+            assertFalse("data bound attr value is incorrect after change", $("input", this.element).get(0).hasAttribute("disabled"));
+        },
+
+        "test databindings.attr remove with undefined": function () {
+            var template = "<input data-bind='disabled: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound attr value is incorrect", $("input", this.element).get(0).hasAttribute("disabled"));
+
+            this.author.set("away", void(0));
+
+            assertFalse("data bound attr value is incorrect after change", $("input", this.element).get(0).hasAttribute("disabled"));
+        },
+
+        "test databindings.!attr remove with boolean": function () {
+            var template = "<input data-bind='!disabled: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound attr value is incorrect", $("input", this.element).get(0).hasAttribute("disabled"));
+
+            this.author.set("away", false);
+
+            assert("data bound attr value is incorrect after change", $("input", this.element).get(0).hasAttribute("disabled"));
+        },
+
+        "test databindings.!attr remove with null": function () {
+            var template = "<input data-bind='!disabled: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound attr value is incorrect", $("input", this.element).get(0).hasAttribute("disabled"));
+
+            this.author.set("away", null);
+
+            assert("data bound attr value is incorrect after change", $("input", this.element).get(0).hasAttribute("disabled"));
+        },
+
+        "test databindings.!attr remove with undefined": function () {
+            var template = "<input data-bind='!disabled: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound attr value is incorrect", $("input", this.element).get(0).hasAttribute("disabled"));
+
+            this.author.set("away", void(0));
+
+            assert("data bound attr value is incorrect after change", $("input", this.element).get(0).hasAttribute("disabled"));
+        },
+
+        "test databindings.!attr remove with zero": function () {
+            var template = "<input data-bind='!disabled: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound attr value is incorrect", $("input", this.element).get(0).hasAttribute("disabled"));
+
+            this.author.set("away", 0);
+
+            assert("data bound attr value is incorrect after change", $("input", this.element).get(0).hasAttribute("disabled"));
+        },
+
+        "test databindings.!attr remove with empty string": function () {
+            var template = "<input data-bind='!disabled: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound attr value is incorrect", $("input", this.element).get(0).hasAttribute("disabled"));
+
+            this.author.set("away", "");
+
+            assert("data bound attr value is incorrect after change", $("input", this.element).get(0).hasAttribute("disabled"));
+        },
+
+        "test databindings.!attr remove with NaN": function () {
+            var template = "<input data-bind='!disabled: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound attr value is incorrect", $("input", this.element).get(0).hasAttribute("disabled"));
+
+            this.author.set("away", NaN);
+
+            assert("data bound attr value is incorrect after change", $("input", this.element).get(0).hasAttribute("disabled"));
+        },
+
+        "test databindings.class": function () {
+            var template = "<span data-bind='.hidden: away'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound class value is incorrect", $("span", this.element).hasClass("hidden"));
+
+            this.author.set("away", false);
+
+            assertFalse("data bound class value is incorrect after change", $("span", this.element).hasClass("hidden"));
+        },
+
+        "test databindings.class with multiple binds": function () {
+            var template = "<span data-bind='.hidden: away, .popular: popular'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound class.hidden value is incorrect", $("span", this.element).hasClass("hidden"));
+            assert("data bound class.popular value is incorrect", $("span", this.element).hasClass("popular"));
+
+            this.author.set("away", false);
+
+            assertFalse("data bound class.hidden value is incorrect after change", $("span", this.element).hasClass("hidden"));
+            assert("data bound class.popular value is incorrect", $("span", this.element).hasClass("popular"));
+
+            this.author.set("popular", false);
+
+            assertFalse("data bound class.hidden value is incorrect after change", $("span", this.element).hasClass("hidden"));
+            assertFalse("data bound class.popular value is incorrect after change", $("span", this.element).hasClass("popular"));
+        },
+
+        "test databindings.!class": function () {
+            var template = "<span data-bind='!.visible: away'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound class value is incorrect", $("span", this.element).hasClass("visible"));
+
+            this.author.set("away", false);
+
+            assert("data bound class value is incorrect after change", $("span", this.element).hasClass("visible"));
+        },
+
+        "test databindings.checked on checkbox with boolean": function () {
+            var template = "<input type='checkbox' data-bind='checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", false);
+
+            assertFalse("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.checked on checkbox with null": function () {
+            var template = "<input type='checkbox' data-bind='checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", null);
+
+            assertFalse("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.checked on checkbox with undefined": function () {
+            var template = "<input type='checkbox' data-bind='checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", void(0));
+
+            assertFalse("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.checked on checkbox with zero": function () {
+            var template = "<input type='checkbox' data-bind='checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", 0);
+
+            assertFalse("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.checked on checkbox with empty string": function () {
+            var template = "<input type='checkbox' data-bind='checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", "");
+
+            assertFalse("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.checked on checkbox with NaN": function () {
+            var template = "<input type='checkbox' data-bind='checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", NaN);
+
+            assertFalse("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.!checked on checkbox with boolean": function () {
+            var template = "<input type='checkbox' data-bind='!checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", false);
+
+            assert("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.!checked on checkbox with null": function () {
+            var template = "<input type='checkbox' data-bind='!checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", null);
+
+            assert("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.!checked on checkbox with undefined": function () {
+            var template = "<input type='checkbox' data-bind='!checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", void(0));
+
+            assert("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.!checked on checkbox with zero": function () {
+            var template = "<input type='checkbox' data-bind='!checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", 0);
+
+            assert("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.!checked on checkbox with empty string": function () {
+            var template = "<input type='checkbox' data-bind='!checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", "");
+
+            assert("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.!checked on checkbox with NaN": function () {
+            var template = "<input type='checkbox' data-bind='!checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("away", NaN);
+
+            assert("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.checked on radio button": function () {
+            var template = "<input type='radio' value='William' data-bind='checked: firstName'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("firstName", "Will");
+
+            assertFalse("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.!checked on radio button": function () {
+            var template = "<input type='radio' value='William' data-bind='!checked: firstName'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertFalse("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+
+            this.author.set("firstName", "Will");
+
+            assert("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+        },
+
+        "test databindings.value": function () {
+            var template = "<input type='text' data-bind='value: firstName'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("data bound input.value value is incorrect", this.author.get("firstName"), $("input", this.element).val());
+
+            this.author.set("firstName", "Will");
+
+            assertSame("data bound input.value value is incorrect after change", "Will", $("input", this.element).val());
+        },
+
+        "test databindings.text computed": function () {
+            var template = "<span data-bind='text: fullName'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("data bound text value is incorrect", this.author.get("fullName"), $("span", this.element).text());
+
+            this.author.set("firstName", "Will");
+
+            assertSame("data bound text value is incorrect after change", "Will Riker", $("span", this.element).text());
+        },
+
+        "test databindings.text with model chain changing value": function () {
+            var template = "Author: <span data-bind='text: fullName'></span><br>Friend: <span data-bind='text: friend.fullName'></span>";
+
+            var friend = Author.create({
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            });
+
+            this.author.set("friend", friend);
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("data bound text value is incorrect", this.author.get("fullName"), $("span", this.element).eq(0).text());
+            assertSame("data bound text value is incorrect", "Jean Luc Picard", $("span", this.element).eq(1).text());
+
+            friend.set("firstName", "Gene Luck");
+
+            assertSame("data bound text value is incorrect", this.author.get("fullName"), $("span", this.element).eq(0).text());
+            assertSame("data bound text value is incorrect", "Gene Luck Picard", $("span", this.element).eq(1).text());
+        },
+
+        "test databindings.text with model chain changing chain": function () {
+            var template = "Author: <span data-bind='text: fullName'></span><br>Friend: <span data-bind='text: friend.fullName'></span>";
+
+            var friend = Author.create({
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            });
+
+            this.author.set("friend", friend);
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("data bound text value is incorrect", this.author.get("fullName"), $("span", this.element).eq(0).text());
+            assertSame("data bound text value is incorrect", "Jean Luc Picard", $("span", this.element).eq(1).text());
+
+            friend = Author.create({
+                firstName: "Geordi",
+                lastName: "La Forge",
+                title: "<b>Chief Engineer</b>",
+                url: "/LaForge",
+                away: true,
+                popular: true
+            });
+
+            this.author.set("friend", friend);
+
+            assertSame("data bound text value is incorrect", this.author.get("fullName"), $("span", this.element).eq(0).text());
+            assertSame("data bound text value is incorrect", "Geordi La Forge", $("span", this.element).eq(1).text());
+
+            friend.set("firstName", "Jordy");
+
+            assertSame("data bound text value is incorrect", this.author.get("fullName"), $("span", this.element).eq(0).text());
+            assertSame("data bound text value is incorrect", "Jordy La Forge", $("span", this.element).eq(1).text());
+        },
+
+        "test databindings.foreach": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+        },
+
+        "test databindings.foreach with multiple top level elements": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: firstName'></td></tr><tr><td data-bind='text: lastName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 6, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Troi", cells.eq(3).text());
+            assertSame("cell 4 value is incorrect", "Beverly", cells.eq(4).text());
+            assertSame("cell 5 value is incorrect", "Crusher", cells.eq(5).text());
+        },
+
+        "test databindings.foreach item added": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+
+            this.authors.add({
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            });
+
+            assertSame("data bound foreach item count is incorrect after add", 4, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Jean Luc Picard", cells.eq(3).text());
+        },
+
+        "test databindings.foreach item inserted": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+
+            this.authors.add({
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            }, { at: 1 });
+
+            assertSame("data bound foreach item count is incorrect after add", 4, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Jean Luc Picard", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+        },
+
+        "test databindings.foreach item inserted at front": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+
+            this.authors.add({
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            }, { at: 0 });
+
+            assertSame("data bound foreach item count is incorrect after add", 4, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Jean Luc Picard", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+        },
+
+        "test databindings.foreach item removed": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+
+            this.authors.remove(this.authors.at(1));
+
+            assertSame("data bound foreach item count is incorrect", 2, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Beverly Crusher", cells.eq(1).text());
+        },
+
+        "test databindings.foreach item removed from front": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+
+            this.authors.remove(this.authors.at(0));
+
+            assertSame("data bound foreach item count is incorrect", 2, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Deanna Troi", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Beverly Crusher", cells.eq(1).text());
+        },
+
+        "test databindings.foreach collection reset with no items": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+
+            this.authors.reset();
+
+            assertSame("data bound foreach item count is incorrect", 0, table.prop("rows").length);
+        },
+
+        "test databindings.foreach collection reset with new items": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+
+            this.authors.reset([{
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            }, {
+                firstName: "Geordi",
+                lastName: "La Forge",
+                title: "<b>Chief Engineer</b>",
+                url: "/LaForge",
+                away: true,
+                popular: true
+            }]);
+
+            assertSame("data bound foreach item count is incorrect", 2, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Jean Luc Picard", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Geordi La Forge", cells.eq(1).text());
+        },
+
+        "test databindings.foreach collection sorted": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+
+            this.authors.sortBy(function (mod) {
+                return mod.get("lastName");
+            });
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Beverly Crusher", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+        }
+    };
+});

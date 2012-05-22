@@ -69,6 +69,19 @@ define("util", ["underscore"], function (_) {
         },
 
         /**
+         * Returns whether a string starts with another string.
+         * @param {String} str The string to check.
+         * @param {String} starts The string to look for at the start of str.
+         * @return {Boolean} Returns true if str begins with start.
+         */
+        startsWith: function(str, starts)
+        {
+            str += "";
+            starts += "";
+            return str.length >= starts.length && str.substring(0, starts.length) === starts;
+        },
+
+        /**
          * Returns the prototype chain of an object. The first item in the array is the object and subsequent values are the prototypes up the chain.
          * @param {Object} obj An object to get the prototype chain of.
          * @return {Array} Returns the prototype chain of the object.

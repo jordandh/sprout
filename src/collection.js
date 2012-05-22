@@ -271,7 +271,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
             }),
             
             /**
-             * Replaces all the items in the collection. Fires a reset event.
+             * Replaces all the items in the collection. If nothing is passed in then all the items in the collection are removed. Fires a reset event.
              * @param {Array|model} (Optional) An array of models or model json data to add to the collection. Or a single model or model's json data to add to the collection.
              * @param {Object} options (Optional)
              * @options

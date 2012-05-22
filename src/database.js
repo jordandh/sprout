@@ -70,8 +70,26 @@ define("database", ["util", "dom", "base", "collection"], function (_, $, base, 
              */
             miss: function (name)
             {
-                var col = collection.create();
+                var schema = this.get("schema"),
+                    col = collection.create(),
+                    colSchema, colModel;
+                
                 this.set(name, col);
+
+                if (schema) {
+                    colSchema = schema[name];
+                    if (colSchema) {
+                        colModel = colSchema.model;
+
+                        if (_.isObject(colModel)) {
+                            col.model = colModel;
+                        }
+                        else if (_.isString(colModel)) {
+                            // TODO: call require on the colModel and then set the col.model equal to the result. This means getting a db collection has to be async which could suck.
+                        }
+                    }
+                }
+
                 return col;
             },
 

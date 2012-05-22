@@ -27,12 +27,14 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
          */
         removeListener = function (type, name, handler, context)
         {
-            var event = this.events[name.toLowerCase()];
-            
-            if (_.isObject(event)) {
-                _.remove(event[type], function (info) {
-                    return info.handler === handler && info.context === context;
-                });
+            if (this.events) {
+                var event = this.events[name.toLowerCase()];
+                
+                if (_.isObject(event)) {
+                    _.remove(event[type], function (info) {
+                        return info.handler === handler && info.context === context;
+                    });
+                }
             }
         },
         /*
@@ -71,7 +73,7 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                 return false;
             }
             
-            setter = attribute.setter;
+            setter = attribute.set;
             
             // Set the value
             if (_.isFunction(setter)) {
@@ -101,6 +103,52 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
             }
         },
         /*
+         * fireAttributeChangeEvents
+         */
+        fireAttributeChangeEvents = function (attribute, name, oldValue, newValue)
+        {
+            var eventName = name + "Change",
+                event1 = this.events[eventName.toLowerCase()],
+                event2 = this.events.change,
+                valueChanged = false,
+                e;
+            
+            if (_.isObject(event1) || _.isObject(event2)) {
+                // Before handlers
+                e = {
+                    name: eventName,
+                    info: { name: name, oldValue: oldValue, newValue: newValue },
+                    src: this,
+                    preventDefault: false
+                };
+                fireAttributeChange.call(this, "before", e, event1);
+                
+                e.name = "change";
+                fireAttributeChange.call(this, "before", e, event2);
+                
+                if (!e.preventDefault) {
+                    valueChanged = changeAttribute.call(this, attribute, name, oldValue, e.info.newValue);
+                    
+                    // On handlers
+                    e.name = eventName;
+                    fireAttributeChange.call(this, "on", e, event1);
+                    e.name = "change";
+                    fireAttributeChange.call(this, "on", e, event2);
+                    
+                    // After handlers
+                    e.name = eventName;
+                    fireAttributeChange.call(this, "after", e, event1);
+                    e.name = "change";
+                    fireAttributeChange.call(this, "after", e, event2);
+                }
+            }
+            else {
+                valueChanged = changeAttribute.call(this, attribute, name, oldValue, newValue);
+            }
+
+            return valueChanged;
+        },
+        /*
          * getAttributes
          */
         getAttributes = function ()
@@ -121,13 +169,20 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
          */
         getValue = function (name)
         {
-            var attribute;
+            var attribute = this.getAttribute(name),
+                getter;
+
+            if (attribute) {
+                getter = attribute.get;
+                if (_.isFunction(getter)) {
+                    return getter.call(this, name);
+                }
+            }
             
             if (this.values.hasOwnProperty(name)) {
                 return this.values[name];
             }
             
-            attribute = this.getAttribute(name);
             if (attribute) {
                 return attribute.value;
             }
@@ -146,7 +201,7 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
         {
             var attribute = this.getAttribute(name) || {},
                 valueChanged = false,
-                eventName = name + "Change",
+                //eventName = name + "Change",
                 oldValue, event1, event2, e;
             
             options = options || {};
@@ -163,7 +218,8 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
             
             if (oldValue !== value) {
                 if (!options.silent) {
-                    event1 = this.events[eventName.toLowerCase()];
+                    valueChanged = fireAttributeChangeEvents.call(this, attribute, name, oldValue, value);
+                    /*event1 = this.events[eventName.toLowerCase()];
                     event2 = this.events.change;
                     
                     if (_.isObject(event1) || _.isObject(event2)) {
@@ -197,7 +253,7 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                     }
                     else {
                         valueChanged = changeAttribute.call(this, attribute, name, oldValue, value);
-                    }
+                    }*/
                 }
                 else {
                     valueChanged = changeAttribute.call(this, attribute, name, oldValue, value);
@@ -205,6 +261,13 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
             }
             
             return valueChanged;
+        },
+        /*
+         * afterDependencyChanged
+         */
+        afterDependencyChanged = function (attribute, name, e)
+        {
+            fireAttributeChangeEvents.call(this, attribute, name, null, attribute.get.call(this));
         },
         /**
          * @class base
@@ -254,14 +317,22 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
          * The base object provides other functionality including attributes, events, constructors/destructors, plugins, and reference counting.
          * When an object is made using the create method its constructor method is automatically called. This method is named constructor and can be overridden by any child objects.
          * When an object is destroyed the destructor method is called. This method is named destructor and can also be overridden just like any other method.
-         *
-         * Attributes
+         * <br/><br/>
+         * <b>Attribute</b>
+         * <pre>
+         * Attribute Properties
          * {Object} value The initial value of the attribute.
          * {Function} validator A function to be called when the attribute is set. If the function returns false then the attribute's value is not changed. It is passed two parameters: the new value and the name of the attribute.
-         * {Function} setter A function to be called when the attribute value is being set. It is passed three parameters: the enw value, the current value, and the name of the attribute. If this function is defined then it is responsible for updating the attribute's value.
+         * {Function} set A function to be called when the attribute value is being set. It is passed three parameters: the enw value, the current value, and the name of the attribute. If this function is defined then it is responsible for updating the attribute's value.
          * {Function} getter A function to be called when the attribute value is being retrieved. It is passed two parameters: the current value and the name of the attribute.
          * {Boolean} readOnly If true then the attribute's value cannot be changed from its initial value. The default value is false.
          * {Object} handler The attribute change callback is normally called on the object that owns the attribute. This overrides that context and instead the handler's function is called. This is primarily used by plugins.
+         * {Array|String} uses The attribute names that this attribute is dependent on for its value. Defining this property make the attribute a computable attribute.
+         * </pre>
+         * A computable attribute is an attribute whose value is calculated from other attributes on the object. An attribute is considered computable if the 'uses' property is defined on it.
+         * The values in 'uses' should be the name of the other attributes that the computable is dependent on. Change event handlers are automatically attached to all the attributes listed in 'uses'.
+         * Whenever one of the dependent attributes is changed a change event is also fired for the computable attribute. A computable attribute should also define a 'get' property.
+         * The 'get' property will use the values of the dependent attributes.
          */
         /**
          * @event destroy
@@ -322,6 +393,21 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                     plugins: {}
                 };
                 this.events = {};
+
+                // Loop through all the attributes and setup any dependencies for computable attributes
+                _.each(getAttributes.call(this), function (attribute, name) {
+                    var uses = attribute.uses;
+
+                    if (_.isString(uses)) {
+                        uses = [uses];
+                    }
+
+                    if (_.isArray(uses)) {
+                        _.each(uses, function (dependency) {
+                            this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
+                        }, this);
+                    }
+                }, this);
             },
             
             /**
@@ -490,7 +576,6 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                             return this.at(parseInt(name, 10));
                         }
                     }
-                    // TODO: call this.miss for attributes that do not exist
                     else {
                         value = getValue.call(this, name);
 
@@ -499,7 +584,6 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                         }
 
                         return value;
-                        //return getValue.call(this, name);
                     }
                 }
             },

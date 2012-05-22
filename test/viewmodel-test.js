@@ -75,7 +75,7 @@ TestCase("viewmodel", ["util", "viewmodel", "database"], function (_, viewModel,
             }));
         },
 
-        "test viewmodel.ftech sync error event": function ()
+        "test viewmodel.fetch sync error event": function ()
         {
             expectAsserts(8);
 

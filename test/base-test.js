@@ -162,6 +162,17 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			
 			c.fire("test", { foo: "bar" });
 		},
+
+		"test base.detachAfter on destroyed object does nothing": function () {
+			var c = Base.create();
+
+			handler = function () {};
+			
+			c.after("test", handler);
+			c.destroy();
+
+			c.detachAfter("test", handler);
+		},
 		
 		"test base.attributes default value": function () {
 			var c = Base.create();
@@ -197,15 +208,50 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			c.set("test", 2);
 			assertSame("attribute has incorrect value", 1, c.get("test"));
 		},
+
+		"test base.attributes get": function () {
+			expectAsserts(2);
+
+			var c = Base.create();
+			
+			c.attributes.test = {
+				get: function (name) {
+					assertSame("attribute name has incorrect value", "test", name);
+					return 2;
+				}
+			};
+			
+			assertSame("attribute value is incorrect", 2, c.get("test"));
+		},
+
+		"test base.attributes get value is not cached": function () {
+			expectAsserts(5);
+
+			var c = Base.create();
+			var val = 2;
+			
+			c.attributes.test = {
+				get: function (name) {
+					assertSame("attribute name has incorrect value", "test", name);
+					return val;
+				}
+			};
+			
+			assertSame("attribute value is incorrect", 2, c.get("test"));
+
+			c.set("test", 3);
+
+			assertSame("attribute value is incorrect", 2, c.get("test"));
+		},
 		
-		"test base.attributes setter": function () {
+		"test base.attributes set": function () {
 			expectAsserts(3);
 			
 			var c = Base.create();
 			
 			c.attributes.test = {
 				value: 1,
-				setter: function (newValue, oldValue, name) {
+				set: function (newValue, oldValue, name) {
 					assertSame("attribute name has incorrect value", "test", name);
 					assertSame("attribute old value has incorrect value", 1, oldValue);
 					assertSame("attribute new value has incorrect value", 2, newValue);
@@ -216,12 +262,12 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			c.set("test", 2);
 		},
 		
-		"test base.attributes setter returning a value": function () {
+		"test base.attributes set returning a value": function () {
 			var c = Base.create();
 			
 			c.attributes.test = {
 				value: 1,
-				setter: function (newValue, oldValue, name) {
+				set: function (newValue, oldValue, name) {
 					return 3;
 				}
 			};
@@ -232,12 +278,12 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			assertSame("attribute has incorrect value", 3, c.get("test"));
 		},
 		
-		"test base.attributes setter returning undefined": function () {
+		"test base.attributes set returning undefined": function () {
 			var c = Base.create();
 			
 			c.attributes.test = {
 				value: 1,
-				setter: function (newValue, oldValue, name) {
+				set: function (newValue, oldValue, name) {
 				}
 			};
 			
@@ -245,6 +291,55 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			
 			c.set("test", 2);
 			assertSame("attribute has incorrect value", 1, c.get("test"));
+		},
+
+		"test base.attributes uses": function () {
+			expectAsserts(11);
+
+			var person = Base.extend({
+				attributes: {
+					fullname: {
+						get: function () {
+							return this.get("firstname") + " " + this.get("lastname");
+						},
+						uses: ["firstname", "lastname"]
+					}
+				}
+			});
+			
+			var will = person.create({
+				firstname: "Will",
+				lastname: "Ryker"
+			});
+
+			var count = 0;
+			
+			assertSame("firstname value is incorrect", "Will", will.get("firstname"));
+			assertSame("lastname value is incorrect", "Ryker", will.get("lastname"));
+			assertSame("fullname value is incorrect", "Will Ryker", will.get("fullname"));
+
+			will.after("fullnameChange", function (e) {
+				if (count === 0) {
+					assertSame("fullname value is incorrect", "William Ryker", e.info.newValue);
+					assertSame("fullname value is incorrect", "William Ryker", will.get("fullname"));
+				}
+				else if (count === 1) {
+					assertSame("fullname value is incorrect", "William Troy", e.info.newValue);
+					assertSame("fullname value is incorrect", "William Troy", will.get("fullname"));
+				}
+
+				count += 1;
+			});
+
+			will.set("firstname", "William");
+
+			assertSame("firstname value is incorrect", "William", will.get("firstname"));
+			assertSame("fullname value is incorrect", "William Ryker", will.get("fullname"));
+
+			will.set("lastname", "Troy");
+
+			assertSame("lastname value is incorrect", "Troy", will.get("lastname"));
+			assertSame("fullname value is incorrect", "William Troy", will.get("fullname"));
 		},
 		
 		"test base.attributes handler with <attribute name>Changed function": function () {

@@ -92,13 +92,13 @@ define("application", ["util", "base"], function (_, base) {
          */
         restart: function (name)
         {
-            var components = this.get("components");
+            var components = this.get("components"),
+                component = components[name];
 
-            _.each(this.get("components"), function (component) {
-                if (component.module) {
-                    component.module.restart();
-                }
-            });
+            if (component && component.module) {
+                component.module.stop();
+                component.module.start();
+            }
         }
     });
 });

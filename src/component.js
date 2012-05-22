@@ -22,11 +22,14 @@ define("component", ["util", "base"], function (_, base) {
         {
         },
 
-        /**
-         * Restarts a component on a page. Child component objects should override this method to define its restart logic.
-         */
-        restart: function ()
+        failed: function (error)
         {
+            try {
+                // TODO: this puts the component into a failed state. An Application object can detect that the component is in a failed state and do something about it. (e.g. restart it or report an error)
+                console.log("Component Failed: ", error);
+            }
+            catch (ex) {
+            }
         }
 	});
 });
