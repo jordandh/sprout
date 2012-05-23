@@ -535,8 +535,8 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
             assert("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
         },
 
-        "test databindings.checked on radio button": function () {
-            var template = "<input type='radio' value='William' data-bind='checked: firstName'></input>";
+        "test databindings.checked on checkbox for two way binding": function () {
+            var template = "<input type='checkbox' data-bind='checked: away'></input>";
 
             this.node.html(template);
 
@@ -544,26 +544,119 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
 
             assert("data bound checked value is incorrect", $("input", this.element).prop("checked"));
 
-            this.author.set("firstName", "Will");
+            $("input", this.element).prop("checked", false);
+            $("input", this.element).eq(0).change();
 
             assertFalse("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+            assertFalse("data bound checked value did not bind back to model", this.author.get("away"));
         },
 
-        "test databindings.!checked on radio button": function () {
-            var template = "<input type='radio' value='William' data-bind='!checked: firstName'></input>";
+        "test databindings.checked on radio button": function () {
+            var template = "<form><input type='radio' name='radio-test' value='William' data-bind='checked: firstName'><input type='radio' name='radio-test' value='Will' data-bind='checked: firstName'></input></form>";
 
             this.node.html(template);
 
             databind.applyBindings(this.author, this.element);
 
-            assertFalse("data bound checked value is incorrect", $("input", this.element).prop("checked"));
+            assert("data bound checked value on 1st radio button is incorrect", $("input", this.element).eq(0).prop("checked"));
+            assertFalse("data bound checked value on 2nd radio button is incorrect", $("input", this.element).eq(1).prop("checked"));
 
             this.author.set("firstName", "Will");
 
-            assert("data bound checked value is incorrect after change", $("input", this.element).prop("checked"));
+            assertFalse("data bound checked value on 1st radio button is incorrect after change", $("input", this.element).eq(0).prop("checked"));
+            assert("data bound checked value on 2nd radio button is incorrect after change", $("input", this.element).eq(1).prop("checked"));
         },
 
-        "test databindings.value": function () {
+        "test databindings.checked on radio button for two way binding": function () {
+            var template = "<form><input type='radio' name='radio-test' value='William' data-bind='checked: firstName'><input type='radio' name='radio-test' value='Will' data-bind='checked: firstName'></input></form>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound checked value on 1st radio button is incorrect", $("input", this.element).eq(0).prop("checked"));
+            assertFalse("data bound checked value on 2nd radio button is incorrect", $("input", this.element).eq(1).prop("checked"));
+
+            $("input", this.element).eq(1).prop("checked", true);
+            $("input", this.element).eq(1).change();
+
+            assertFalse("data bound checked value on 1st radio button is incorrect after change", $("input", this.element).eq(0).prop("checked"));
+            assert("data bound checked value on 2nd radio button is incorrect after change", $("input", this.element).eq(1).prop("checked"));
+            assertSame("data bound checked value did not bind back to model", "Will", this.author.get("firstName"));
+        },
+
+        "test databindings.-checked on radio button for one way binding": function () {
+            var template = "<form><input type='radio' name='radio-test' value='William' data-bind='-checked: firstName'><input type='radio' name='radio-test' value='Will' data-bind='-checked: firstName'></input></form>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound checked value on 1st radio button is incorrect", $("input", this.element).eq(0).prop("checked"));
+            assertFalse("data bound checked value on 2nd radio button is incorrect", $("input", this.element).eq(1).prop("checked"));
+
+            $("input", this.element).eq(1).prop("checked", true);
+            $("input", this.element).eq(1).change();
+
+            assertFalse("data bound checked value on 1st radio button is incorrect after change", $("input", this.element).eq(0).prop("checked"));
+            assert("data bound checked value on 2nd radio button is incorrect after change", $("input", this.element).eq(1).prop("checked"));
+            assertSame("data bound checked value did not bind back to model", "William", this.author.get("firstName"));
+        },
+
+        "test databind.checked removeBindings": function () {
+            var template = "<input type='checkbox' data-bind='checked: away'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            var metaData = databind.getMetaData($("input", this.element).get(0));
+            assertObject("element metaData does not exist", metaData);
+
+            var binderMetaData2 = metaData["checked:away"];
+            assertObject("2nd binder metaData does not exist", binderMetaData2);
+
+            var binderMetaData = metaData["checked:.away"];
+            assertObject("1st binder metaData does not exist", binderMetaData);
+
+            assertFunction("1st binder metaData does not have a listener", binderMetaData.listener);
+            assertFunction("2nd binder metaData does not have an element checked listener", binderMetaData2.checkedListener);
+            assertObject("2nd binder metaData does not have a viewModel", binderMetaData2.viewModel);
+            assertString("2nd binder metaData does not have an attributeName", binderMetaData2.attributeName);
+
+            var listeners = this.author.events.awaychange.after;
+            var foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+
+            assert("meta data function is not a listener on the view model", foundListener);
+            assertSame("meta data checked listener is not attached to the element", 1, $("input", this.element).data("events").change.length);
+
+            databind.removeBindings(this.element);
+
+            metaData = databind.getMetaData($("input", this.element).get(0));
+            assertUndefined("element metaData exists after bindings were removed", metaData);
+
+            listeners = this.author.events.awaychange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+
+            assertFalse("meta data listener function was not removed from the view model", foundListener);
+            assertUndefined("meta data checked listener was not detached from the element", $("input", this.element).data("events"));
+        },
+
+        "test databindings.value on text box": function () {
             var template = "<input type='text' data-bind='value: firstName'></input>";
 
             this.node.html(template);
@@ -575,6 +668,91 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
             this.author.set("firstName", "Will");
 
             assertSame("data bound input.value value is incorrect after change", "Will", $("input", this.element).val());
+        },
+
+        "test databindings.value on text box for two way binding": function () {
+            var template = "<input type='text' data-bind='value: firstName'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("data bound input.value value is incorrect", this.author.get("firstName"), $("input", this.element).val());
+
+            $("input", this.element).val("Will");
+            $("input", this.element).change();
+
+            assertSame("data bound input.value value is incorrect after change", "Will", $("input", this.element).val());
+            assertSame("data bound checked value did not bind back to model", "Will", this.author.get("firstName"));
+        },
+
+        "test databindings.-value on text box for one way binding": function () {
+            var template = "<input type='text' data-bind='-value: firstName'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("data bound input.value value is incorrect", this.author.get("firstName"), $("input", this.element).val());
+            
+            $("input", this.element).val("Will");
+            $("input", this.element).change();
+
+            assertSame("data bound input.value value is incorrect after change", "Will", $("input", this.element).val());
+            assertSame("data bound checked value did not bind back to model", "William", this.author.get("firstName"));
+        },
+
+        "test databind.value removeBindings": function () {
+            var template = "<input type='text' data-bind='value: firstName'></input>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            var metaData = databind.getMetaData($("input", this.element).get(0));
+            assertObject("element metaData does not exist", metaData);
+
+            var binderMetaData2 = metaData["value:firstName"];
+            assertObject("2nd binder metaData does not exist", binderMetaData2);
+
+            var binderMetaData = metaData["value:.firstName"];
+            assertObject("1st binder metaData does not exist", binderMetaData);
+
+            assertFunction("1st binder metaData does not have a listener", binderMetaData.listener);
+            assertFunction("2nd binder metaData does not have an element checked listener", binderMetaData2.changeListener);
+            assertObject("2nd binder metaData does not have a viewModel", binderMetaData2.viewModel);
+            assertString("2nd binder metaData does not have an attributeName", binderMetaData2.attributeName);
+
+            var listeners = this.author.events.firstnamechange.after;
+            var foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+
+            assert("meta data function is not a listener on the view model", foundListener);
+            assertSame("meta data change listener is not attached to the element", 1, $("input", this.element).data("events").change.length);
+
+            databind.removeBindings(this.element);
+
+            metaData = databind.getMetaData($("input", this.element).get(0));
+            assertUndefined("element metaData exists after bindings were removed", metaData);
+
+            listeners = this.author.events.firstnamechange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+
+            assertFalse("meta data listener function was not removed from the view model", foundListener);
+            assertUndefined("meta data changed listener was not detached from the element", $("input", this.element).data("events"));
         },
 
         "test databindings.text computed": function () {
@@ -949,6 +1127,145 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
             assertSame("cell 0 value is incorrect", "Beverly Crusher", cells.eq(0).text());
             assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
             assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+        },
+
+        "test databind.foreach removeBindings": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var metaData = databind.getMetaData($("tbody", this.element).get(0));
+            assertObject("element metaData does not exist", metaData);
+
+            var binderMetaData2 = metaData["foreach:authors"];
+            assertObject("2nd binder metaData does not exist", binderMetaData2);
+
+            var binderMetaData = metaData["foreach:.authors"];
+            assertObject("1st binder metaData does not exist", binderMetaData);
+
+            assertFunction("1st binder metaData does not have a listener", binderMetaData.listener);
+            assertFunction("2nd binder metaData does not have a collection add listener", binderMetaData2.addListener);
+            assertFunction("2nd binder metaData does not have a collection remove listener", binderMetaData2.removeListener);
+            assertFunction("2nd binder metaData does not have a collection reset listener", binderMetaData2.resetListener);
+            assertFunction("2nd binder metaData does not have a collection sort listener", binderMetaData2.sortListener);
+            assertString("2nd binder metaData does not have a template", binderMetaData2.template);
+
+            var listeners = this.authorsViewModel.events.authorschange.after;
+            var foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data listener is not on the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.add.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.addListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data add listener is not on the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.remove.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.removeListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data remove listener is not on the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.reset.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.resetListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data reset listener is not on the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.sort.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.sortListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data sort listener is not on the view model", foundListener);
+
+            databind.removeBindings(this.element);
+
+            metaData = databind.getMetaData($("tbody", this.element).get(0));
+            assertUndefined("element metaData exists after bindings were removed", metaData);
+
+            listeners = this.authorsViewModel.events.authorschange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data listener function was not removed from the view model", foundListener);
+
+            isteners = this.authorsViewModel.get("authors").events.add.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.addListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data add listener was not removed from the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.remove.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.removeListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data remove listener was not removed from the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.reset.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.resetListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data reset listener was not removed from the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.sort.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.sortListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data sort listener was not removed from the view model", foundListener);
         }
     };
 });

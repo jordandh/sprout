@@ -4,6 +4,7 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
     var dataBindAttributeName = "data-bind",
         elementExpando = "__databind__",
         elementMetaDataStore = {},
+        bindingOperators = ["!", "-"],
         databind;
 
     /*
@@ -32,6 +33,8 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
             binderMetaData = {};
             elementMetaData[binderKey] = binderMetaData;
         }
+
+        binderMetaData.binder = binder;
 
         return binderMetaData;
     }
@@ -73,6 +76,10 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
                     if (_.isFunction(binderMetaData.listener) && _.isObject(binderMetaData.model) && _.isString(binderMetaData.eventName)) {
                         binderMetaData.model.detachAfter(binderMetaData.eventName, binderMetaData.listener);
                     }
+
+                    if (_.isObject(binderMetaData.binder) && _.isFunction(binderMetaData.binder.stop)) {
+                        binderMetaData.binder.stop(element, binderMetaData);
+                    }
                 });
             }
 
@@ -93,58 +100,66 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
     /*
      * Data Binder Functions
      */
-    function attachBinder (binder, binderKey, notBinding, element, viewModel, bindingValueArrayOrString)
+    //function attachBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain)
+    function attachBinder (binder, viewModel, attributeNameChain, binderInfo)
     {
-        var attributeNameChain = _.isString(bindingValueArrayOrString) ? bindingValueArrayOrString.split(".") : bindingValueArrayOrString,
-            vm = viewModel,
-            listener, metaData;
+        var listener, metaData;
 
         if (attributeNameChain.length > 1) {
-            listener = _.bind(updateBinder, null, binder, binderKey, notBinding, element, vm, attributeNameChain.slice(1));
+            //listener = _.bind(updateBinder, null, binder, binderKey, notBinding, element, viewModel, attributeNameChain.slice(1));
+            listener = _.bind(updateBinder, null, binder, viewModel, attributeNameChain.slice(1), binderInfo);
             
-            metaData = getMetaData(element, binder, binderKey, attributeNameChain, true);
+            metaData = getMetaData(binderInfo.element, binder, binderInfo.key, attributeNameChain, true);
             metaData.eventName = attributeNameChain[1] + "Change";
             metaData.listener = listener;
-            metaData.model = vm;
+            metaData.model = viewModel;
 
-            vm.after(attributeNameChain[1] + "Change", listener);
-            vm.on("destroy", _.bind(detachBinder, null, binder, binderKey, notBinding, element, vm, attributeNameChain));
+            viewModel.after(attributeNameChain[1] + "Change", listener);
+            //viewModel.on("destroy", _.bind(detachBinder, null, binder, binderKey, notBinding, element, viewModel, attributeNameChain));
+            viewModel.on("destroy", _.bind(detachBinder, null, binder, viewModel, attributeNameChain, binderInfo));
 
-            attachBinder(binder, binderKey, notBinding, element, vm.get(attributeNameChain[1]), attributeNameChain.slice(1));
+            //attachBinder(binder, binderKey, notBinding, element, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1));
+            attachBinder(binder, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1), binderInfo);
 
             if (attributeNameChain.length === 2) {
-                startBinder(binder, binderKey, notBinding, element, vm, [attributeNameChain[1]]);
-                updateBinder(binder, binderKey, notBinding, element, vm, [attributeNameChain[1]]);
+                //startBinder(binder, binderKey, notBinding, element, viewModel, [attributeNameChain[1]]);
+                //updateBinder(binder, binderKey, notBinding, element, viewModel, [attributeNameChain[1]]);
+                startBinder(binder, viewModel, [attributeNameChain[1]], binderInfo);
+                updateBinder(binder, viewModel, [attributeNameChain[1]], binderInfo);
             }
         }
     }
 
-    function startBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain)
+    //function startBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain)
+    function startBinder (binder, viewModel, attributeNameChain, binderInfo)
     {
         if (_.isFunction(binder.start)) {
-            binder.start(element, viewModel.get(attributeNameChain[0]), binderKey, notBinding, null, getMetaData(element, binder, binderKey, attributeNameChain, true));
+            binder.start(binderInfo.element, viewModel.get(attributeNameChain[0]), binderInfo, getMetaData(binderInfo.element, binder, binderInfo.key, attributeNameChain, true));
         }
     }
 
-    function updateBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain, e)
+    //function updateBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain, e)
+    function updateBinder (binder, viewModel, attributeNameChain, binderInfo, e)
     {
         var oldViewModel = e ? e.info.oldValue : null;
 
         if (attributeNameChain.length > 1) {
             if (oldViewModel) {
-                detachBinder(binder, binderKey, notBinding, element, oldViewModel, attributeNameChain);
+                detachBinder(binder, oldViewModel, attributeNameChain, binderInfo);
             }
-            attachBinder(binder, binderKey, notBinding, element, viewModel.get(attributeNameChain[0]), attributeNameChain);
+            attachBinder(binder, viewModel.get(attributeNameChain[0]), attributeNameChain, binderInfo);
         }
         else {
-            binder.update(element, viewModel.get(attributeNameChain[0]), binderKey, notBinding, oldViewModel, getMetaData(element, binder, binderKey, attributeNameChain, true));
+            //binder.update(binderInfo.element, viewModel.get(attributeNameChain[0]), binderInfo.key, binderInfo.not, oldViewModel, getMetaData(binderInfo.element, binder, binderInfo.key, attributeNameChain, true));
+            binder.update(binderInfo.element, viewModel.get(attributeNameChain[0]), oldViewModel, viewModel, attributeNameChain[0], binderInfo, getMetaData(binderInfo.element, binder, binderInfo.key, attributeNameChain, true));
         }
     }
 
-    function detachBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain)
+    //function detachBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain)
+    function detachBinder (binder, viewModel, attributeNameChain, binderInfo)
     {
         if (attributeNameChain.length > 1) {
-            var metaData = getMetaData(element, binder, binderKey, attributeNameChain);
+            var metaData = getMetaData(binderInfo.element, binder, binderInfo.key, attributeNameChain);
             if (metaData && metaData.listener) {
                 viewModel.detachAfter(attributeNameChain[1] + "Change", metaData.listener);
                 delete metaData.eventName;
@@ -152,7 +167,7 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
                 delete metaData.model;
             }
             
-            detachBinder(binder, binderKey, notBinding, element, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1));
+            detachBinder(binder, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1), binderInfo);
         }
     }
 
@@ -351,6 +366,27 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
         return bindingString ? parseBindingsObject(bindingString) : null;
     }
 
+    function getBindingOperators (key)
+    {
+        var ops = {};
+
+        for (var i = 0, length = bindingOperators.length; i < length; i += 1) {
+            ops[bindingOperators[i]] = false;
+        }
+
+        key = _.trim(key);
+
+        while (key && _.indexOf(bindingOperators, key.charAt(0)) !== -1) {
+            ops[key.charAt(0)] = true;
+            key = key.substring(1);
+        }
+
+        return {
+            key: key,
+            ops: ops
+        };
+    }
+
     /*
      * Element Binding Functions
      */
@@ -361,22 +397,26 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
             bindChildren = true;
 
         _.each(bindings, function (binding) {
-            var not = false,
-                binder;
+            var operators = getBindingOperators(binding.key),
+                bindingInfo, binder;
 
-            binding.key = _.trim(binding.key);
+            //binding.key = operators.key;
+            bindingInfo = operators.ops;
+            bindingInfo.key = operators.key;
+            bindingInfo.element = element;
+            //binding.key = _.trim(binding.key);
 
-            if (_.startsWith(binding.key, "!")) {
+            /*if (_.startsWith(binding.key, "!")) {
                 not = true;
                 binding.key = binding.key.substring(1);
-            }
+            }*/
 
-            if (_.startsWith(binding.key, ".")) {
+            if (_.startsWith(bindingInfo.key, ".")) {
                 binder = databindings["class"];
-                binding.key = binding.key.substring(1);
+                bindingInfo.key = bindingInfo.key.substring(1);
             }
             else {
-                binder = databindings[binding.key];
+                binder = databindings[bindingInfo.key];
             }
 
             if (!_.isObject(binder)) {
@@ -387,7 +427,13 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
                 bindChildren &= binder.bindChildren;
             }
 
-            attachBinder(binder, binding.key, not, element, viewModel, [null].concat(_.trim(binding.value).split(".")));
+            //attachBinder(binder, binding.key, not, element, viewModel, [null].concat(_.trim(binding.value).split(".")));
+            /*attachBinder(binder, viewModel, [null].concat(_.trim(binding.value).split(".")), {
+                key: binding.key,
+                not: not,
+                element: element
+            });*/
+            attachBinder(binder, viewModel, [null].concat(_.trim(binding.value).split(".")), bindingInfo);
         });
 
         // Bind children
@@ -414,6 +460,11 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
         // TODO: this is good for debugging but should it be exposed?
         metaData: elementMetaDataStore,
         getMetaData: getElementMetaData,
+
+        /**
+         * Override or append to in order to add new operators to bindings. Defaults to ["!", "-"]
+         */
+        bindingOperators: bindingOperators,
 
         applyBindings: function (viewModel, element)
         {

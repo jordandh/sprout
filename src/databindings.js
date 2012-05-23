@@ -98,6 +98,35 @@ define("databindings", ["util", "dom"], function (_, $) {
     {
         resetItems(element, e.src, metaData);
     }
+
+    function afterValueChanged (element, metaData)
+    {
+        var el = $(element);
+
+        // TODO: might not want to do this (same thing for afterCheckedChanged)
+        // Setting the value on the view model might be rejected if the value did not validate. If that happens then update the element's value to stay in sync with the view model.
+        if (!metaData.viewModel.set(metaData.attributeName, el.val())) {
+            el.val(metaData.viewModel.get(metaData.attributeName));
+        }
+    }
+
+    function afterCheckedChanged (element, info, metaData)
+    {
+        var el, value;
+
+        if (element.type === "checkbox") {
+            if (!metaData.viewModel.set(metaData.attributeName, info["!"] ? !element.checked : element.checked)) {
+                value = metaData.viewModel.get(metaData.attributeName);
+                element.checked = info["!"] ? !value : !!value;
+            }
+        }
+        else if (element.type === "radio") {
+            el = $(element);
+            if (!metaData.viewModel.set(metaData.attributeName, el.val())) {
+                element.checked = (metaData.viewModel.get(metaData.attributeName) === el.val());
+            }
+        }
+    }
     
     var databindings = {
         text: {
@@ -115,50 +144,104 @@ define("databindings", ["util", "dom"], function (_, $) {
         },
 
         attr: {
-            update: function (element, value, name, not)
+            update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
-                // If a 'not' operation then it can be assumed this is an attribute that either exists or does not exist on an element (disabled, required, etc)
-                if (not) {
+                // If a '!' operation then it can be assumed this is an attribute that either exists or does not exist on an element (disabled, required, etc)
+                if (info["!"]) {
                     if (value) {
-                        element.removeAttribute(name);
+                        element.removeAttribute(info.key);
                     }
                     else {
-                        element.setAttribute(name, "");
+                        element.setAttribute(info.key, "");
                     }
                 }
                 else {
                     if (value === false || value === null || _.isUndefined(value)) {
-                        element.removeAttribute(name);
+                        element.removeAttribute(info.key);
                     }
                     else {
-                        element.setAttribute(name, value.toString());
+                        element.setAttribute(info.key, value.toString());
                     }
                 }
             }
         },
 
         "class": {
-            update: function (element, value, name, not)
+            update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
-                $(element).toggleClass(name, not ? !value : !!value);
+                $(element).toggleClass(info.key, info["!"] ? !value : !!value);
             }
         },
 
         checked: {
-            update: function (element, value, name, not)
+            start: function (element, value, info, metaData)
             {
+                // If this is two-way binding
+                if (!info["-"]) {
+                    var listener = _.bind(afterCheckedChanged, null, element, info, metaData);
+                    metaData.checkedListener = listener;
+                    $(element).change(listener);
+                }
+            },
+
+            stop: function (element, metaData)
+            {
+                if (_.isFunction(metaData.checkedListener)) {
+                    $(element).unbind("change", metaData.checkedListener);
+                }
+
+                delete metaData.checkedListener;
+                delete metaData.viewModel;
+                delete metaData.attributeName;
+            },
+
+            update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
+            {
+                // If this is two-way binding
+                if (!info["-"]) {
+                    metaData.viewModel = viewModel;
+                    metaData.attributeName = attributeName;
+                }
+
                 if (element.type === "checkbox") {
-                    element.checked = not ? !value : !!value;
+                    element.checked = info["!"] ? !value : !!value;
                 }
                 else if (element.type === "radio") {
-                    element.checked = (not ? value !== element.value : value === element.value);
+                    element.checked = (value === $(element).val());
                 }
             }
         },
 
         value: {
-            update: function (element, value)
+            start: function (element, value, info, metaData)
             {
+                // If this is two-way binding
+                if (!info["-"]) {
+                    var listener = _.bind(afterValueChanged, null, element, metaData);
+                    metaData.changeListener = listener;
+                    $(element).change(listener);
+                }
+            },
+
+            stop: function (element, metaData)
+            {
+                if (_.isFunction(metaData.changeListener)) {
+                    $(element).unbind("change", metaData.changeListener);
+                }
+
+                delete metaData.changeListener;
+                delete metaData.viewModel;
+                delete metaData.attributeName;
+            },
+
+            update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
+            {
+                // If this is two-way binding
+                if (!info["-"]) {
+                    metaData.viewModel = viewModel;
+                    metaData.attributeName = attributeName;
+                }
+
                 $(element).val(value);
             }
         },
@@ -166,21 +249,36 @@ define("databindings", ["util", "dom"], function (_, $) {
         foreach: {
             bindChildren: false,
 
-            start: function (element, value, name, not, oldValue, metaData)
+            start: function (element, value, info, metaData)
             {
                 metaData.template = $(element).html();
                 $(element).empty();
             },
 
-            stop: function (element, value, name, not, oldValue, metaData)
+            stop: function (element, metaData)
             {
+                var viewModel = metaData ? metaData.viewModel : null;
+
+                if (viewModel) {
+                    viewModel.detachAfter("add", metaData.addListener);
+                    viewModel.detachAfter("remove", metaData.removeListener);
+                    viewModel.detachAfter("reset", metaData.resetListener);
+                    viewModel.detachAfter("sort", metaData.sortListener);
+                }
+
+                delete metaData.viewModel;
                 delete metaData.template;
+                delete metaData.addListener;
+                delete metaData.removeListener;
+                delete metaData.resetListener;
+                delete metaData.sortListener;
             },
 
-            update: function (element, value, name, not, oldValue, metaData)
+            update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
                 var listener;
 
+                // TODO: test to make sure oldValue is the collection and not something else
                 if (oldValue) {
                     oldValue.detachAfter("add", metaData.addListener);
                     oldValue.detachAfter("remove", metaData.removeListener);
@@ -189,6 +287,8 @@ define("databindings", ["util", "dom"], function (_, $) {
                 }
 
                 if (value) {
+                    metaData.viewModel = value;
+
                     listener = _.bind(afterModelsAdded, null, element, metaData);
                     metaData.addListener = listener;
                     value.after("add", listener);
