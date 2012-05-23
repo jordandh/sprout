@@ -143,7 +143,11 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
     {
         var oldViewModel = e ? e.info.oldValue : null;
 
-        if (attributeNameChain.length > 1) {
+        // If the element has been removed from the dom since the binding was setup
+        if (!$.contains(document.body, binderInfo.element)) {
+            unbindElement(binderInfo.element);
+        }
+        else if (attributeNameChain.length > 1) {
             if (oldViewModel) {
                 detachBinder(binder, oldViewModel, attributeNameChain, binderInfo);
             }

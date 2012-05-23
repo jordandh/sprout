@@ -150,6 +150,197 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
             assertFalse("meta data listener function was not removed from the view model", foundListener);
         },
 
+        "test databind.databindings are removed if element is removed from dom": function () {
+            var template = "<span data-bind='text: firstName'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            var boundElement = $("span", this.element).get(0);
+
+            var metaDataKey = boundElement.__databind__;
+            assertString("element data key is not on element", metaDataKey);
+            assertObject("element medtaData key does not map to its metaData in the metaData store", databind.metaData[metaDataKey]);
+
+            var metaData = databind.getMetaData($("span", this.element).get(0));
+            assertObject("element metaData does not exist", metaData);
+
+            var binderMetaData = metaData["text:firstName"];
+            assertObject("2nd binder metaData does not exist", binderMetaData);
+
+            binderMetaData = metaData["text:.firstName"];
+            assertObject("1st binder metaData does not exist", binderMetaData);
+
+            var binderListener = binderMetaData.listener;
+            assertFunction("1st binder metaData does not have a listener", binderListener);
+
+            var listeners = this.author.events.firstnamechange.after;
+            var foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+
+            assert("meta data function is not a listener on the view model", foundListener);
+
+            this.node.remove();
+
+            assertFalse("bound element is still in the dom", $.contains(document.body, boundElement));
+            assertString("element data key is still on element after dom removal but before binding removal", boundElement.__databind__);
+            assertSame("element data key does not match data key before dom removal", metaDataKey, boundElement.__databind__);
+
+            this.author.set("firstName", "Will");
+
+            assertNull("element data key was not removed from element after removal", boundElement.__databind__);
+            assertUndefined("element medtaData key was not removed from element metaData store", databind.metaData[metaDataKey]);
+
+            listeners = this.author.events.firstnamechange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+
+            assertFalse("meta data listener function was not removed from the view model", foundListener);
+        },
+
+        "test databind.databindings are removed for chain if element is removed from dom": function () {
+            var template = "<span data-bind='text: friend.firstName, title: firstName'></span>";
+
+            this.node.html(template);
+
+            var friend = Author.create({
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            });
+
+            this.author.set("friend", friend);
+
+            databind.applyBindings(this.author, this.element);
+
+            var boundElement = $("span", this.element).get(0);
+
+            var metaDataKey = boundElement.__databind__;
+            assertString("element data key is not on element", metaDataKey);
+            assertObject("element medtaData key does not map to its metaData in the metaData store", databind.metaData[metaDataKey]);
+
+            var metaData = databind.getMetaData($("span", this.element).get(0));
+            assertObject("element metaData does not exist", metaData);
+
+            var binderMetaData3 = metaData["text:firstName"];
+            assertObject("3rd binder metaData does not exist", binderMetaData3);
+
+            var binderMetaData2 = metaData["text:friend.firstName"];
+            assertObject("2nd binder metaData does not exist", binderMetaData2);
+
+            var binderMetaData1 = metaData["text:.friend.firstName"];
+            assertObject("1st binder metaData does not exist", binderMetaData1);
+
+            var titleBinderMetaData2 = metaData["title:firstName"];
+            assertObject("2nd title binder metaData does not exist", binderMetaData2);
+
+            var titleBinderMetaData1 = metaData["title:.firstName"];
+            assertObject("1st title binder metaData does not exist", binderMetaData1);
+
+            var binderListener2 = binderMetaData2.listener;
+            assertFunction("2nd binder metaData does not have a listener", binderListener2);
+
+            var binderListener1 = binderMetaData1.listener;
+            assertFunction("1st binder metaData does not have a listener", binderListener1);
+
+            var titleBinderListener1 = titleBinderMetaData1.listener;
+            assertFunction("1st title binder metaData does not have a listener", titleBinderListener1);
+
+            var listeners = this.author.events.friendchange.after;
+            var foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderListener1) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data listener1 is not attached to the view model", foundListener);
+
+            listeners = friend.events.firstnamechange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderListener2) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data listener2 is not attached to the friend view model", foundListener);
+
+            listeners = this.author.events.firstnamechange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === titleBinderListener1) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data title listener is not attached to the view model", foundListener);
+
+            this.node.remove();
+
+            assertFalse("bound element is still in the dom", $.contains(document.body, boundElement));
+            assertString("element data key is still on element after dom removal but before binding removal", boundElement.__databind__);
+            assertSame("element data key does not match data key before dom removal", metaDataKey, boundElement.__databind__);
+
+            //this.author.set("friend", null);
+            this.author.set("firstName", "Will");
+
+            assertNull("element data key was not removed from element after removal", boundElement.__databind__);
+            assertUndefined("element medtaData key was not removed from element metaData store", databind.metaData[metaDataKey]);
+
+            listeners = this.author.events.friendchange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderListener1) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data listener1 was not removed from the view model", foundListener);
+
+            listeners = friend.events.firstnamechange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderListener2) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data listener2 was not removed from the friend view model", foundListener);
+
+            listeners = this.author.events.firstnamechange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === titleBinderListener1) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data title listener was not removed from the view model", foundListener);
+        },
+
         "test databindings.text": function () {
             var template = "<span data-bind='text: firstName'></span>";
 
