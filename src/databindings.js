@@ -45,6 +45,8 @@ define("databindings", ["util", "dom"], function (_, $) {
     /**
      * Handler for when models are added to the foreach's collection.
      * @private
+     * @param {Object} element The dom element the foreach binder is bound to.
+     * @param {Object} metaData The meta data for the foreach binding.
      * @param {Object} e The event object.
      */
     function afterModelsAdded (element, metaData, e)
@@ -60,6 +62,8 @@ define("databindings", ["util", "dom"], function (_, $) {
     /**
      * Handler for when models are removed from the foreach's collection.
      * @private
+     * @param {Object} element The dom element the foreach binder is bound to.
+     * @param {Object} metaData The meta data for the foreach binding.
      * @param {Object} e The event object.
      */
     function afterModelsRemoved (element, metaData, e)
@@ -84,6 +88,9 @@ define("databindings", ["util", "dom"], function (_, $) {
     /**
      * Handler for when the foreach's collection is reset.
      * @private
+     * @param {Object} element The dom element the foreach binder is bound to.
+     * @param {Object} metaData The meta data for the foreach binding.
+     * @param {Object} e The event object.
      */
     function afterReset (element, metaData, e)
     {
@@ -93,12 +100,21 @@ define("databindings", ["util", "dom"], function (_, $) {
     /**
      * Handler for when the foreach's collection is sorted.
      * @private
+     * @param {Object} element The dom element the foreach binder is bound to.
+     * @param {Object} metaData The meta data for the foreach binding.
+     * @param {Object} e The event object.
      */
     function afterSort (element, metaData, e)
     {
         resetItems(element, e.src, metaData);
     }
 
+    /**
+     * Handler for when the value binder's dom element's value changes.
+     * @private
+     * @param {Object} element The dom element the value binder is bound to.
+     * @param {Object} metaData The meta data for the value binding.
+     */
     function afterValueChanged (element, metaData)
     {
         var el = $(element);
@@ -110,7 +126,14 @@ define("databindings", ["util", "dom"], function (_, $) {
         }
     }
 
-    function afterCheckedChanged (element, info, metaData)
+    /**
+     * Handler for when the value binder's dom element's value changes.
+     * @private
+     * @param {Object} element The dom element the value binder is bound to.
+     * @param {Object} metaData The meta data for the value binding.
+     * @param {Object} info The extra information about the binding.
+     */
+    function afterCheckedChanged (element, metaData, info)
     {
         var el, value;
 
@@ -128,7 +151,23 @@ define("databindings", ["util", "dom"], function (_, $) {
         }
     }
     
+    /**
+     * @class databindings
+     * Provides the logic and behavior for individual data binders.
+     * @singleton
+     */
+    /**
+     * The databind object that applies these binders to dom elements.
+     * @property databind
+     * @type Object
+     */
     var databindings = {
+        /**
+         * @class text
+         * The text binder binds a model's attribute value to the text content of a dom element.
+         * @singleton
+         * @namespace databindings
+         */
         text: {
             update: function (element, value)
             {
@@ -136,6 +175,12 @@ define("databindings", ["util", "dom"], function (_, $) {
             }
         },
 
+        /**
+         * @class html
+         * The html binder binds a model's attribute value to the html content of a dom element.
+         * @singleton
+         * @namespace databindings
+         */
         html: {
             update: function (element, value)
             {
@@ -143,6 +188,12 @@ define("databindings", ["util", "dom"], function (_, $) {
             }
         },
 
+        /**
+         * @class attr
+         * The attr binder binds a model's attribute value to a dom element's attribute.
+         * @singleton
+         * @namespace databindings
+         */
         attr: {
             update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
@@ -166,6 +217,12 @@ define("databindings", ["util", "dom"], function (_, $) {
             }
         },
 
+        /**
+         * @class class
+         * The class binder binds a model's attribute value to a dom element's class names.
+         * @singleton
+         * @namespace databindings
+         */
         "class": {
             update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
@@ -173,12 +230,18 @@ define("databindings", ["util", "dom"], function (_, $) {
             }
         },
 
+        /**
+         * @class checked
+         * The checked binder binds a model's attribute value to a checkbox's checked property. By default this binder uses two way binding.
+         * @singleton
+         * @namespace databindings
+         */
         checked: {
             start: function (element, value, info, metaData)
             {
                 // If this is two-way binding
                 if (!info["-"]) {
-                    var listener = _.bind(afterCheckedChanged, null, element, info, metaData);
+                    var listener = _.bind(afterCheckedChanged, null, element, metaData, info);
                     metaData.checkedListener = listener;
                     $(element).change(listener);
                 }
@@ -212,6 +275,12 @@ define("databindings", ["util", "dom"], function (_, $) {
             }
         },
 
+        /**
+         * @class value
+         * The value binder binds a model's attribute value to an input's value property. By default this binder uses two way binding.
+         * @singleton
+         * @namespace databindings
+         */
         value: {
             start: function (element, value, info, metaData)
             {
@@ -246,6 +315,12 @@ define("databindings", ["util", "dom"], function (_, $) {
             }
         },
 
+        /**
+         * @class foreach
+         * The foreach binder binds a collection to a dom element's content.
+         * @singleton
+         * @namespace databindings
+         */
         foreach: {
             bindChildren: false,
 
