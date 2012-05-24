@@ -5,6 +5,7 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
         elementExpando = "__databind__",
         elementMetaDataStore = {},
         bindingOperators = ["!", "-"],
+        restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g,
         databind;
 
     /*
@@ -100,13 +101,11 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
     /*
      * Data Binder Functions
      */
-    //function attachBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain)
     function attachBinder (binder, viewModel, attributeNameChain, binderInfo)
     {
         var listener, metaData;
 
         if (attributeNameChain.length > 1) {
-            //listener = _.bind(updateBinder, null, binder, binderKey, notBinding, element, viewModel, attributeNameChain.slice(1));
             listener = _.bind(updateBinder, null, binder, viewModel, attributeNameChain.slice(1), binderInfo);
             
             metaData = getMetaData(binderInfo.element, binder, binderInfo.key, attributeNameChain, true);
@@ -115,22 +114,17 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
             metaData.model = viewModel;
 
             viewModel.after(attributeNameChain[1] + "Change", listener);
-            //viewModel.on("destroy", _.bind(detachBinder, null, binder, binderKey, notBinding, element, viewModel, attributeNameChain));
             viewModel.on("destroy", _.bind(detachBinder, null, binder, viewModel, attributeNameChain, binderInfo));
 
-            //attachBinder(binder, binderKey, notBinding, element, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1));
             attachBinder(binder, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1), binderInfo);
 
             if (attributeNameChain.length === 2) {
-                //startBinder(binder, binderKey, notBinding, element, viewModel, [attributeNameChain[1]]);
-                //updateBinder(binder, binderKey, notBinding, element, viewModel, [attributeNameChain[1]]);
                 startBinder(binder, viewModel, [attributeNameChain[1]], binderInfo);
                 updateBinder(binder, viewModel, [attributeNameChain[1]], binderInfo);
             }
         }
     }
 
-    //function startBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain)
     function startBinder (binder, viewModel, attributeNameChain, binderInfo)
     {
         if (_.isFunction(binder.start)) {
@@ -138,7 +132,6 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
         }
     }
 
-    //function updateBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain, e)
     function updateBinder (binder, viewModel, attributeNameChain, binderInfo, e)
     {
         var oldViewModel = e ? e.info.oldValue : null;
@@ -159,7 +152,6 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
         }
     }
 
-    //function detachBinder (binder, binderKey, notBinding, element, viewModel, attributeNameChain)
     function detachBinder (binder, viewModel, attributeNameChain, binderInfo)
     {
         if (attributeNameChain.length > 1) {
@@ -178,7 +170,6 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
     /*
      * Element Attribute Parsing Functions
      */
-    var restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g;
     function restoreTokens (string, tokens)
     {
         var prevValue = null;
@@ -278,75 +269,6 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
         return result;
     }
 
-
-    var javaScriptAssignmentTarget = /^[\_$a-z][\_$a-z0-9]*(\[.*?\])*(\.[\_$a-z][\_$a-z0-9]*(\[.*?\])*)*$/i;
-    var javaScriptReservedWords = ["true", "false"];
-
-    function isWriteableValue(expression) {
-        if (_.indexOf(javaScriptReservedWords, ko.utils.stringTrim(expression).toLowerCase()) >= 0)
-            return false;
-        return expression.match(javaScriptAssignmentTarget) !== null;
-    }
-
-    function ensureQuoted(key) {
-        var trimmedKey = _.trim(key);
-        switch (trimmedKey.length && trimmedKey.charAt(0)) {
-            case "'":
-            case '"':
-                return key;
-            default:
-                return "'" + trimmedKey + "'";
-        }
-    }
-
-    function buildEvalWithinScopeFunction (expression, scopeLevels) {
-        // Build the source for a function that evaluates "expression"
-        // For each scope variable, add an extra level of "with" nesting
-        // Example result: with(sc[1]) { with(sc[0]) { return (expression) } }
-        var functionBody = "return (" + expression + ")";
-        for (var i = 0; i < scopeLevels; i++) {
-            functionBody = "with(sc[" + i + "]) { " + functionBody + " } ";
-        }
-        return new Function("sc", functionBody);
-    }
-
-    function insertPropertyAccessorsIntoJson (objectLiteralStringOrKeyValueArray) {
-        var keyValueArray = typeof objectLiteralStringOrKeyValueArray === "string"
-            ? parseBindingsObject(objectLiteralStringOrKeyValueArray)
-            : objectLiteralStringOrKeyValueArray;
-        var resultStrings = [], propertyAccessorResultStrings = [];
-
-        var keyValueEntry;
-        for (var i = 0; keyValueEntry = keyValueArray[i]; i++) {
-            if (resultStrings.length > 0)
-                resultStrings.push(",");
-
-            if (keyValueEntry['key']) {
-                var quotedKey = ensureQuoted(keyValueEntry['key']), val = keyValueEntry['value'];
-                resultStrings.push(quotedKey);
-                resultStrings.push(":");
-                resultStrings.push(val);
-
-                if (isWriteableValue(ko.utils.stringTrim(val))) {
-                    if (propertyAccessorResultStrings.length > 0)
-                        propertyAccessorResultStrings.push(", ");
-                    propertyAccessorResultStrings.push(quotedKey + " : function(__ko_value) { " + val + " = __ko_value; }");
-                }
-            } else if (keyValueEntry['unknown']) {
-                resultStrings.push(keyValueEntry['unknown']);
-            }
-        }
-
-        var combinedResult = resultStrings.join("");
-        if (propertyAccessorResultStrings.length > 0) {
-            var allPropertyAccessors = propertyAccessorResultStrings.join("");
-            combinedResult = combinedResult + ", '_ko_property_writers' : { " + allPropertyAccessors + " } ";
-        }
-
-        return combinedResult;
-    }
-
-
     function getElementBindingsString (element)
     {
         if (element.nodeType === 1) {
@@ -357,16 +279,6 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
     function getElementBindings (element)
     {
         var bindingString = getElementBindingsString(element);
-
-        /*if (bindingString) {
-            var json = "{" + insertPropertyAccessorsIntoJson(bindingString) + "}";
-            var func = buildEvalWithinScopeFunction(json, 0);
-            var result = func();
-            //console.log(json);
-            console.log(result);
-        }*/
-
-
         return bindingString ? parseBindingsObject(bindingString) : null;
     }
 
@@ -404,16 +316,9 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
             var operators = getBindingOperators(binding.key),
                 bindingInfo, binder;
 
-            //binding.key = operators.key;
             bindingInfo = operators.ops;
             bindingInfo.key = operators.key;
             bindingInfo.element = element;
-            //binding.key = _.trim(binding.key);
-
-            /*if (_.startsWith(binding.key, "!")) {
-                not = true;
-                binding.key = binding.key.substring(1);
-            }*/
 
             if (_.startsWith(bindingInfo.key, ".")) {
                 binder = databindings["class"];
@@ -431,12 +336,6 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
                 bindChildren &= binder.bindChildren;
             }
 
-            //attachBinder(binder, binding.key, not, element, viewModel, [null].concat(_.trim(binding.value).split(".")));
-            /*attachBinder(binder, viewModel, [null].concat(_.trim(binding.value).split(".")), {
-                key: binding.key,
-                not: not,
-                element: element
-            });*/
             attachBinder(binder, viewModel, [null].concat(_.trim(binding.value).split(".")), bindingInfo);
         });
 

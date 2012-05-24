@@ -60,7 +60,7 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
         },
 
         tearDown: function () {
-            //this.node.remove();
+            this.node.remove();
             this.node = null;
             this.element = null;
             this.author.destroy();
