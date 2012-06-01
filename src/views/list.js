@@ -259,10 +259,7 @@ define("views/list", ["util", "dom", "view"], function (_, $, view) {
             sort: function (options)
             {
                 if (!_.isFunction(this.comparator)) {
-                    throw {
-                        name: "ListSortError",
-                        message: "A comparator function must be defined to sort a collection."
-                    };
+                    throw new Error("A comparator function must be defined to sort a collection.");
                 }
 
                 this.sortBy(this.comparator, options);

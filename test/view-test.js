@@ -43,6 +43,17 @@ TestCase("view", ["util", "dom", "view"], function (_, $, view) {
             assertFalse("The view bounding element has the hidden class name.", element.hasClass("hidden"));
         },
 
+        "test view.render throws with no parent node": function ()
+        {
+            var foo = view.create();
+
+            assertFalse("The view rendered attribute is not false before rendering.", foo.get("rendered"));
+
+            assertException("render did not throw correct exception", function () {
+                foo.render();
+            }, "Error");
+        },
+
         "test view.render when disabled": function ()
         {
             var foo = view.create();

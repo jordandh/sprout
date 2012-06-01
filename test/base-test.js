@@ -26,6 +26,20 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			assert("c is not destroyed.", c.get("destroyed"));
 			assertUndefined("c.plugins is not undefined.", c.get("plugins"));
 		},
+
+		"test base.destroy throws if called more than once": function () {
+			var c = Base.create();
+			
+			assert("c is destroyed.", !c.get("destroyed"));
+			
+			c.destroy();
+			
+			assert("c is not destroyed.", c.get("destroyed"));
+
+			assertException("destroy did not throw correct exception", function () {
+				c.destroy();
+			}, "Error");
+		},
 		
 		"test base.fire": function () {
 			expectAsserts(2);

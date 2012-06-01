@@ -471,10 +471,7 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
             destroy: function ()
             {
                 if (this.get("destroyed")) {
-                    throw {
-                        name: "DestroyError",
-                        message: "This object has already been destroyed."
-                    };
+                    throw new Error("This object has already been destroyed.");
                 }
                 
                 this.fire("destroy", null, function () {

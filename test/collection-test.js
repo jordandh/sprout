@@ -632,7 +632,7 @@ TestCase("collection", ["util", "collection", "model"], function (_, collection,
 
 			assertException("sort did not throw correct exception", function () {
 				col.sort();
-			}, "CollectionSortError");
+			}, "Error");
 		},
 
 		"test collection.sort": function ()

@@ -390,10 +390,7 @@ define("collection", ["util", "base", "model", "data"], function (_, base, model
             sort: function (options)
             {
                 if (!_.isFunction(this.comparator)) {
-                    throw {
-                        name: "CollectionSortError",
-                        message: "A comparator function must be defined to sort a collection."
-                    };
+                    throw new Error("A comparator function must be defined to sort a collection.");
                 }
 
                 this.sortBy(this.comparator, options);

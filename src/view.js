@@ -178,10 +178,7 @@ define("view", ["util", "dom", "base"], function (_, $, base) {
                 }
 
                 if (!parentNode) {
-                    throw {
-                        name: "TypeError",
-                        message: "Invalid parentNode specified for view.render function."
-                    };
+                    throw new Error("Invalid parentNode specified for view.render function.");
                 }
 
                 options = options || {};

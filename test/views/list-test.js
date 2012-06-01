@@ -240,7 +240,7 @@ TestCase("views/list", ["util", "dom", "views/list"], function (_, $, list) {
 
             assertException("sort did not throw correct exception", function () {
                 l.sort();
-            }, "ListSortError");
+            }, "Error");
         },
 
         "test list.sortBy before render": function ()
