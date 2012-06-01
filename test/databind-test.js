@@ -362,11 +362,11 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
 
             databind.applyBindings(this.author, this.element);
 
-            assertSame("data bound html value is incorrect", this.author.get("title"), $("span", this.element).html());
+            assertSame("data bound html value is incorrect", this.author.get("title").toLowerCase(), $("span", this.element).html().toLowerCase());
 
             this.author.set("title", "<i>Number One</i>");
 
-            assertSame("data bound html value is incorrect after change", "<i>Number One</i>", $("span", this.element).html());
+            assertSame("data bound html value is incorrect after change", "<i>Number One</i>".toLowerCase(), $("span", this.element).html().toLowerCase());
         },
 
         "test databindings.attr": function () {

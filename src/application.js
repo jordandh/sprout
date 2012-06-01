@@ -1,4 +1,4 @@
-define("application", ["util", "base"], function (_, base) {
+define("application", ["util", "base", "pubsub"], function (_, base, pubsub) {
     "use strict";
 
     /**
@@ -12,9 +12,20 @@ define("application", ["util", "base"], function (_, base) {
         this.get("components")[component.name] = component;
 
         require([component.path], function (module) {
-            var comp = module.create();
-            comp.start();
-            component.module = comp;
+            try {
+                var comp = module.create();
+                comp.start();
+                component.module = comp;
+            }
+            catch (ex) {
+                pubsub.publish("error", {
+                    exception: ex,
+                    info: {
+                        action: "starting component",
+                        component: component
+                    }
+                }, this);
+            }
         });
     }
     
@@ -77,9 +88,20 @@ define("application", ["util", "base"], function (_, base) {
 
             if (component) {
                 if (component.module) {
-                    component.module.stop();
-                    component.module.destroy();
-                    component.module = null;
+                    try {
+                        component.module.stop();
+                        component.module.destroy();
+                        component.module = null;
+                    }
+                    catch (ex) {
+                        pubsub.publish("error", {
+                            exception: ex,
+                            info: {
+                                action: "stopping component",
+                                component: component
+                            }
+                        }, this);
+                    }
                 }
 
                 delete components[name];
