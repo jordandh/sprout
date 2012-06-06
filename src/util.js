@@ -14,7 +14,7 @@ define("util", ["underscore", "underscore.string"], function (_, _s) {
         "unique"
     ];
 
-    _.mixin(_s);
+    _.mixin(_s.exports());
 
     /**
      * @class util
