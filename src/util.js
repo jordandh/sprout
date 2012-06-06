@@ -1,4 +1,4 @@
-define("util", ["underscore"], function (_) {
+define("util", ["underscore", "underscore.string"], function (_, _s) {
     "use strict";
 
     var dontEnumMethods = [
@@ -13,6 +13,8 @@ define("util", ["underscore"], function (_) {
         "length",
         "unique"
     ];
+
+    _.mixin(_s);
 
     /**
      * @class util
@@ -56,29 +58,6 @@ define("util", ["underscore"], function (_) {
 
                 return true;
             });
-        },
-
-        /**
-         * Returns a copy of the provided string with no white space at the beginning or end.
-         * @param {String} str The string to trim.
-         * @return {String} Returns a copy of the provided string with no white space at the beginning or end.
-         */
-        trim: function (str)
-        {
-            return str.replace(/^\s*(\S*(?:\s+\S+)*)\s*$/, "$1");
-        },
-
-        /**
-         * Returns whether a string starts with another string.
-         * @param {String} str The string to check.
-         * @param {String} starts The string to look for at the start of str.
-         * @return {Boolean} Returns true if str begins with start.
-         */
-        startsWith: function(str, starts)
-        {
-            str += "";
-            starts += "";
-            return str.length >= starts.length && str.substring(0, starts.length) === starts;
         },
 
         /**

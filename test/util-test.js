@@ -141,11 +141,6 @@ TestCase("util", ["util", "base"], function (_, base) {
 			assertSame("array has incorrect item value", 3, a[1]);
 		},
 
-		"test _.trim": function ()
-		{
-			assertSame("string is not trimmed", "hello test", _.trim("  hello test     \n\t\r"));
-		},
-
 		"test _.prototypes": function ()
 		{
 			/*var p = {};
