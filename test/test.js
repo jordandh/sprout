@@ -80,7 +80,6 @@
         "assets/test/dom-test.js",
         "assets/test/base-test.js",
         "assets/test/plugin-test.js",
-        /*"assets/test/history-test.js",*/
         "assets/test/router-test.js",
         "assets/test/data-test.js",
         "assets/test/model-test.js",
