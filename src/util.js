@@ -18,7 +18,7 @@ define("util", ["underscore", "underscore.string"], function (_, _s) {
 
     /**
      * @class util
-     * Provides utility functions including the underscore api.
+     * Provides utility functions including the underscore and underscore.string api.
      * @singleton
      */
     _.mixin({
@@ -61,6 +61,34 @@ define("util", ["underscore", "underscore.string"], function (_, _s) {
         },
 
         /**
+         * Joins strings together to create a path. The path pieces are joined together with a '/'.
+         * @param {String} ... Supply any number of strings as arguments to join together.
+         * @return {String} Returns the strings joined together as a path.
+         */
+        joinPaths: function ()
+        {
+            var length = arguments.length,
+                delimiter = "/",
+                path, piece;
+
+            if (length === 0) {
+                return "";
+            }
+
+            path = arguments[0];
+
+            for (var i = 1; i < length; i += 1) {
+                piece = arguments[i];
+
+                if (piece !== "") {
+                    path = path.replace(/[\/\\]$/, "") + delimiter + piece.replace(/^[\/\\]/, "");
+                }
+            }
+
+            return path;
+        },
+
+        /**
          * Returns the prototype chain of an object. The first item in the array is the object and subsequent values are the prototypes up the chain.
          * @param {Object} obj An object to get the prototype chain of.
          * @return {Array} Returns the prototype chain of the object.
@@ -95,10 +123,6 @@ define("util", ["underscore", "underscore.string"], function (_, _s) {
          */
         create: function (prototype, members)
         {
-            // If ES5 is not available then use the code below to create an object.
-            /*function F () {}
-            F.prototype = prototype;
-            var obj = new F();*/
             var obj, F;
 
             if (Object.create) {
@@ -123,25 +147,12 @@ define("util", ["underscore", "underscore.string"], function (_, _s) {
 
                     // Fix for don't enum bug in IE8
                     _.each(dontEnumMethods, function (name) {
-                        /*var method = members[name];
-                        if (!_.isUndefined(method)) {
-                            obj[name] = method;
-                        }*/
                         if (members.hasOwnProperty(name)) {
                             obj[name] = members[name];
                         }
                     });
                 }
             }
-            
-            /*if (members) {
-                _.each(members, function (value, name) {
-                    obj[name] = value;
-                });
-            }*/
-            
-            // If ES5 is not available then super needs to be set on the object so that _.getPrototypeOf can use it.
-            //obj.super = prototype;
             
             return obj;
         },

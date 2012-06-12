@@ -141,6 +141,36 @@ TestCase("util", ["util", "base"], function (_, base) {
 			assertSame("array has incorrect item value", 3, a[1]);
 		},
 
+		"test _.joinPaths": function ()
+		{
+			assertSame("joined path has incorrect value", "test/for/path", _.joinPaths("test", "for", "path"));
+		},
+
+		"test _.joinPaths with no arguments": function ()
+		{
+			assertSame("joined path has incorrect value", "", _.joinPaths());
+		},
+
+		"test _.joinPaths with one argument": function ()
+		{
+			assertSame("joined path has incorrect value", "test", _.joinPaths("test"));
+		},
+
+		"test _.joinPaths with empty string piece": function ()
+		{
+			assertSame("joined path has incorrect value", "test/path", _.joinPaths("test", "", "path"));
+		},
+
+		"test _.joinPaths with / string piece": function ()
+		{
+			assertSame("joined path has incorrect value", "test/path", _.joinPaths("test", "/", "path"));
+		},
+
+		"test _.joinPaths with / in the pieces": function ()
+		{
+			assertSame("joined path has incorrect value", "/test/for/path/", _.joinPaths("/test/", "/for/", "/path/"));
+		},
+
 		"test _.prototypes": function ()
 		{
 			/*var p = {};
