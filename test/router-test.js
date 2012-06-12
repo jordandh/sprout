@@ -200,6 +200,57 @@ TestCase("router", ["router"], function (router) {
             r.destroy();
         },
 
+        "test router.add single route matches after start": function () {
+            expectAsserts(1);
+
+            var r = router.create(),
+                onStarfleet = function () {
+                    assert("this assert should be called", true);
+                },
+                o = {};
+
+            r.start("jsUnitTest.htm");
+            r.navigate("st/starfleet");
+
+            r.add("starfleet", {
+                path: "st/starfleet",
+                start: onStarfleet,
+                context: o
+            });
+
+            r.destroy();
+        },
+
+        "test router.add multiple routes matches after start": function () {
+            expectAsserts(1);
+
+            var r = router.create(),
+                onStarfleet = function () {
+                    assert("this assert should be called", true);
+                },
+                onMedical = function () {},
+                o = {},
+                med = {};
+
+            r.start("jsUnitTest.htm");
+            r.navigate("trek/starfleet");
+
+            r.add({
+                "starfleet": {
+                    path: "trek/starfleet",
+                    start: onStarfleet,
+                    context: o
+                },
+                "medical": {
+                    path: "trek/starfleet/medical",
+                    start: onMedical,
+                    context: med
+                }
+            });
+
+            r.destroy();
+        },
+
         "test router.remove": function () {
             var r = router.create(),
                 onStarfleet = function () {},
@@ -794,6 +845,42 @@ TestCase("router", ["router"], function (router) {
             r.start("jsUnitTest.htm/startrek");
 
             r.navigate("starfleet/medical/bcrusher");
+
+            r.destroy();
+        },
+
+        "test router.navigate calls stop on previously matched routes": function () {
+            expectAsserts(2);
+
+            var r = router.create(),
+                onStarfleet = function () {
+                    assert("this start assert should be called", true);
+                },
+                stopStarfleet = function () {
+                    assert("this stop assert should be called", true);
+                },
+                onMedical = function () {},
+                o = {},
+                med = {};
+
+            r.add({
+                "starfleet": {
+                    path: "startrek/starfleet",
+                    start: onStarfleet,
+                    stop: stopStarfleet,
+                    context: o
+                },
+                "medical": {
+                    path: "startrek/starfleet/medical",
+                    start: onMedical,
+                    context: med
+                }
+            });
+
+            r.start("jsUnitTest.htm");
+
+            r.navigate("startrek/starfleet");
+            r.navigate("nothing");
 
             r.destroy();
         }

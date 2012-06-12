@@ -10,6 +10,8 @@ define("component", ["util", "base"], function (_, base) {
 	return base.extend({
         /**
          * Starts up a component on a page. Child component objects should override this method to define its start up logic.
+         * @param {Object} resources
+         * {Object} router The application's shared router. The component can use it to setup url routing.
          */
         start: function ()
         {
@@ -17,6 +19,8 @@ define("component", ["util", "base"], function (_, base) {
 
         /**
          * Stop a component on a page. Child component objects should override this method to define its stop logic.
+         * @param {Object} resources
+         * {Object} router The application's shared router. The component can use it to setup url routing.
          */
         stop: function ()
         {

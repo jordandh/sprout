@@ -1,20 +1,23 @@
-define("application", ["util", "base", "pubsub"], function (_, base, pubsub) {
+define("application", ["util", "base", "pubsub", "router"], function (_, base, pubsub, router) {
     "use strict";
 
     /**
      * Adds and starts a component in the application.
      * @private
-     * @param {String} name The name of the module to add.
      * @param {Object} component The component to add to the application.
      */
     function addComponent (component)
     {
+        var rtr = this.router;
+
         this.get("components")[component.name] = component;
 
         require([component.path], function (module) {
             try {
                 var comp = module.create();
-                comp.start();
+                comp.start({
+                    router: rtr
+                });
                 component.module = comp;
             }
             catch (ex) {
@@ -31,7 +34,7 @@ define("application", ["util", "base", "pubsub"], function (_, base, pubsub) {
     
     /**
      * @class application
-     * Provides functionality for managing components on a page.
+     * Provides functionality for managing shared resources and components on a page.
      * @extends base
      */
     return base.extend({
@@ -51,35 +54,54 @@ define("application", ["util", "base", "pubsub"], function (_, base, pubsub) {
          */
         attributes: {
             /**
-             * @cfg {Object} components The unique client id of this model.
+             * @cfg {Object} components The components registered with the application.
              * @readOnly
              */
             components: { readOnly: true }
         },
 
         /**
-         * Registers and starts one or more components with the application.
-         * @param {Object|Array} components Either one component or an array of components to start. A component is an object with two properties:
+         * Starts up the application initializing shared resources and starting up components.
+         * @param {Object} options
+         * {Object} router The application's shared router. The component can use it to setup url routing.
+         * {Object|Array} components Either one component or an array of components to start. A component is an object with two properties:
          * {
          *    name: "<string unique name of the module>",
          *    path: "<string path to the module>"
          * }
          */
-        start: function (components)
+        start: function (options)
         {
+            var components;
+
+            _.defaults(options, {
+                components: null,
+                routing: true,
+                rootUrl: ""
+            });
+
+            // Start up the router
+            if (options.routing) {
+                this.router = router.create();
+                this.router.start(options.rootUrl);
+            }
+
+            // Start up the components
+            components = options.components;
+
             if (_.isArray(components)) {
                 _.each(components, function (component) {
                     addComponent.call(this, component);
                 }, this);
             }
-            else {
+            else if (_.isObject(components)) {
                 addComponent.call(this, name, components[name]);
             }
         },
 
         /**
-         * Stops and deregisters a module.
-         * @param {String} name The name of the module to stop.
+         * Stops and deregisters a component.
+         * @param {String} name The name of the component to stop.
          */
         stop: function (name)
         {
@@ -109,8 +131,8 @@ define("application", ["util", "base", "pubsub"], function (_, base, pubsub) {
         },
 
         /**
-         * Restarts a module.
-         * @param {String} name The name of the module to restart.
+         * Restarts a component.
+         * @param {String} name The name of the component to restart.
          */
         restart: function (name)
         {

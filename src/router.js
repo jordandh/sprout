@@ -1,9 +1,9 @@
-define("router", ["util", "base", "dom", "jquery.history"], function (_, base, $, history) {
+define("router", ["util", "base", "dom", "history", "pubsub"], function (_, base, $, history, pubsub) {
     "use strict";
 
-    var namedParam    = /:\w+/g,
-        splatParam    = /\*\w+/g,
-        escapeRegExp  = /[-[\]{}()+?.,\\^$|#\s]/g,
+    var namedParam = /:\w+/g,
+        splatParam = /\*\w+/g,
+        escapeRegExp = /[-[\]{}()+?.,\\^$|#\s]/g,
         pathStripper = /^[#\/]/;
 
     function hasPathRegExp (path)
@@ -29,12 +29,16 @@ define("router", ["util", "base", "dom", "jquery.history"], function (_, base, $
             throw new Error("Route name '" + name + "' already exists.");
         }
 
-        var route = {};
+        var route = {
+            name: name
+        };
         _.extend(route, routeConfig, {
             path: _.isRegExp(routeConfig.path) ? routeConfig.path : toPathRegExp(routeConfig.path)
         });
         
         this.routes[name] = route;
+
+        return route;
     }
 
     function removeRoute (name)
@@ -48,6 +52,85 @@ define("router", ["util", "base", "dom", "jquery.history"], function (_, base, $
         }
     }
 
+    function matchRoutes (path, routes)
+    {
+        var matches = [];
+
+        // Match the rootUrl portion of the path
+        path = path.replace(pathStripper, "");
+        if (_.startsWith(path, this.rootUrl)) {
+            path = path.substring(this.rootUrl.length).replace(pathStripper, "");
+        }
+
+        // Match routes to the path
+        _.each(routes, function (route) {
+            if (route.path.test(path)) {
+                matches.push({
+                    route: route,
+                    parameters: route.path.exec(path).slice(1)
+                });
+            }
+        });
+
+        return matches;
+    }
+
+    function startRoutes (path, routes, appendMatches)
+    {
+        var matches = matchRoutes.call(this, getRelativePath(), routes);
+
+        if (appendMatches) {
+            this.matchedRoutes = this.matchedRoutes.concat(matches);
+        }
+        else {
+            this.matchedRoutes = matches;
+        }
+
+        _.each(matches, function (match) {
+            if (_.isFunction(match.route.start)) {
+                try {
+                    match.route.start.apply(match.route.context, match.parameters);
+                }
+                catch (ex) {
+                    pubsub.publish("error", {
+                        exception: ex,
+                        info: {
+                            source: "router.startRoutes",
+                            match: match,
+                            path: path,
+                            routes: routes,
+                            appendMatches: appendMatches,
+                            matches: matches,
+                            matchedRoutes: this.matchedRoutes
+                        }
+                    }, this);
+                }
+            }
+        }, this);
+    }
+
+    function stopMatchedRoutes ()
+    {
+        _.each(this.matchedRoutes, function (match) {
+            if (_.isFunction(match.route.stop)) {
+                try {
+                    match.route.stop.apply(match.route.context, match.parameters);
+                }
+                catch (ex) {
+                    pubsub.publish("error", {
+                        exception: ex,
+                        info: {
+                            source: "router.stopMatchedRoutes",
+                            match: match,
+                            path: getRelativePath(),
+                            matchedRoutes: this.matchedRoutes
+                        }
+                    }, this);
+                }
+            }
+        }, this);
+    }
+
     function getRelativePath ()
     {
         return history.getState().url.replace(history.getRootUrl(), "");
@@ -55,10 +138,8 @@ define("router", ["util", "base", "dom", "jquery.history"], function (_, base, $
 
     function afterPathChanged ()
     {
-        console.log("Path changed to " + getRelativePath());
-        _.each(this.match(getRelativePath()), function (match) {
-            match.route.start.apply(match.route.context, match.parameters);
-        });
+        stopMatchedRoutes.call(this);
+        startRoutes.call(this, getRelativePath(), this.routes);
     }
 
     return base.extend({
@@ -70,6 +151,7 @@ define("router", ["util", "base", "dom", "jquery.history"], function (_, base, $
             base.constructor.call(this);
             this.routes = {};
             this.rootUrl = "";
+            this.matchedRoutes = [];
             this.boundListener = null;
         },
 
@@ -81,6 +163,7 @@ define("router", ["util", "base", "dom", "jquery.history"], function (_, base, $
             this.stop();
             this.routes = null;
             this.rootUrl = null;
+            this.matchedRoutes = null;
 
             base.destructor.call(this);
         },
@@ -119,6 +202,7 @@ define("router", ["util", "base", "dom", "jquery.history"], function (_, base, $
 
             this.routes = {};
             this.rootUrl = "";
+            this.matchedRoutes = [];
         },
 
         /**
@@ -126,16 +210,30 @@ define("router", ["util", "base", "dom", "jquery.history"], function (_, base, $
          */
         add: function (routes)
         {
+            var addedRoutes = this.boundListener ? {} : null,
+                addedRoute;
+
             if (_.isObject(routes)) {
                 _.each(routes, function (route, name) {
-                    addRoute.call(this, name, route);
+                    addedRoute = addRoute.call(this, name, route);
+
+                    if (addedRoutes) {
+                        addedRoutes[name.toLowerCase()] = addedRoute;
+                    }
                 }, this);
             }
             else if (_.isString(routes)) {
-                addRoute.call(this, routes, arguments[1]);
+                addedRoute = addRoute.call(this, routes, arguments[1]);
+
+                if (addedRoutes) {
+                    addedRoutes[routes.toLowerCase()] = addedRoute;
+                }
             }
 
-            // TODO: if this.hist has been started check to see if any of the newly added routes match the current url. If one does then run it
+            // If routing has already started then run the newly added routes if they match the current path
+            if (addedRoutes) {
+                startRoutes.call(this, getRelativePath(), addedRoutes, true);
+            }
         },
 
         remove: function (name)
@@ -145,25 +243,7 @@ define("router", ["util", "base", "dom", "jquery.history"], function (_, base, $
 
         match: function (path)
         {
-            var routes = [];
-
-            // Match the rootUrl portion of the path
-            path = path.replace(pathStripper, "");
-            if (_.startsWith(path, this.rootUrl)) {
-                path = path.substring(this.rootUrl.length).replace(pathStripper, "");
-            }
-
-            // Match routes to the path
-            _.each(this.routes, function (route) {
-                if (route.path.test(path)) {
-                    routes.push({
-                        route: route,
-                        parameters: route.path.exec(path).slice(1)
-                    });
-                }
-            });
-
-            return routes;
+            return matchRoutes.call(this, path, this.routes);
         },
 
         navigate: function (path)
