@@ -218,6 +218,19 @@ define("databindings", ["util", "dom"], function (_, $) {
         },
 
         /**
+         * @class className
+         * The className binder binds a model's attribute value to a dom element's class names.
+         * @singleton
+         * @namespace databindings
+         */
+        className: {
+            update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
+            {
+                $(element).toggleClass(info.key, info["!"] ? !value : !!value);
+            }
+        },
+
+        /**
          * @class class
          * The class binder binds a model's attribute value to a dom element's class names.
          * @singleton
@@ -226,7 +239,8 @@ define("databindings", ["util", "dom"], function (_, $) {
         "class": {
             update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
-                $(element).toggleClass(info.key, info["!"] ? !value : !!value);
+                $(element).removeClass(oldValue);
+                $(element).addClass(value);
             }
         },
 

@@ -405,7 +405,7 @@ define("databind", ["util", "dom", "databindings"], function (_, $, databindings
             bindingInfo.element = element;
 
             if (_.startsWith(bindingInfo.key, ".")) {
-                binder = databindings["class"];
+                binder = databindings["className"];
                 bindingInfo.key = bindingInfo.key.substring(1);
             }
             else {

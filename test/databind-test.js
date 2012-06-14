@@ -28,7 +28,8 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
                 title: "<b>Number One</b>",
                 url: "/Riker",
                 away: true,
-                popular: true
+                popular: true,
+                rank: "Commander"
             });
 
             this.authors = Authors.create([{
@@ -509,7 +510,7 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
             assert("data bound attr value is incorrect after change", $("input", this.element).get(0).hasAttribute("disabled"));
         },
 
-        "test databindings.class": function () {
+        "test databindings.className": function () {
             var template = "<span data-bind='.hidden: away'></span>";
 
             this.node.html(template);
@@ -523,7 +524,7 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
             assertFalse("data bound class value is incorrect after change", $("span", this.element).hasClass("hidden"));
         },
 
-        "test databindings.class with multiple binds": function () {
+        "test databindings.className with multiple binds": function () {
             var template = "<span data-bind='.hidden: away, .popular: popular'></span>";
 
             this.node.html(template);
@@ -544,7 +545,7 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
             assertFalse("data bound class.popular value is incorrect after change", $("span", this.element).hasClass("popular"));
         },
 
-        "test databindings.!class": function () {
+        "test databindings.!className": function () {
             var template = "<span data-bind='!.visible: away'></span>";
 
             this.node.html(template);
@@ -556,6 +557,21 @@ TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmod
             this.author.set("away", false);
 
             assert("data bound class value is incorrect after change", $("span", this.element).hasClass("visible"));
+        },
+
+        "test databindings.class": function () {
+            var template = "<span data-bind='class: rank'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound class value is incorrect", $("span", this.element).hasClass("Commander"));
+
+            this.author.set("rank", "Captain");
+
+            assertFalse("data bound class value has old class name", $("span", this.element).hasClass("Commander"));
+            assert("data bound class value does not have new class name", $("span", this.element).hasClass("Captain"));
         },
 
         "test databindings.checked on checkbox with boolean": function () {
