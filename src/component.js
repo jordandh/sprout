@@ -1,4 +1,4 @@
-define("component", ["util", "base"], function (_, base) {
+define("component", ["util", "base", "pubsub"], function (_, base, pubsub) {
     "use strict";
     
     /**
@@ -30,7 +30,13 @@ define("component", ["util", "base"], function (_, base) {
         {
             try {
                 // TODO: this puts the component into a failed state. An Application object can detect that the component is in a failed state and do something about it. (e.g. restart it or report an error)
-                console.log("Component Failed: ", error);
+                pubsub.publish("error", {
+                    exception: error,
+                    info: {
+                        action: "component failed",
+                        component: this
+                    }
+                }, this);
             }
             catch (ex) {
             }

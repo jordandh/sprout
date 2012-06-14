@@ -5,33 +5,117 @@ define("application", ["util", "base", "pubsub", "router"], function (_, base, p
      * Adds and starts a component in the application.
      * @private
      * @param {Object} component The component to add to the application.
+     * @param {Boolean} waitToStart (Optional) Whether or not the component should wait to start until explicity told to. Defaults to false.
      */
-    function addComponent (component)
+    function addComponent (component, waitToStart)
     {
-        var rtr = this.router;
+        // Setup the component
+        component.app = this;
+        component.start = startComponent;
+        component.stop = stopComponent;
+        component.appConfig = {
+            waitToStart: waitToStart,
+            doNotStart: false
+        };
 
         this.get("components")[component.name] = component;
 
+        // Start up child components (this has to go before the require call to insure that the child components exist when the parent component's start function is called)
+        addComponents.call(this, component.components, true);
+
         require([component.path], function (module) {
             try {
-                var comp = module.create();
-                comp.start({
-                    router: rtr
-                });
-                component.module = comp;
+                component.module = module.create();
+
+                // If the component should not wait to start (usually the case for child components) AND the component should start at all (usually the case when a parent component is stopped before its child components are started)
+                if (!component.appConfig.waitToStart && !component.appConfig.doNotStart) {
+                    component.start();
+                }
             }
             catch (ex) {
                 pubsub.publish("error", {
                     exception: ex,
                     info: {
-                        action: "starting component",
+                        action: "creating component",
                         component: component
                     }
                 }, this);
             }
         });
     }
-    
+
+    function addComponents (components, waitToStart)
+    {
+        if (_.isArray(components)) {
+            _.each(components, function (component) {
+                addComponent.call(this, component, waitToStart);
+            }, this);
+        }
+        else if (_.isObject(components)) {
+            addComponent.call(this, components, waitToStart);
+        }
+    }
+
+    function stopComponent ()
+    {
+        this.appConfig.doNotStart = true;
+
+        if (this.module) {
+            try {
+                this.module.stop();
+                this.module.resources = null;
+            }
+            catch (ex) {
+                pubsub.publish("error", {
+                    exception: ex,
+                    info: {
+                        action: "stopping component",
+                        component: this
+                    }
+                }, this);
+            }
+        }
+    }
+
+    function startComponent ()
+    {
+        var component = this;
+
+        // If the component has not been downloaded yet from the require call then change its start up config to not wait to start once it is downloaded
+        this.appConfig.waitToStart = false;
+
+        // If the component's module has already been downloaded and created then start it up
+        if (this.module) {
+            try {
+                this.module.resources = {
+                    router: this.app.router,
+                    config: this.config,
+                    startComponents: function () {
+                        _.each(component.components, function (childComponent) {
+                            childComponent.start();
+                        });
+                    },
+                    stopComponents: function () {
+                        _.each(component.components, function (childComponent) {
+                            childComponent.stop();
+                        });
+                    }
+                };
+
+                this.module.start();
+            }
+            catch (ex) {
+                pubsub.publish("error", {
+                    exception: ex,
+                    info: {
+                        action: "starting component",
+                        component: this
+                    }
+                }, this);
+            }
+        }
+    }
+
     /**
      * @class application
      * Provides functionality for managing shared resources and components on a page.
@@ -87,16 +171,7 @@ define("application", ["util", "base", "pubsub", "router"], function (_, base, p
             }
 
             // Start up the components
-            components = options.components;
-
-            if (_.isArray(components)) {
-                _.each(components, function (component) {
-                    addComponent.call(this, component);
-                }, this);
-            }
-            else if (_.isObject(components)) {
-                addComponent.call(this, name, components[name]);
-            }
+            addComponents.call(this, options.components, false);
         },
 
         /**
@@ -105,28 +180,10 @@ define("application", ["util", "base", "pubsub", "router"], function (_, base, p
          */
         stop: function (name)
         {
-            var components = this.get("components"),
-                component = components[name];
+            var component = this.get("components")[name];
 
             if (component) {
-                if (component.module) {
-                    try {
-                        component.module.stop();
-                        component.module.destroy();
-                        component.module = null;
-                    }
-                    catch (ex) {
-                        pubsub.publish("error", {
-                            exception: ex,
-                            info: {
-                                action: "stopping component",
-                                component: component
-                            }
-                        }, this);
-                    }
-                }
-
-                delete components[name];
+                component.stop();
             }
         },
 
