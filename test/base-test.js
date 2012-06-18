@@ -1125,7 +1125,14 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			assertObject("the proxy object does not have a testName attribute", c.getAttribute("testName"));
 
 			assertUndefined("the origin object has a testName attribute value", b.get("testName"));
-			assertString("the proxy object has a testName attribute value", c.get("testName"));
+			assertSame("the proxy object has a testName attribute value", "test attr", c.get("testName"));
+
+			c.set("testName", "foobar");
+
+			assertUndefined("the origin object has a testName attribute after set", b.getAttribute("testName"));
+			assertObject("the proxy object does not have a testName attribute after set", c.getAttribute("testName"));
+
+			assertSame("the proxy object has a testName attribute value after set", "foobar", c.get("testName"));
 		}
 	};
 });
