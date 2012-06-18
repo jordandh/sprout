@@ -380,6 +380,45 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			c.set("test", 2);
 			assertSame("attribute has incorrect value", 2, c.get("test"));
 		},
+
+		"test base.attribute destroy does destroy value on instance": function () {
+			var Animal = Base.extend({
+				attributes: {
+					name: {
+						destory: true
+					}
+				}
+			});
+
+			c = Animal.create();
+
+			c.set("name", Base.create());
+
+			assertObject("attribute value is not on object before destroy", c.get("name"));
+			
+			c.destroy();
+
+			assertUndefined("attribute value is on object after destroy", c.get("name"));
+		},
+
+		"test base.attribute destroy does not destroy value on prototype": function () {
+			var Animal = Base.extend({
+				attributes: {
+					name: {
+						value: Base.create(),
+						destory: true
+					}
+				}
+			});
+
+			c = Animal.create();
+
+			assertObject("attribute value is not on prototype before destroy", Animal.attributes.name.value);
+			
+			c.destroy();
+
+			assertObject("attribute value is not on prototype after destroy", Animal.attributes.name.value);
+		},
 		
 		"test base.get with no parameters": function ()
 		{
@@ -871,6 +910,70 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			c.set("test", "foo");
 			assertSame("test attribute has incorrect value", "foo", c.get("test"));
 		},
+
+		"test base.addAttribute with single attribute": function ()
+		{
+			var c = Base.create();
+
+			assertUndefined("test attribute is defined", c.getAttribute("test"));
+			assertUndefined("test attribute value is defined", c.get("test"));
+
+			c.addAttribute("test", {
+				value: "foo"
+			});
+
+			assertObject("test attribute is undefined", c.getAttribute("test"));
+			assertSame("test attribute value is undefined", "foo", c.get("test"));
+		},
+
+		"test base.addAttribute with multiple attributes": function ()
+		{
+			var c = Base.create();
+
+			assertUndefined("test attribute is defined", c.getAttribute("test"));
+			assertUndefined("test attribute value is defined", c.get("test"));
+			assertUndefined("foobar attribute is defined", c.getAttribute("foobar"));
+			assertUndefined("foobar attribute value is defined", c.get("foobar"));
+
+			c.addAttribute({
+				test: {
+					value: "foo"
+				},
+				foobar: {
+					value: "foo"
+				}
+			});
+
+			assertObject("test attribute is undefined", c.getAttribute("test"));
+			assertSame("test attribute value is undefined", "foo", c.get("test"));
+			assertObject("foobar attribute is undefined", c.getAttribute("foobar"));
+			assertSame("foobar attribute value is undefined", "foo", c.get("foobar"));
+		},
+
+		"test base.addAttribute with computable value": function ()
+		{
+			var c = Base.create();
+			c.set("name", "Data");
+
+			assertUndefined("test attribute is defined", c.getAttribute("test"));
+			assertUndefined("test attribute value is defined", c.get("test"));
+
+			c.addAttribute("test", {
+				get: function () {
+					return "I am " + this.get("name");
+				},
+				uses: "name"
+			});
+
+			assertObject("test attribute is undefined", c.getAttribute("test"));
+			assertSame("name attribute value is incorrect after attribute added", "Data", c.get("name"));
+			assertSame("test attribute value is undefined after attribute added", "I am Data", c.get("test"));
+
+			c.set("name", "Worf");
+
+			assertSame("name attribute value is incorrect after change", "Worf", c.get("name"));
+			assertSame("test attribute value is undefined after change", "I am Worf", c.get("test"));
+		},
 		
 		"test base.extend isPrototypeOf": function () {
 			var Animal = Base.extend({}),
@@ -939,7 +1042,7 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			var Animal = Base.extend({
 				alive: true,
 				talk: function () {
-					return "I'm alive."
+					return "I'm alive.";
 				}
 			});
 			
@@ -958,7 +1061,7 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			var Animal = Base.extend({
 				alive: true,
 				talk: function () {
-					return "I'm alive."
+					return "I'm alive.";
 				}
 			});
 			
@@ -990,6 +1093,39 @@ TestCase("base", ["util", "base"], function (_, Base) {
 			
 			assertSame("name attribute has incorrect value", "Chewie", b.get("name"));
 			assertSame("age attribute has incorrect value", 42, b.get("age"));
+		},
+
+		"test base.proxy member does not change origin object": function ()
+		{
+			var b = Base.create();
+
+			assertUndefined("the origin object has testName", b.testName);
+
+			var c = b.proxy({
+				testName: "Test"
+			});
+
+			assertUndefined("the origin object has testName", b.testName);
+			assertString("the proxy object does not have testName", c.testName);
+		},
+
+		"test base.proxy attribute does not change origin object": function ()
+		{
+			var b = Base.create();
+
+			assertUndefined("the origin object has a testName attribute", b.getAttribute("testName"));
+
+			var c = b.proxy({
+				attributes: {
+					"testName": { value: "test attr" }
+				}
+			});
+
+			assertUndefined("the origin object has a testName attribute", b.getAttribute("testName"));
+			assertObject("the proxy object does not have a testName attribute", c.getAttribute("testName"));
+
+			assertUndefined("the origin object has a testName attribute value", b.get("testName"));
+			assertString("the proxy object has a testName attribute value", c.get("testName"));
 		}
 	};
 });

@@ -201,7 +201,6 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
         {
             var attribute = this.getAttribute(name) || {},
                 valueChanged = false,
-                //eventName = name + "Change",
                 oldValue, event1, event2, e;
             
             options = options || {};
@@ -219,41 +218,6 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
             if (oldValue !== value) {
                 if (!options.silent) {
                     valueChanged = fireAttributeChangeEvents.call(this, attribute, name, oldValue, value);
-                    /*event1 = this.events[eventName.toLowerCase()];
-                    event2 = this.events.change;
-                    
-                    if (_.isObject(event1) || _.isObject(event2)) {
-                        // Before handlers
-                        e = {
-                            name: eventName,
-                            info: { name: name, oldValue: oldValue, newValue: value },
-                            src: this,
-                            preventDefault: false
-                        };
-                        fireAttributeChange.call(this, "before", e, event1);
-                        
-                        e.name = "change";
-                        fireAttributeChange.call(this, "before", e, event2);
-                        
-                        if (!e.preventDefault) {
-                            valueChanged = changeAttribute.call(this, attribute, name, oldValue, e.info.newValue);
-                            
-                            // On handlers
-                            e.name = eventName;
-                            fireAttributeChange.call(this, "on", e, event1);
-                            e.name = "change";
-                            fireAttributeChange.call(this, "on", e, event2);
-                            
-                            // After handlers
-                            e.name = eventName;
-                            fireAttributeChange.call(this, "after", e, event1);
-                            e.name = "change";
-                            fireAttributeChange.call(this, "after", e, event2);
-                        }
-                    }
-                    else {
-                        valueChanged = changeAttribute.call(this, attribute, name, oldValue, value);
-                    }*/
                 }
                 else {
                     valueChanged = changeAttribute.call(this, attribute, name, oldValue, value);
@@ -261,6 +225,26 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
             }
             
             return valueChanged;
+        },
+        /*
+         * setupAttributes
+         */
+        setupAttributes = function (attributes)
+        {
+            // Loop through all the attributes and setup any dependencies for computable attributes
+            _.each(attributes, function (attribute, name) {
+                var uses = attribute.uses;
+
+                if (_.isString(uses)) {
+                    uses = [uses];
+                }
+
+                if (_.isArray(uses)) {
+                    _.each(uses, function (dependency) {
+                        this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
+                    }, this);
+                }
+            }, this);
         },
         /*
          * afterDependencyChanged
@@ -382,6 +366,25 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
             {
                 return _.create(this, members);
             },
+
+            /**
+             * Creates a new object that extends from this object instance. Any new members override the origin object's members. Any new attributes are added to the proxy object.
+             * This function is useful when you want to treat an object like the origin object but add some extra functionality on top of it.
+             * The proxy safely adds the functionality without changing the origin object. This way anything already using the origin object does not have access to the new proxy members.
+             * And anything given the proxy object thinks it has the origin object.
+             * @param {Object} members A key/value hash of methods and properties that are added to the proxy object.
+             * @return {Object} Returns an object that is a proxy of this object.
+             */
+            proxy: function (members)
+            {
+                var proxy = this.extend(members);
+
+                if (members.attributes) {
+                    proxy.addAttribute(members.attributes);
+                }
+
+                return proxy;
+            },
             
             /**
              * Initializes the object.
@@ -395,7 +398,8 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                 this.events = {};
 
                 // Loop through all the attributes and setup any dependencies for computable attributes
-                _.each(getAttributes.call(this), function (attribute, name) {
+                setupAttributes.call(this, getAttributes.call(this));
+                /*_.each(getAttributes.call(this), function (attribute, name) {
                     var uses = attribute.uses;
 
                     if (_.isString(uses)) {
@@ -407,7 +411,7 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                             this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
                         }, this);
                     }
-                }, this);
+                }, this);*/
             },
             
             /**
@@ -423,6 +427,13 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                 // Loop through all values that have been defined as attributes and delete them
                 _.each(getAttributes.call(this), function (attribute, name) {
                     if (this.values.hasOwnProperty(name)) {
+                        var value = this.values[name];
+
+                        // If the attribute should auto-destroy the value then do so
+                        if (attribute.destroy && _.isObject(this.values[name]) && _.isFunction(value.destroy)) {
+                            value.destroy();
+                        }
+
                         delete this.values[name];
                     }
                 }, this);
@@ -583,6 +594,33 @@ define("base", ["util", "pubsub"], function (_, pubsub) {
                         return value;
                     }
                 }
+            },
+
+            addAttribute: function (attributes)
+            {
+                if (_.isString(attributes)) {
+                    var name = attributes;
+                    attributes = {};
+                    attributes[name] = arguments[1];
+                }
+
+                _.extend(this.attributes, attributes);
+                setupAttributes.call(this, attributes);
+
+                // Loop through all the attributes and setup any dependencies for computable attributes
+                /*_.each(attributes, function (attribute, name) {
+                    var uses = attribute.uses;
+
+                    if (_.isString(uses)) {
+                        uses = [uses];
+                    }
+
+                    if (_.isArray(uses)) {
+                        _.each(uses, function (dependency) {
+                            this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
+                        }, this);
+                    }
+                }, this);*/
             },
             
             /**
