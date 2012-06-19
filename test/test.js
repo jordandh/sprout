@@ -76,20 +76,17 @@
     });
 
     require([
-        "assets/test/util-test.js",
-        "assets/test/dom-test.js",
-        "assets/test/base-test.js",
-        "assets/test/plugin-test.js",
-        "assets/test/router-test.js",
-        "assets/test/data-test.js",
-        "assets/test/model-test.js",
-        "assets/test/collection-test.js",
-        "assets/test/database-test.js",
-        "assets/test/viewmodel-test.js",
-        "assets/test/pubsub-test.js",
-        "assets/test/databind-test.js",
-        "assets/test/view-test.js",
-        "assets/test/views/list-test.js",
-        "assets/test/views/datalist-test.js"
+        "assets/sprout/test/util-test.js",
+        "assets/sprout/test/dom-test.js",
+        "assets/sprout/test/base-test.js",
+        "assets/sprout/test/plugin-test.js",
+        "assets/sprout/test/router-test.js",
+        "assets/sprout/test/data-test.js",
+        "assets/sprout/test/model-test.js",
+        "assets/sprout/test/collection-test.js",
+        "assets/sprout/test/database-test.js",
+        "assets/sprout/test/viewmodel-test.js",
+        "assets/sprout/test/pubsub-test.js",
+        "assets/sprout/test/databind-test.js"
     ]);
 }());

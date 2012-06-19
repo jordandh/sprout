@@ -1,4 +1,4 @@
-define("history", ["jquery"], function () {
+define(["jquery"], function () {
 /*
     http://www.JSON.org/json2.js
     2011-01-18

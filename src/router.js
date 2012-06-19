@@ -1,4 +1,4 @@
-define("router", ["util", "base", "dom", "history", "pubsub"], function (_, base, $, history, pubsub) {
+define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pubsub"], function (_, base, $, history, pubsub) {
     "use strict";
 
     var namedParam = /:\w+/g,

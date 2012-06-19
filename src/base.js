@@ -1,4 +1,4 @@
-define("base", ["util", "pubsub"], function (_, pubsub) {
+define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
     "use strict";
 
     var rgxNumber = /^\d+$/,

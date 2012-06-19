@@ -1,4 +1,4 @@
-define("collection", ["util", "base", "model", "data"], function (_, base, model, data) {
+define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (_, base, model, data) {
     "use strict";
     
     /**

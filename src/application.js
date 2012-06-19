@@ -1,4 +1,4 @@
-define("application", ["util", "base", "pubsub", "router"], function (_, base, pubsub, router) {
+define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], function (_, base, pubsub, router) {
     "use strict";
 
     /**

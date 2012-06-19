@@ -1,6 +1,6 @@
-TestCase("viewmodel", ["util", "viewmodel", "database"], function (_, viewModel, database) {
+TestCase("viewmodel", ["sprout/util", "sprout/viewmodel", "sprout/database"], function (_, viewModel, database) {
     var foo = viewModel.extend({
-        rootUrl: "/assets/test/viewmodel-test.json",
+        rootUrl: "/assets/sprout/test/viewmodel-test.json",
         expires: 30 * 60 * 1000,
         parse: function (json) {
             this.set("name", json.name);
@@ -14,7 +14,7 @@ TestCase("viewmodel", ["util", "viewmodel", "database"], function (_, viewModel,
                 value: 1
             }
         },
-        rootUrl: "/assets/test/viewmodel-no-cache-test.json?test={id}",
+        rootUrl: "/assets/sprout/test/viewmodel-no-cache-test.json?test={id}",
         expires: 0
     });
 
@@ -28,16 +28,16 @@ TestCase("viewmodel", ["util", "viewmodel", "database"], function (_, viewModel,
         "test viewmodel.url": function () {
             var vm = foo.create();
             
-            assertSame("url returned incorrect value", "/assets/test/viewmodel-test.json", vm.url());
+            assertSame("url returned incorrect value", "/assets/sprout/test/viewmodel-test.json", vm.url());
         },
 
         "test viewmodel.url supplant": function () {
             var vm = bar.create();
             
-            assertSame("url returned incorrect value", "/assets/test/viewmodel-no-cache-test.json?test=1", vm.url());
+            assertSame("url returned incorrect value", "/assets/sprout/test/viewmodel-no-cache-test.json?test=1", vm.url());
 
             vm.set("id", 2);
-            assertSame("url returned incorrect value", "/assets/test/viewmodel-no-cache-test.json?test=2", vm.url());
+            assertSame("url returned incorrect value", "/assets/sprout/test/viewmodel-no-cache-test.json?test=2", vm.url());
         },
         
         "test viewmodel.parse": function () {

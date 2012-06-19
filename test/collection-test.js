@@ -1,4 +1,4 @@
-TestCase("collection", ["util", "collection", "model"], function (_, collection, model) {
+TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], function (_, collection, model) {
 	var animal = model.extend({
 		attributes: {
 			name: {},

@@ -1,13 +1,13 @@
-TestCase("data", ["util", "model", "data"], function (_, model, data) {
+TestCase("data", ["sprout/util", "sprout/model", "sprout/data"], function (_, model, data) {
 	var foo = model.extend({
 		url: function () {
-			return "/assets/test/data-test.json";
+			return "/assets/sprout/test/data-test.json";
 		}
 	});
 
 	var bar = model.extend({
 		url: function () {
-			return "/assets/test/does-not-exist-test.json";
+			return "/assets/sprout/test/does-not-exist-test.json";
 		}
 	});
 	
@@ -184,7 +184,7 @@ TestCase("data", ["util", "model", "data"], function (_, model, data) {
 
 			var mod = bar.create();
 
-			data.sync("read", mod, { url: "/assets/test/data-test.json" }).done(async(function (data, status, xhr) {
+			data.sync("read", mod, { url: "/assets/sprout/test/data-test.json" }).done(async(function (data, status, xhr) {
 				try {
 					assertSame("status value is incorrect.", "success", status);
 					assertObject("xhr is not an object.", xhr);

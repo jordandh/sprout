@@ -1,4 +1,4 @@
-TestCase("plugin", ["base", "plugin"], function (Base, Plugin) {
+TestCase("plugin", ["sprout/base", "sprout/plugin"], function (Base, Plugin) {
 	return {
 		setUp: function () {
 			this.TestPlugin = Plugin.extend({

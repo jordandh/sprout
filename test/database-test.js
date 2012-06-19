@@ -1,11 +1,11 @@
-TestCase("database", ["util", "viewmodel", "database"], function (_, viewModel, dbms) {
+TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], function (_, viewModel, dbms) {
     var foo = viewModel.extend({
-        rootUrl: "/assets/test/database-test.json",
+        rootUrl: "/assets/sprout/test/database-test.json",
         expires: 30 * 60 * 1000
     });
 
     var bar = viewModel.extend({
-        rootUrl: "/assets/test/database-no-cache-test.json",
+        rootUrl: "/assets/sprout/test/database-no-cache-test.json",
         expires: 0
     });
     
@@ -81,7 +81,7 @@ TestCase("database", ["util", "viewmodel", "database"], function (_, viewModel, 
             expectAsserts(4);
 
             var foobar = viewModel.extend({
-                rootUrl: "/assets/test/database-test.json?cb=test-expires-0",
+                rootUrl: "/assets/sprout/test/database-test.json?cb=test-expires-0",
                 expires: 0
             });
 
@@ -102,7 +102,7 @@ TestCase("database", ["util", "viewmodel", "database"], function (_, viewModel, 
             expectAsserts(6);
 
             var foobar = viewModel.extend({
-                rootUrl: "/assets/test/database-test.json?cb=test-no-expires"
+                rootUrl: "/assets/sprout/test/database-test.json?cb=test-no-expires"
             });
 
             var db = dbms.get("test-sync"),
@@ -124,7 +124,7 @@ TestCase("database", ["util", "viewmodel", "database"], function (_, viewModel, 
             expectAsserts(10);
 
             var foobar = viewModel.extend({
-                rootUrl: "/assets/test/database-expire-test.json",
+                rootUrl: "/assets/sprout/test/database-expire-test.json",
                 expires: 5 * 1000
             });
 
@@ -167,7 +167,7 @@ TestCase("database", ["util", "viewmodel", "database"], function (_, viewModel, 
             expectAsserts(5);
 
             var foobar = viewModel.extend({
-                rootUrl: "/assets/test/database-does-not-exist-test.json",
+                rootUrl: "/assets/sprout/test/database-does-not-exist-test.json",
                 expires: 30 * 60 * 1000
             });
 
@@ -190,7 +190,7 @@ TestCase("database", ["util", "viewmodel", "database"], function (_, viewModel, 
             expectAsserts(2);
 
             var foobar = viewModel.extend({
-                rootUrl: "/assets/test/database-abort-sync-test.json",
+                rootUrl: "/assets/sprout/test/database-abort-sync-test.json",
                 expires: 30 * 60 * 1000
             });
 
@@ -215,7 +215,7 @@ TestCase("database", ["util", "viewmodel", "database"], function (_, viewModel, 
             var db = dbms.get("test-sync"),
                 vm = bar.create();
 
-            db.sync(vm, { url: "/assets/test/database-url-override-test.json" }).done(async(function (data, status) {
+            db.sync(vm, { url: "/assets/sprout/test/database-url-override-test.json" }).done(async(function (data, status) {
                 try {
                     assertSame("status value is incorrect.", "success", status);
                     assertSame("data.name value is incorrect.", "Lore", data.name);

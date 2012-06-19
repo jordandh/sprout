@@ -1,4 +1,4 @@
-define("viewmodel", ["util", "base", "database"], function (_, base, database) {
+define(["sprout/util", "sprout/base", "sprout/database"], function (_, base, database) {
     "use strict";
 
     /**

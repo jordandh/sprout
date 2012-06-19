@@ -1,4 +1,4 @@
-TestCase("pubsub", ["util", "pubsub"], function (_, pubsub) {
+TestCase("pubsub", ["sprout/util", "sprout/pubsub"], function (_, pubsub) {
     return {
         "test pubsub.subscribe": function ()
         {

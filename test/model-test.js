@@ -1,4 +1,4 @@
-TestCase("model", ["util", "model"], function (_, model) {
+TestCase("model", ["sprout/util", "sprout/model"], function (_, model) {
 	var foo = model.extend({
 		attributes: {
 			name: {

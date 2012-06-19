@@ -1,4 +1,4 @@
-define("data", ["util", "dom"], function (_, $) {
+define(["sprout/util", "sprout/dom"], function (_, $) {
     "use strict";
     
     /*

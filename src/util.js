@@ -1,4 +1,4 @@
-define("util", ["underscore", "underscore.string"], function (_, _s) {
+define(["underscore", "underscore.string"], function (_, _s) {
     "use strict";
 
     var dontEnumMethods = [

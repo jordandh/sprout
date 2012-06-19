@@ -1,4 +1,4 @@
-define("component", ["util", "base", "pubsub"], function (_, base, pubsub) {
+define(["sprout/util", "sprout/base", "sprout/pubsub"], function (_, base, pubsub) {
     "use strict";
     
     /**

@@ -1,4 +1,4 @@
-define("error", ["pubsub", "dom"], function (pubsub, $) {
+define(["sprout/pubsub", "sprout/dom"], function (pubsub, $) {
     "use strict";
 
     function packageError (error)

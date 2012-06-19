@@ -1,4 +1,4 @@
-TestCase("databind", ["util", "dom", "databind", "model", "collection", "viewmodel"], function (_, $, databind, model, collection, viewmodel) {
+TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/model", "sprout/collection", "sprout/viewmodel"], function (_, $, databind, model, collection, viewmodel) {
     var Author = model.extend({
         attributes: {
             fullName: {

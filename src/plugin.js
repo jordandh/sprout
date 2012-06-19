@@ -1,4 +1,4 @@
-define("plugin", ["util", "base"], function (_, base) {
+define(["sprout/util", "sprout/base"], function (_, base) {
     "use strict";
 
     /**

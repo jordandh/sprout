@@ -1,4 +1,4 @@
-define("databindings", ["util", "dom"], function (_, $) {
+define(["sprout/util", "sprout/dom"], function (_, $) {
     "use strict";
 
     var foreachExpando = "__cid__";

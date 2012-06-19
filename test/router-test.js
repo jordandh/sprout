@@ -1,4 +1,4 @@
-TestCase("router", ["router"], function (router) {
+TestCase("router", ["sprout/router"], function (router) {
     var hasHistory = window.history && window.history.pushState,
         hasHash = "onhashchange" in window && (document.documentMode === undefined || document.documentMode > 7);
 

@@ -1,4 +1,4 @@
-define("databind", ["util", "dom", "databindings"], function (_, $, databindings) {
+define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, databindings) {
     "use strict";
 
     var dataBindAttributeName = "data-bind",
