@@ -2,6 +2,43 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
     "use strict";
 
     /**
+     * Resolves or rejects a derrered object with the given arguments and optionally delayed.
+     * @param {Object} deferred The deferred object for the sync.
+     * @param {String} method Which method to use on the deferred object. Can be 'resolve' or 'reject'.
+     * @param {Array} args The arguments to pass to the deferred method.
+     * @param {Number} delay (Optional) The milliseconds to wait before calling deferred method.
+     * @param {Date} startTime (Optional) the date that the sync operation started. Used to see how much of the delay time has already passed.
+     * @private
+     */
+    function finishDeferred (deferred, method, args, options)
+    {
+        var timePassed;
+
+        if (_.isNumber(options.wait) && options.wait > 0) {
+            options.promise.releaseHold = function () {
+                options.wait -= 1;
+                if (options.wait <= 0) {
+                    finishDeferred.call(this, deferred, method, args, options);
+                }
+            };
+            return;
+        }
+
+        if (_.isNumber(options.delay) && _.isDate(options.startTime)) {
+            timePassed = new Date() - options.startTime;
+        }
+
+        if (_.isNumber(timePassed) && timePassed < options.delay) {
+            _.delay(function () {
+                deferred[method].apply(null, args);
+            }, options.delay - timePassed);
+        }
+        else {
+            deferred[method].apply(null, args);
+        }
+    }
+
+    /**
      * Handler for an unsuccessful transaction.
      * @private
      * @param {Object} e The event object passed to event action functions.
@@ -11,12 +48,12 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
      * @param {String} status The status text for the error ("timeout", "error", "abort", or "parsererror").
      * @param {String} error The error thrown. When an HTTP error occurs, errorThrown receives the textual portion of the HTTP status, such as "Not Found" or "Internal Server Error."
      */
-    function onAjaxError (e, deferred, fireAfter, xhr, status, error)
+    function onAjaxError (e, deferred, options, fireAfter, xhr, status, error)
     {
         status = _.trim(status);
         error = _.trim(error);
 
-        deferred.reject(xhr, status, error);
+        finishDeferred(deferred, 'reject', [xhr, status, error], options);
 
         e.info.status = status;
         e.info.error = error;
@@ -31,10 +68,11 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
      * @param {Function} fireAfter The fire after function used in firing async events.
      * @param {Object} payload The data from the request.
      */
-    function onAjaxSuccess (e, deferred, fireAfter, payload, status, xhr)
+    function onAjaxSuccess (e, deferred, options, fireAfter, payload, status, xhr)
     {
         var viewModelData = this.parse(payload, e.src, e.info.options.url);
-        deferred.resolve(viewModelData, status, xhr);
+
+        finishDeferred(deferred, 'resolve', [viewModelData, status, xhr], options);
 
         e.info.status = "success";
         fireAfter();
@@ -142,15 +180,20 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
              * The third argument is the error thrown; when an HTTP error occurs, errorThrown receives the textual portion of the HTTP status, such as "Not Found" or "Internal Server Error."
              * @param {Object} viewModel The viewmodel requesting the data.
              * @param {Object} options (Optional) Equivalent to the option parameter for jQuery's ajax function.
+             * @options
+             * {Number} delay undefined If a number then delays (in milliseconds) when the sync operation resolves or rejects itself with a starting point of when the sync function was called. If the sync operation takes longer than the delay then the operation resolves or rejects itself immediately.
+             * {Number} wait undefined If a number then makes the sync operation wait before resolving or rejecting itself. This is done with a wait count option. The wait count is decremented with the releaseHold method on the promise returned by the sync function. Once the wait count reaches zero the sync operation resolves or rejects itself (assuming the sync operation has finished). If the sync operation finishes and the wait count is zero then the sync operation resolves or rejects itself immediately.
              * @return {Promise} Returns a promise for the sync transaction.
              */
             sync: function (viewModel, options)
             {
                 var expires = viewModel.expires,
                     deferred = $.Deferred(),
+                    promise = deferred.promise(),
                     db = this,
-                    cachedData;
-                
+                    deferredOptions = {},
+                    cachedData, jqXHR;
+
                 options = options || {};
                 options.type = "GET";
                 options.dataType = "json";
@@ -161,20 +204,49 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
 
                 cachedData = this.cache[options.url];
 
+                // If a delay should be applied then make note of the start time
+                if (_.isNumber(options.delay)) {
+                    deferredOptions.delay = options.delay;
+                    deferredOptions.startTime = new Date();
+                }
+
+                if (_.isNumber(options.wait) && options.wait > 0) {
+                    deferredOptions.wait = options.wait;
+                    deferredOptions.promise = promise;
+                    // Put a simple release hold that only decrements the wait count. This is so the wait count is updated before the first call to finishDeferred.
+                    // The finishDeferred function will overwrite this function to call itself once the wait drops to zero or lower.
+                    promise.releaseHold = function () {
+                        deferredOptions.wait -= 1;
+                    };
+                }
+
+                promise.abort = function (abortOptions) {
+                    abortOptions = abortOptions || {};
+
+                    if (jqXHR) {
+                        jqXHR.abort();
+                    }
+
+                    if (abortOptions.ignoreWait) {
+                        delete deferredOptions.wait;
+                    }
+                    finishDeferred(deferred, 'reject', [null, "abort", null], deferredOptions);
+                };
+
                 // If the data is cached and it never expires or it hasn't expired
                 if (!_.isUndefined(cachedData) && (!_.isNumber(expires) || new Date() - cachedData.time < expires)) {
-                    deferred.resolve(cachedData.data, "success", null);
+                    finishDeferred(deferred, 'resolve', [cachedData.data, "success", null], deferredOptions);
                 }
                 else {
                     // Fire the sync event as an async event
                     viewModel.fire("sync", { options: options }, function (e, fireAfter) {
-                        $.ajax(e.info.options).done(_.bind(onAjaxSuccess, db, e, deferred, fireAfter)).fail(_.bind(onAjaxError, db, e, deferred, fireAfter));
+                        jqXHR = $.ajax(e.info.options).done(_.bind(onAjaxSuccess, db, e, deferred, deferredOptions, fireAfter)).fail(_.bind(onAjaxError, db, e, deferred, deferredOptions, fireAfter));
                     }, /* Prevented Action */ function (e) {
-                        deferred.reject(null, "abort", null);
+                        finishDeferred(deferred, 'reject', [null, "abort", null], deferredOptions);
                     }, true);
                 }
                 
-                return deferred.promise();
+                return promise;
             }
         }),
         databases = [];

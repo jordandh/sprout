@@ -117,6 +117,7 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
                 base.constructor.call(this);
                 this.items = [];
                 this.itemsById = {};
+                this.itemsByCid = {};
             },
 
             /**
@@ -126,7 +127,37 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
             {
                 this.items = null;
                 this.itemsById = null;
+                this.itemsByCid = null;
                 base.destructor.call(this);
+            },
+
+            /**
+             * The attributes for the collection.
+             * @property
+             * @type Object
+             */
+            attributes: {
+                /**
+                 * @cfg {Boolean} empty Whether or not the collection has no items in it.
+                 * @default false
+                 * @readOnly
+                 * @computable
+                 */
+                empty: {
+                    get: function () {
+                        return this.get("count") === 0;
+                    },
+                    uses: "count"
+                },
+                /**
+                 * @cfg {Boolean} count The number of items in the collection.
+                 * @default 0
+                 * @readOnly
+                 */
+                count: {
+                    value: 0,
+                    readOnly: true
+                }
             },
 
             /**
@@ -179,15 +210,6 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
             },
             
             /**
-             * Returns the number of items in the collection.
-             * @return {Number} Returns the number of items in the collection.
-             */
-            count: function ()
-            {
-                return this.items.length;
-            },
-            
-            /**
              * Returns the item at a given index in the collection.
              * @param {Number} index The index into the collection.
              * @return {model} Returns the model at the index.
@@ -205,6 +227,16 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
             getById: function (id)
             {
                 return this.itemsById[id];
+            },
+
+            /**
+             * Returns the item with a matching cid in the collection.
+             * @param {String} cid The cid of the item to get.
+             * @return {model} Returns the model with the matching cid.
+             */
+            getByCid: function (cid)
+            {
+                return this.itemsByCid[cid];
             },
             
             /**
@@ -231,6 +263,8 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
                     if (!_.isUndefined(id)) {
                         this.itemsById[id] = item;
                     }
+
+                    this.itemsByCid[item.get("cid")] = item;
                     
                     items[index] = item;
                 }, this);
@@ -249,6 +283,8 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
                     else {
                         this.items.push.apply(this.items, items);
                     }
+
+                    this.set("count", this.items.length, { force: true });
                 }
             }),
             
@@ -265,9 +301,12 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
                     var index = this.indexOf(item);
                     if (index !== -1) {
                         delete this.itemsById[this.items[index].get("id")];
+                        delete this.itemsByCid[item.get("cid")];
                         this.items.splice(index, 1);
                     }
                 }, this);
+
+                this.set("count", this.items.length, { force: true });
             }),
             
             /**
@@ -287,6 +326,8 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
                 // Set the items array equal to a new empty array
                 this.items = [];
                 this.itemsById = {};
+                this.itemsByCid = {};
+                this.set("count", 0, { force: true });
                 
                 // Add any new items if there are any suppresing the add event since this is a reset event
                 if (items.length > 0) {

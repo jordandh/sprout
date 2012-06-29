@@ -1473,6 +1473,82 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
                 }
             }
             assertFalse("meta data sort listener was not removed from the view model", foundListener);
+        },
+
+        "test databindings.foreach-render event": function () {
+            expectAsserts(13);
+
+            var error = null;
+
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            this.authorsViewModel.after('foreach-render', function (e) {
+                try {
+                    assertObject('event item model has incorrect value', e.info.model);
+                    assertUndefined('event item at has incorrect value', e.info.at);
+                    assertObject('event item nodes has incorrect value', e.info.nodes);
+                }
+                catch (ex) {
+                    error = ex;
+                }
+            });
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+
+            if (error !== null) {
+                throw error;
+            }
+        },
+
+        "test databindings.foreach-reset event": function () {
+            expectAsserts(10);
+
+            var error = null;
+
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            this.authorsViewModel.after('foreach-reset', function (e) {
+                try {
+                    assertObject('event item viewModel has incorrect value', e.info.viewModel);
+                    assertObject('event item element has incorrect value', e.info.element);
+                    assertObject('event item collection has incorrect value', e.info.collection);
+                }
+                catch (ex) {
+                    error = ex;
+                }
+            });
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William Riker", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+
+            this.authorsViewModel.get('authors').reset();
+
+            if (error !== null) {
+                throw error;
+            }
         }
     };
 });

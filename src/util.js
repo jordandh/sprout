@@ -89,6 +89,16 @@ define(["underscore", "underscore.string"], function (_, _s) {
         },
 
         /**
+         * Inserts commas into a number. For example 320000 would return '320,000'.
+         * @param {Number|String} number The number to insert commas into.
+         * @return {String} Returns a string version of the number with commas inserted.
+         */
+        commafy: function (number)
+        {
+            return String(number).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+        },
+
+        /**
          * Returns the prototype chain of an object. The first item in the array is the object and subsequent values are the prototypes up the chain.
          * @param {Object} obj An object to get the prototype chain of.
          * @return {Array} Returns the prototype chain of the object.

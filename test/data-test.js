@@ -144,6 +144,23 @@ TestCase("data", ["sprout/util", "sprout/model", "sprout/data"], function (_, mo
 			}
 		},
 
+		"test data.sync delay": function () {
+			expectAsserts(5);
+
+			var mod = foo.create();
+
+			var delay = 5000;
+			var startTime = new Date();
+
+			data.sync("read", mod, { delay: delay }).done(async(function (data, status, xhr) {
+				assert("sync resolution was not delayed", new Date() - startTime >= delay);
+				assertSame("status value is incorrect.", "success", status);
+				assertObject("xhr is not an object.", xhr);
+				assertObject("data is not an object.", data);
+				assertSame("data.name value is incorrect.", "data-test", data.name);
+			}));
+		},
+
 		"test data.sync 404": function () {
 			expectAsserts(5);
 
@@ -185,6 +202,30 @@ TestCase("data", ["sprout/util", "sprout/model", "sprout/data"], function (_, mo
 			var mod = bar.create();
 
 			data.sync("read", mod, { url: "/assets/sprout/test/data-test.json" }).done(async(function (data, status, xhr) {
+				try {
+					assertSame("status value is incorrect.", "success", status);
+					assertObject("xhr is not an object.", xhr);
+					assertObject("data is not an object.", data);
+					assertSame("data.name value is incorrect.", "data-test", data.name);
+				}
+				catch (ex) {
+					error = ex;
+				}
+			}));
+
+			if (error !== null) {
+				throw error;
+			}
+		},
+
+		"test data.sync with options.delay": function () {
+			expectAsserts(4);
+
+			var error = null;
+
+			var mod = foo.create();
+
+			data.sync("read", mod, { delay: 100 }).done(async(function (data, status, xhr) {
 				try {
 					assertSame("status value is incorrect.", "success", status);
 					assertObject("xhr is not an object.", xhr);

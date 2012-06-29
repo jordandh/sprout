@@ -229,6 +229,75 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
             if (error !== null) {
                 throw error;
             }
+        },
+
+        "test database.sync options.delay": function () {
+            expectAsserts(5);
+
+            var db = dbms.get("test-sync"),
+                vm = bar.create();
+
+            var delay = 5000;
+            var startTime = new Date();
+
+            db.sync(vm, { delay: delay }).done(async(function (data, status, xhr) {
+                assert("sync resolution was not delayed", new Date() - startTime >= delay);
+                assertSame("status value is incorrect.", "success", status);
+                assertObject("xhr is not an object.", xhr);
+                assertObject("data is not an object.", data);
+                assertSame("data.name value is incorrect.", "Data", data.name);
+            }));
+        },
+
+        "test database.sync options.cache delay": function () {
+            expectAsserts(10);
+
+            var db = dbms.get("test-sync"),
+                vm = foo.create();
+
+            var delay = 5000;
+            var startTime = new Date();
+
+            db.sync(vm, { delay: delay }).done(async(function (data, status, xhr) {
+                assert("sync resolution was not delayed", new Date() - startTime >= delay);
+                assertSame("status value is incorrect.", "success", status);
+                assertObject("xhr is not an object.", xhr);
+                assertObject("data is not an object.", data);
+                assertSame("data.name value is incorrect.", "Data", data.name);
+
+                startTime = new Date();
+
+                db.sync(vm, { delay: delay }).done(async(function (data, status) {
+                    assert("sync resolution was not delayed", new Date() - startTime >= delay);
+                    assertSame("status value is incorrect.", "success", status);
+                    assertObject("xhr is not an object.", xhr);
+                    assertObject("data is not an object.", data);
+                    assertSame("data.name value is incorrect.", "Data", data.name);
+                }));
+            }));
+        },
+
+        "test database.sync options.wait": function () {
+            expectAsserts(5);
+
+            var db = dbms.get("test-sync"),
+                vm = bar.create();
+
+            var wait = 1;
+            var startTime = new Date();
+
+            var promise = db.sync(vm, { wait: wait }).done(async(function (data, status, xhr) {
+                assertSame("status value is incorrect.", "success", status);
+                assertObject("xhr is not an object.", xhr);
+                assertObject("data is not an object.", data);
+                assertSame("data.name value is incorrect.", "Data", data.name);
+            }));
+
+            _.delay(function () {
+                assertSame('sync operation has incorrect state', 'pending', promise.state());
+
+                promise.releaseHold();
+            }, 5000);
         }
     };
 });

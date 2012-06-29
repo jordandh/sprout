@@ -55,7 +55,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			]);
 			
 			assert("collection is not a prototype of animals", collection.isPrototypeOf(col));
-			assertSame("collection count is incorrect.", 2, col.count());
+			assertSame("collection count is incorrect.", 2, col.get("count"));
 			assertSame("item.name value is incorrect.", "Spot", col.get("0.name"));
 			assertSame("item.age value is incorrect.", 8, col.get("0.age"));
 			assertSame("dog item.name value is incorrect.", "Stripe", col.get("1.name"));
@@ -73,7 +73,29 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 				}
 			]);
 			
-			assertSame("collection count is incorrect.", 2, col.count());
+			assertSame("collection count is incorrect.", 2, col.get("count"));
+		},
+
+		"test collection.empty": function ()
+		{
+			var col = animals.create();
+
+			assert("collection is not empty.", col.get("empty"));
+			
+			col.add([{
+					name: "Spot",
+					age: 8
+				}, {
+					name: "Stripe",
+					age: 10
+				}
+			]);
+
+			assertFalse("collection is empty.", col.get("empty"));
+
+			col.reset();
+
+			assert("collection is not empty.", col.get("empty"));
 		},
 		
 		"test collection.at": function ()
@@ -101,7 +123,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			var mod = animal.create({
 				name: "Spot",
@@ -109,7 +131,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			});
 			col.add(mod);
 			
-			assertSame("collection count is incorrect.", 1, col.count());
+			assertSame("collection count is incorrect.", 1, col.get("count"));
 			
 			var item = col.get(0);
 			assertSame("item from collection is not same as item added to collection.", mod, item);
@@ -121,7 +143,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			var cat = animal.create({
 				name: "Spot",
@@ -135,7 +157,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			
 			col.add([cat, dog]);
 			
-			assertSame("collection count is incorrect.", 2, col.count());
+			assertSame("collection count is incorrect.", 2, col.get("count"));
 			
 			var item = col.get(0);
 			assertSame("cat item from collection is not same as item added to collection.", cat, item);
@@ -152,14 +174,14 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			col.add({
 				name: "Spot",
 				age: 8
 			});
 			
-			assertSame("collection count is incorrect.", 1, col.count());
+			assertSame("collection count is incorrect.", 1, col.get("count"));
 			assertSame("item.name value is incorrect.", "Spot", col.get("0.name"));
 			assertSame("item.age value is incorrect.", 8, col.get("0.age"));
 		},
@@ -168,7 +190,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			col.add([{
 				name: "Spot",
@@ -178,7 +200,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 				age: 10
 			}]);
 			
-			assertSame("collection count is incorrect.", 2, col.count());
+			assertSame("collection count is incorrect.", 2, col.get("count"));
 			assertSame("item.name value is incorrect.", "Spot", col.get("0.name"));
 			assertSame("item.age value is incorrect.", 8, col.get("0.age"));
 			assertSame("dog item.name value is incorrect.", "Stripe", col.get("1.name"));
@@ -189,7 +211,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			col.add([{
 				name: "Spot",
@@ -199,21 +221,21 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 				age: 10
 			}]);
 			
-			assertSame("collection count is incorrect.", 2, col.count());
+			assertSame("collection count is incorrect.", 2, col.get("count"));
 			
 			var cat = col.get("0"),
 				dog = col.get("1");
 			
 			col.reset();
 			
-			assertSame("collection count after reset is incorrect.", 0, col.count());
+			assertSame("collection count after reset is incorrect.", 0, col.get("count"));
 		},
 		
 		"test collection.reset with new items": function ()
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			col.add([{
 				name: "Spot",
@@ -223,7 +245,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 				age: 10
 			}]);
 			
-			assertSame("collection count is incorrect.", 2, col.count());
+			assertSame("collection count is incorrect.", 2, col.get("count"));
 			
 			var cat = col.get("0"),
 				dog = col.get("1");
@@ -236,7 +258,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 				age: 5
 			}]);
 			
-			assertSame("collection count is incorrect.", 2, col.count());
+			assertSame("collection count is incorrect.", 2, col.get("count"));
 			assertSame("item.name value is incorrect.", "Quick", col.get("0.name"));
 			assertSame("item.age value is incorrect.", 3, col.get("0.age"));
 			assertSame("dog item.name value is incorrect.", "Slow", col.get("1.name"));
@@ -247,7 +269,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			var cat = animal.create({
 				name: "Spot",
@@ -267,11 +289,11 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			});
 			col.add(cow);
 			
-			assertSame("collection count after adding items is incorrect.", 3, col.count());
+			assertSame("collection count after adding items is incorrect.", 3, col.get("count"));
 			
 			col.remove(cat);
 			
-			assertSame("collection count after removing item is incorrect.", 2, col.count());
+			assertSame("collection count after removing item is incorrect.", 2, col.get("count"));
 			assertSame("dog item from collection is not same as item added to collection.", dog, col.get("0"));
 			assertSame("cow item from collection is not same as item added to collection.", cow, col.get("1"));
 		},
@@ -280,7 +302,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			var cat = animal.create({
 				name: "Spot",
@@ -300,11 +322,11 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			});
 			col.add(cow);
 			
-			assertSame("collection count after adding items is incorrect.", 3, col.count());
+			assertSame("collection count after adding items is incorrect.", 3, col.get("count"));
 			
 			col.remove(dog);
 			
-			assertSame("collection count after removing item is incorrect.", 2, col.count());
+			assertSame("collection count after removing item is incorrect.", 2, col.get("count"));
 			assertSame("cat item from collection is not same as item added to collection.", cat, col.get("0"));
 			assertSame("cow item from collection is not same as item added to collection.", cow, col.get("1"));
 		},
@@ -313,7 +335,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			var cat = animal.create({
 				name: "Spot",
@@ -333,11 +355,11 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			});
 			col.add(cow);
 			
-			assertSame("collection count after adding items is incorrect.", 3, col.count());
+			assertSame("collection count after adding items is incorrect.", 3, col.get("count"));
 			
 			col.remove(cow);
 			
-			assertSame("collection count after removing item is incorrect.", 2, col.count());
+			assertSame("collection count after removing item is incorrect.", 2, col.get("count"));
 			assertSame("cat item from collection is not same as item added to collection.", cat, col.get("0"));
 			assertSame("dog item from collection is not same as item added to collection.", dog, col.get("1"));
 		},
@@ -346,7 +368,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			var cat = animal.create({
 				name: "Spot",
@@ -371,11 +393,11 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 				age: 2
 			});
 			
-			assertSame("collection count after adding items is incorrect.", 3, col.count());
+			assertSame("collection count after adding items is incorrect.", 3, col.get("count"));
 			
 			col.remove(rat);
 			
-			assertSame("collection count after removing item is incorrect.", 3, col.count());
+			assertSame("collection count after removing item is incorrect.", 3, col.get("count"));
 			assertSame("cat item from collection is not same as item added to collection.", cat, col.get("0"));
 			assertSame("dog item from collection is not same as item added to collection.", dog, col.get("1"));
 			assertSame("cow item from collection is not same as item added to collection.", cow, col.get("2"));
@@ -434,7 +456,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			var col = mod.get("animals");
 			
 			assert("collection is not a prototype of animals", collection.isPrototypeOf(col));
-			assertSame("collection count is incorrect", 2, col.count())
+			assertSame("collection count is incorrect", 2, col.get("count"))
 			assertSame("item.name value is incorrect.", "Spot", col.get("0.name"));
 			assertSame("item.age value is incorrect.", 8, col.get("0.age"));
 			assertSame("dog item.name value is incorrect.", "Stripe", col.get("1.name"));
@@ -484,7 +506,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			var col = foobars.create();
 
 			col.fetch().done(async(function () {
-				assertSame("collection has incorrect item count", 2, col.count());
+				assertSame("collection has incorrect item count", 2, col.get("count"));
 			}));
 		},
 
@@ -501,7 +523,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			});
 
 			col.make(mod).done(async(function () {
-				assertSame("collection has incorrect item count", 1, col.count());
+				assertSame("collection has incorrect item count", 1, col.get("count"));
 				
 				var data = col.get(0);
 				assertObject("model from collection is not an object", data);
@@ -526,7 +548,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			};
 
 			col.make(json).done(async(function () {
-				assertSame("collection has incorrect item count", 1, col.count());
+				assertSame("collection has incorrect item count", 1, col.get("count"));
 				
 				var data = col.get(0);
 				assertObject("model from collection is not an object", data);
@@ -542,7 +564,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var col = animals.create();
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			var cat = animal.create({
 				name: "Spot",
@@ -550,11 +572,11 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			});
 			col.add(cat);
 
-			assertSame("collection count is incorrect before erase.", 1, col.count());
+			assertSame("collection count is incorrect before erase.", 1, col.get("count"));
 
 			cat.erase();
 
-			assertSame("collection count is incorrect after erase.", 0, col.count());
+			assertSame("collection count is incorrect after erase.", 0, col.get("count"));
 		},
 
 		"test collection removes existing model after it is erased": function ()
@@ -569,14 +591,14 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 				age: 26
 			};
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			col.make(json).done(async(function () {
-				assertSame("collection count is incorrect before erase.", 1, col.count());
+				assertSame("collection count is incorrect before erase.", 1, col.get("count"));
 
 				var data = col.get(0);
 				data.erase().done(async(function () {
-					assertSame("collection count is incorrect after erase.", 0, col.count());
+					assertSame("collection count is incorrect after erase.", 0, col.get("count"));
 				}));
 			}));
 		},
@@ -593,14 +615,14 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 				age: 26
 			};
 			
-			assertSame("collection count is incorrect.", 0, col.count());
+			assertSame("collection count is incorrect.", 0, col.get("count"));
 			
 			col.make(json).done(async(function () {
-				assertSame("collection count is incorrect before erase.", 1, col.count());
+				assertSame("collection count is incorrect before erase.", 1, col.get("count"));
 
 				var data = col.get(0);
 				data.erase().done(async(function () {
-					assertSame("collection count is incorrect after erase.", 0, col.count());
+					assertSame("collection count is incorrect after erase.", 0, col.get("count"));
 				}));
 			}));
 		},
@@ -846,6 +868,103 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			col.reset();
 			assertUndefined("model by id A is not undefined", col.getById("A"));
 			assertUndefined("model by id B is not undefined", col.getById("B"));
+		},
+
+		"test collection.getByCid returns model after it is added": function ()
+		{
+			var col = animals.create([{
+					id: "A",
+					name: "Spot",
+					age: 8
+				}, {
+					id: "B",
+					name: "Stripe",
+					age: 10
+				}
+			]);
+
+			var mod = col.at(0),
+				modByCid = col.getByCid(mod.get('cid'));
+			assertSame("model by cid A has incorrect value", mod, modByCid);
+
+			mod = col.at(1);
+			modByCid = col.getByCid(mod.get('cid'));
+			assertSame("model by cid B has incorrect value", mod, modByCid);
+		},
+
+		"test collection.getByCid returns undefined for cids not in collection": function ()
+		{
+			var col = animals.create([{
+					id: "A",
+					name: "Spot",
+					age: 8
+				}, {
+					id: "B",
+					name: "Stripe",
+					age: 10
+				}
+			]);
+
+			var mod = col.at(0),
+				modByCid = col.getByCid(mod.get('cid'));
+			assertSame("model by cid A has incorrect value", mod, modByCid);
+
+			mod = col.at(1);
+			modByCid = col.getByCid(mod.get('cid'));
+			assertSame("model by cid B has incorrect value", mod, modByCid);
+
+			modByCid = col.getByCid("Not Found");
+			assertUndefined("model by cid is not undefined", modByCid);
+		},
+
+		"test collection.getByCid returns undefined after model is removed": function ()
+		{
+			var col = animals.create([{
+					id: "A",
+					name: "Spot",
+					age: 8
+				}, {
+					id: "B",
+					name: "Stripe",
+					age: 10
+				}
+			]);
+
+			var mod = col.at(0),
+				modByCid = col.getByCid(mod.get('cid'));
+			assertSame("model by cid A has incorrect value", mod, modByCid);
+
+			mod = col.at(1);
+			modByCid = col.getByCid(mod.get('cid'));
+			assertSame("model by cid B has incorrect value", mod, modByCid);
+
+			col.remove(mod);
+			modByCid = col.getByCid("B");
+			assertUndefined("model by cid is not undefined", modByCid);
+		},
+		
+		"test collection.getByCid returns undefined after reset": function ()
+		{
+			var col = animals.create([{
+					id: "A",
+					name: "Spot",
+					age: 8
+				}, {
+					id: "B",
+					name: "Stripe",
+					age: 10
+				}
+			]);
+
+			var mod = col.at(0);
+			assertSame("model by cid A has incorrect value", mod, col.getByCid(mod.get('cid')));
+
+			mod = col.at(1);
+			assertSame("model by cid B has incorrect value", mod, col.getByCid(mod.get('cid')));
+
+			col.reset();
+			assertUndefined("model by cid A is not undefined", col.getByCid(mod.get('cid')));
+			assertUndefined("model by cid B is not undefined", col.getByCid(mod.get('cid')));
 		}
-	}
+	};
 });

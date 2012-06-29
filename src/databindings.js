@@ -3,43 +3,49 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
 
     var foreachExpando = "__cid__";
 
-    function renderItem (element, model, template, at)
+    function renderItem (element, model, template, viewModel, at)
     {
         var itemElements = $("<div></div>").html(template).children(),
             cid = model.get("cid");
 
-        if (_.isNumber(at)) {
-            if (at === 0) {
-                itemElements.prependTo(element);
+        viewModel.fire('foreach-render', { nodes: itemElements, model: model, at: at }, function () {
+            if (_.isNumber(at)) {
+                if (at === 0) {
+                    itemElements.prependTo(element);
+                }
+                else {
+                    $('> tr', element).eq(at - 1).after(itemElements);
+                }
             }
             else {
-                $('> tr', element).eq(at - 1).after(itemElements);
+                itemElements.appendTo(element);
             }
-        }
-        else {
-            itemElements.appendTo(element);
-        }
 
-        itemElements.each(function () {
-            this[foreachExpando] = cid;
-            databindings.databind.applyBindings(model, this);
+            itemElements.each(function () {
+                this[foreachExpando] = cid;
+                databindings.databind.applyBindings(model, this);
+            });
         });
     }
 
-    function resetItems (element, col, metaData)
+    function resetItems (element, col, viewModel, metaData)
     {
         var template = metaData.template;
 
-        // Remove the bindings from the existing foreach items
-        $(element).children().each(function () {
-            databindings.databind.removeBindings(this);
+        viewModel.fire('foreach-reset', { element: element, collection: col, viewModel: viewModel }, function () {
+            // Remove the bindings from the existing foreach items
+            $(element).children().each(function () {
+                databindings.databind.removeBindings(this);
+            });
+
+            $(element).empty();
+
+            if (col) {
+                col.each(function (model) {
+                    renderItem(element, model, template, viewModel);
+                });
+            }
         });
-
-        $(element).empty();
-
-        col.each(function (model) {
-            renderItem(element, model, template);
-        }, this);
     }
 
     /**
@@ -49,13 +55,13 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
      * @param {Object} metaData The meta data for the foreach binding.
      * @param {Object} e The event object.
      */
-    function afterModelsAdded (element, metaData, e)
+    function afterModelsAdded (element, viewModel, metaData, e)
     {
         var template = metaData.template,
             at = e.info.options.at;
 
         _.each(e.info.items, function (model, index) {
-            renderItem(element, model, template, at);
+            renderItem(element, model, template, viewModel, at);
         }, this);
     }
 
@@ -92,9 +98,9 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
      * @param {Object} metaData The meta data for the foreach binding.
      * @param {Object} e The event object.
      */
-    function afterReset (element, metaData, e)
+    function afterReset (element, viewModel, metaData, e)
     {
-        resetItems(element, e.src, metaData);
+        resetItems(element, e.src, viewModel, metaData);
     }
 
     /**
@@ -104,9 +110,9 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
      * @param {Object} metaData The meta data for the foreach binding.
      * @param {Object} e The event object.
      */
-    function afterSort (element, metaData, e)
+    function afterSort (element, viewModel, metaData, e)
     {
-        resetItems(element, e.src, metaData);
+        resetItems(element, e.src, viewModel, metaData);
     }
 
     /**
@@ -153,8 +159,16 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
     
     /**
      * @class databindings
-     * Provides the logic and behavior for individual data binders.
+     * Provides the logic and behavior for individual data binders. Fires events on behalf of the bound view model.
      * @singleton
+     */
+    /**
+     * @event foreach-reset
+     * Fires when a foreach binding is re-rendering markup from it's collection being reset.
+     */
+    /**
+     * @event foreach-render
+     * Fires when a foreach binding is rendering an item.
      */
     /**
      * The databind object that applies these binders to dom elements.
@@ -378,7 +392,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                 if (value) {
                     metaData.viewModel = value;
 
-                    listener = _.bind(afterModelsAdded, null, element, metaData);
+                    listener = _.bind(afterModelsAdded, null, element, viewModel, metaData);
                     metaData.addListener = listener;
                     value.after("add", listener);
 
@@ -386,16 +400,16 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                     metaData.removeListener = listener;
                     value.after("remove", listener);
 
-                    listener = _.bind(afterReset, null, element, metaData);
+                    listener = _.bind(afterReset, null, element, viewModel, metaData);
                     metaData.resetListener = listener;
                     value.after("reset", listener);
 
-                    listener = _.bind(afterSort, null, element, metaData);
+                    listener = _.bind(afterSort, null, element, viewModel, metaData);
                     metaData.sortListener = listener;
                     value.after("sort", listener);
                 }
 
-                resetItems(element, value, metaData);
+                resetItems(element, value, viewModel, metaData);
             }
         }
     };

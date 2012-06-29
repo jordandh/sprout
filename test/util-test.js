@@ -171,6 +171,16 @@ TestCase("util", ["sprout/util", "sprout/base"], function (_, base) {
 			assertSame("joined path has incorrect value", "/test/for/path/", _.joinPaths("/test/", "/for/", "/path/"));
 		},
 
+		"test _.commafy with string input": function ()
+		{
+			assertSame('result has incorrect value', '320,000', _.commafy('320000'));
+		},
+
+		"test _.commafy with number input": function ()
+		{
+			assertSame('result has incorrect value', '320,000', _.commafy(320000));
+		},
+
 		"test _.prototypes": function ()
 		{
 			/*var p = {};
