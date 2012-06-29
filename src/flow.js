@@ -76,18 +76,22 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 
 	/**
      * @class flow
-     * A flow objects helps chain together asynchronous operations. After creating a flow object you pass it instructions to run which it runs one after the other.
+     * A flow objects helps chain together asynchronous operations. After creating a flow object you pass it instructions to run which it executes one after the other.
      * <pre><code>
      *     var anim = flow.create();
      *     anim.wait(150).run(slide, this, item).wait(350).run(fadeOut, this, this.fadeLists);
+     *     ...
+     *     anim.destroy();
      * </code></pre>
      * The above code creates a flow object and tells it to wait 150 ms before sliding an item. And then to wait another 350 ms after that before fading out some lists.
+     * <br/><br/>
      * One off flows can be created without having to worry about calling destory on the flow object once it is done executing its instructions.
      * This is possible by calling the done method as the last instruction.
      * <pre><code>
      *     flow.create().wait(150).run(slide, this, item).wait(350).run(fadeOut, this, this.fadeLists).done();
      * </code></pre>
      * The above code will create a flow object, wait 150 ms, slide an item, wait 350 ms, fade some lists out, and then destroy itself.
+     * <br/><br/>
      * When an instruction is added to an empty flow it is executed immediately.
      * @extends base
      */
