@@ -1,5 +1,31 @@
 define(["sprout/util", "sprout/base"], function (_, base) {
 	/**
+     * Checks whether an instruction condition passes.
+     * @private
+     * @param {Boolean|Function|Array|Object} condition A boolean, function, array of promises, or one promise to check.
+     * @return {Boolean} Returns true if the condition passes, false otherwise.
+     */
+	function passes (condition)
+	{
+		// If the condition is a boolean then just use its value
+		if (_.isBoolean(condition)) {
+			return condition;
+		}
+		// Else if the condition is a function then use its return value
+		else  if (_.isFunction(condition)) {
+			return condition();
+		}
+		// Else if the condition is an array of promises then use their states
+		else if (_.isArray(condition)) {
+			return !_.any(condition, function (promise) {
+				return promise.state() === 'rejected';
+			});
+		}
+
+		return false;
+	}
+
+	/**
      * Runs an instruction.
      * @private
      * @param {Object} instruction The instruction to execute.
@@ -11,6 +37,16 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 			// Delay execution of the next instruction
 			this.timeout = setTimeout(_.bind(runNextInstruction, this), instruction.delay);
 			break;
+		case 'waitIf':
+			// If the delay should be applied then delay execution of the next instruction
+			if (passes(instruction.condition)) {
+				this.timeout = setTimeout(_.bind(runNextInstruction, this), instruction.delay);
+			}
+			// Else Execute the next instruction now
+			else {
+				runNextInstruction.call(this);
+			}
+			break;
 		case 'run':
 			// Invoke the function
 			instruction.func.apply(instruction.context, instruction.args);
@@ -20,7 +56,8 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 			break;
 		case 'runIf':
 			// If any of the promises have been rejected at this point then do not invoke the function
-			if (!_.any(instruction.promises, function (promise) { return promise.state() === 'rejected'; })) {
+			//if (!_.any(instruction.promises, function (promise) { return promise.state() === 'rejected'; })) {
+			if (passes(instruction.condition)) {
 				instruction.func.apply(instruction.context, instruction.args);
 			}
 
@@ -29,7 +66,8 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 			break;
 		case 'runIfNot':
 			// If any of the promises have been rejected at this point then invoke the function
-			if (_.any(instruction.promises, function (promise) { return promise.state() === 'rejected'; })) {
+			//if (_.any(instruction.promises, function (promise) { return promise.state() === 'rejected'; })) {
+			if (!passes(instruction.condition)) {
 				instruction.func.apply(instruction.context, instruction.args);
 			}
 
@@ -168,6 +206,27 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 		},
 
 		/**
+         * A flow instruction. Add this instruction to delay execution of the following instructions by a specified number of milliseconds.
+         * The delay is only applied if the condition resolves to false. The condition can be a boolean, function (that returns truthy or falsy), or promises.
+         * If the promises have not been reject or any of the other condition types are truthy then the delay is applied.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, array of promises, or one promise to check against before applying the delay.
+         * @param {Number} delay The number of milliseconds to delay execution of the following instructions.
+         * @return {Object} Returns itself for chaining.
+         */
+		waitIf: function (condition, delay)
+		{
+			this.instructions.push({
+				type: 'waitIf',
+				condition: condition,
+				delay: delay
+			});
+
+			startInstructions.call(this);
+
+			return this;
+		},
+
+		/**
          * A flow instruction. Add this instruction to a flow object to cause a function to be invoked.
          * @param {Function} func The function to run.
          * @param {Object} context (Optional) The context to run the function in. Defaults to undefined.
@@ -190,19 +249,19 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 
 		/**
          * A flow instruction. Add this instruction to a flow object to cause a function to be invoked.
-         * The function is only invoked if the promises passed to it have not been rejected.
-         * This means promises that are pending or resolved will cause the function to be invoked.
-         * @param {Array|Object} promises The promise or promises to check against before invoking the function.
+         * The function is only invoked if the condition passes.
+         * This means promises that are pending or resolved will invoke the function.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, array of promises, or one promise to check against before invoking the function.
          * @param {Function} func The function to run.
          * @param {Object} context (Optional) The context to run the function in. Defaults to undefined.
          * @param {...} args (Optional) Any remaining arguments are passed as arguments to the function.
          * @return {Object} Returns itself for chaining.
          */
-		runIf: function (promises, func, context)
+		runIf: function (condition, func, context)
 		{
 			this.instructions.push({
 				type: 'runIf',
-				promises: _.isArray(promises) ? promises : [promises],
+				condition: _.isArray(condition) ? condition : [condition],
 				func: func,
 				context: context,
 				args: _.toArray(arguments).slice(3)
@@ -215,19 +274,19 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 
 		/**
          * A flow instruction. Add this instruction to a flow object to cause a function to be invoked.
-         * The function is only invoked if the promises passed to it have been rejected.
+         * The function is only invoked if the condition does not pass.
          * This means promises that are pending or resolved will not invoke the function.
-         * @param {Array|Object} promises The promise or promises to check against before invoking the function.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, array of promises, or one promise to check against before invoking the function.
          * @param {Function} func The function to run.
          * @param {Object} context (Optional) The context to run the function in. Defaults to undefined.
          * @param {...} args (Optional) Any remaining arguments are passed as arguments to the function.
          * @return {Object} Returns itself for chaining.
          */
-		runIfNot: function (promises, func, context)
+		runIfNot: function (condition, func, context)
 		{
 			this.instructions.push({
 				type: 'runIfNot',
-				promises: _.isArray(promises) ? promises : [promises],
+				condition: _.isArray(condition) ? condition : [condition],
 				func: func,
 				context: context,
 				args: _.toArray(arguments).slice(3)
