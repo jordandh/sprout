@@ -15,11 +15,16 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 		else  if (_.isFunction(condition)) {
 			return condition();
 		}
-		// Else if the condition is an array of promises then use their states
+		// Else if the condition is an array of conditions then use their states
 		else if (_.isArray(condition)) {
 			return !_.any(condition, function (promise) {
-				return promise.state() === 'rejected';
+				//return promise.state() === 'rejected';
+				return passes(condition);
 			});
+		}
+		// Else if the condition is a promise then use its state
+		else if (_.isObject(condition)) {
+			return condition.state() !== 'rejected';
 		}
 
 		return false;
@@ -209,7 +214,7 @@ define(["sprout/util", "sprout/base"], function (_, base) {
          * A flow instruction. Add this instruction to delay execution of the following instructions by a specified number of milliseconds.
          * The delay is only applied if the condition resolves to false. The condition can be a boolean, function (that returns truthy or falsy), or promises.
          * If the promises have not been reject or any of the other condition types are truthy then the delay is applied.
-         * @param {Boolean|Function|Array|Object} condition A boolean, function, array of promises, or one promise to check against before applying the delay.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before applying the delay.
          * @param {Number} delay The number of milliseconds to delay execution of the following instructions.
          * @return {Object} Returns itself for chaining.
          */
@@ -251,7 +256,7 @@ define(["sprout/util", "sprout/base"], function (_, base) {
          * A flow instruction. Add this instruction to a flow object to cause a function to be invoked.
          * The function is only invoked if the condition passes.
          * This means promises that are pending or resolved will invoke the function.
-         * @param {Boolean|Function|Array|Object} condition A boolean, function, array of promises, or one promise to check against before invoking the function.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before invoking the function.
          * @param {Function} func The function to run.
          * @param {Object} context (Optional) The context to run the function in. Defaults to undefined.
          * @param {...} args (Optional) Any remaining arguments are passed as arguments to the function.
@@ -261,7 +266,7 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 		{
 			this.instructions.push({
 				type: 'runIf',
-				condition: _.isArray(condition) ? condition : [condition],
+				condition: condition,
 				func: func,
 				context: context,
 				args: _.toArray(arguments).slice(3)
@@ -276,7 +281,7 @@ define(["sprout/util", "sprout/base"], function (_, base) {
          * A flow instruction. Add this instruction to a flow object to cause a function to be invoked.
          * The function is only invoked if the condition does not pass.
          * This means promises that are pending or resolved will not invoke the function.
-         * @param {Boolean|Function|Array|Object} condition A boolean, function, array of promises, or one promise to check against before invoking the function.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before invoking the function.
          * @param {Function} func The function to run.
          * @param {Object} context (Optional) The context to run the function in. Defaults to undefined.
          * @param {...} args (Optional) Any remaining arguments are passed as arguments to the function.
@@ -286,7 +291,7 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 		{
 			this.instructions.push({
 				type: 'runIfNot',
-				condition: _.isArray(condition) ? condition : [condition],
+				condition: condition,
 				func: func,
 				context: context,
 				args: _.toArray(arguments).slice(3)
