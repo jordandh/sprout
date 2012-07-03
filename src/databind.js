@@ -95,8 +95,15 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
 
             if (_.isObject(elementMetaData)) {
                 _.each(elementMetaData, function (binderMetaData) {
-                    if (_.isFunction(binderMetaData.listener) && _.isObject(binderMetaData.model) && _.isString(binderMetaData.eventName)) {
-                        binderMetaData.model.detachAfter(binderMetaData.eventName, binderMetaData.listener);
+                    if (_.isObject(binderMetaData.model)) {
+                        if (_.isFunction(binderMetaData.listener) && _.isString(binderMetaData.eventName)) {
+                            binderMetaData.model.detachAfter(binderMetaData.eventName, binderMetaData.listener);
+                        }
+
+                        if (_.isFunction(binderMetaData.destroyListener))  {
+                            binderMetaData.model.detachOn("destroy", binderMetaData.destroyListener);
+                            console.log("removed data bound 'destroy' event listener");
+                        }
                     }
 
                     // Tell the binder to stop so that it can clean up (e.g. event listeners)
@@ -146,7 +153,10 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             metaData.model = viewModel;
 
             viewModel.after(attributeNameChain[1] + "Change", listener);
-            viewModel.on("destroy", _.bind(detachBinder, null, binder, viewModel, attributeNameChain, binderInfo));
+
+            listener = _.bind(detachBinder, null, binder, viewModel, attributeNameChain, binderInfo);
+            metaData.destroyListener = listener;
+            viewModel.on("destroy", listener);
 
             attachBinder(binder, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1), binderInfo);
 
