@@ -308,7 +308,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
          * {Object} value The initial value of the attribute.
          * {Function} validator A function to be called when the attribute is set. If the function returns false then the attribute's value is not changed. It is passed two parameters: the new value and the name of the attribute.
          * {Function} set A function to be called when the attribute value is being set. It is passed three parameters: the enw value, the current value, and the name of the attribute. If this function is defined then it is responsible for updating the attribute's value.
-         * {Function} getter A function to be called when the attribute value is being retrieved. It is passed two parameters: the current value and the name of the attribute.
+         * {Function} get A function to be called when the attribute value is being retrieved. It is passed two parameters: the current value and the name of the attribute.
          * {Boolean} readOnly If true then the attribute's value cannot be changed from its initial value. The default value is false.
          * {Object} handler The attribute change callback is normally called on the object that owns the attribute. This overrides that context and instead the handler's function is called. This is primarily used by plugins.
          * {Array|String} uses The attribute names that this attribute is dependent on for its value. Defining this property make the attribute a computable attribute.
