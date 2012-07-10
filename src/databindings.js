@@ -3,7 +3,17 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
 
     var foreachExpando = "__cid__";
 
-    function renderItem (element, model, template, viewModel, at)
+    /**
+     * Renders an individual item from a foreach binder's collection.
+     * @private
+     * @param {Object} element The dom element the foreach binder is bound to.
+     * @param {Object} model The model this item is bound to.
+     * @param {Object} template The markup template for the item.
+     * @param {Object} viewModel The model the foreach binder is bound to.
+     * @param {Object} at The index to insert the item at.
+     * @param {Object} info The binding info for the foreach binding.
+     */
+    function renderItem (element, model, template, viewModel, at, info)
     {
         var itemElements = $("<div></div>").html(template).children(),
             cid = model.get("cid");
@@ -23,12 +33,21 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
 
             itemElements.each(function () {
                 this[foreachExpando] = cid;
-                databindings.databind.applyBindings(model, this);
+                databindings.databind.applyBindings(model, this, info.context);
             });
         });
     }
 
-    function resetItems (element, col, viewModel, metaData)
+    /**
+     * Resets the dom for the new items in the foreach's collection.
+     * @private
+     * @param {Object} element The dom element the foreach binder is bound to.
+     * @param {Object} col The collection the foreach binder is bound to.
+     * @param {Object} viewModel The model the foreach binder is bound to.
+     * @param {Object} info The binding info for the foreach binding.
+     * @param {Object} metaData The meta data for the foreach binding.
+     */
+    function resetItems (element, col, viewModel, info, metaData)
     {
         var template = metaData.template;
 
@@ -42,7 +61,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
 
             if (col) {
                 col.each(function (model) {
-                    renderItem(element, model, template, viewModel);
+                    renderItem(element, model, template, viewModel, void(0), info);
                 });
             }
         });
@@ -52,16 +71,18 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
      * Handler for when models are added to the foreach's collection.
      * @private
      * @param {Object} element The dom element the foreach binder is bound to.
+     * @param {Object} viewModel The model the foreach binder is bound to.
+     * @param {Object} info The binding info for the foreach binding.
      * @param {Object} metaData The meta data for the foreach binding.
      * @param {Object} e The event object.
      */
-    function afterModelsAdded (element, viewModel, metaData, e)
+    function afterModelsAdded (element, viewModel, info, metaData, e)
     {
         var template = metaData.template,
             at = e.info.options.at;
 
         _.each(e.info.items, function (model, index) {
-            renderItem(element, model, template, viewModel, at);
+            renderItem(element, model, template, viewModel, at, info);
         }, this);
     }
 
@@ -69,10 +90,12 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
      * Handler for when models are removed from the foreach's collection.
      * @private
      * @param {Object} element The dom element the foreach binder is bound to.
+     * @param {Object} viewModel The model the foreach binder is bound to.
+     * @param {Object} info The binding info for the foreach binding.
      * @param {Object} metaData The meta data for the foreach binding.
      * @param {Object} e The event object.
      */
-    function afterModelsRemoved (element, metaData, e)
+    function afterModelsRemoved (element, viewModel, info, metaData, e)
     {
         var itemElements = $(element).children();
 
@@ -95,24 +118,28 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
      * Handler for when the foreach's collection is reset.
      * @private
      * @param {Object} element The dom element the foreach binder is bound to.
+     * @param {Object} viewModel The model the foreach binder is bound to.
+     * @param {Object} info The binding info for the foreach binding.
      * @param {Object} metaData The meta data for the foreach binding.
      * @param {Object} e The event object.
      */
-    function afterReset (element, viewModel, metaData, e)
+    function afterReset (element, viewModel, info, metaData, e)
     {
-        resetItems(element, e.src, viewModel, metaData);
+        resetItems(element, e.src, viewModel, info, metaData);
     }
 
     /**
      * Handler for when the foreach's collection is sorted.
      * @private
      * @param {Object} element The dom element the foreach binder is bound to.
+     * @param {Object} viewModel The model the foreach binder is bound to.
+     * @param {Object} info The binding info for the foreach binding.
      * @param {Object} metaData The meta data for the foreach binding.
      * @param {Object} e The event object.
      */
-    function afterSort (element, viewModel, metaData, e)
+    function afterSort (element, viewModel, info, metaData, e)
     {
-        resetItems(element, e.src, viewModel, metaData);
+        resetItems(element, e.src, viewModel, info, metaData);
     }
 
     /**
@@ -392,24 +419,24 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                 if (value) {
                     metaData.viewModel = value;
 
-                    listener = _.bind(afterModelsAdded, null, element, viewModel, metaData);
+                    listener = _.bind(afterModelsAdded, null, element, viewModel, info, metaData);
                     metaData.addListener = listener;
                     value.after("add", listener);
 
-                    listener = _.bind(afterModelsRemoved, null, element, metaData);
+                    listener = _.bind(afterModelsRemoved, null, element, viewModel, info, metaData);
                     metaData.removeListener = listener;
                     value.after("remove", listener);
 
-                    listener = _.bind(afterReset, null, element, viewModel, metaData);
+                    listener = _.bind(afterReset, null, element, viewModel, info, metaData);
                     metaData.resetListener = listener;
                     value.after("reset", listener);
 
-                    listener = _.bind(afterSort, null, element, viewModel, metaData);
+                    listener = _.bind(afterSort, null, element, viewModel, info, metaData);
                     metaData.sortListener = listener;
                     value.after("sort", listener);
                 }
 
-                resetItems(element, value, viewModel, metaData);
+                resetItems(element, value, viewModel, info, metaData);
             }
         }
     };

@@ -102,7 +102,6 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
 
                         if (_.isFunction(binderMetaData.destroyListener))  {
                             binderMetaData.model.detachOn("destroy", binderMetaData.destroyListener);
-                            console.log("removed data bound 'destroy' event listener");
                         }
                     }
 
@@ -142,27 +141,45 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
      */
     function attachBinder (binder, viewModel, attributeNameChain, binderInfo)
     {
-        var listener, metaData;
+        var listener, metaData, i;
 
         if (attributeNameChain.length > 1) {
-            listener = _.bind(updateBinder, null, binder, viewModel, attributeNameChain.slice(1), binderInfo);
-            
-            metaData = getMetaData(binderInfo.element, binder, binderInfo.key, attributeNameChain, true);
-            metaData.eventName = attributeNameChain[1] + "Change";
-            metaData.listener = listener;
-            metaData.model = viewModel;
+            // If this binding should be done using the view model's parent
+            if (attributeNameChain[1] !== '$parent') {
+                // Listen for the attribute value changing
+                listener = _.bind(updateBinder, null, binder, viewModel, attributeNameChain.slice(1), binderInfo);
+                
+                metaData = getMetaData(binderInfo.element, binder, binderInfo.key, attributeNameChain, true);
+                metaData.eventName = attributeNameChain[1] + "Change";
+                metaData.listener = listener;
+                metaData.model = viewModel;
 
-            viewModel.after(attributeNameChain[1] + "Change", listener);
+                viewModel.after(attributeNameChain[1] + "Change", listener);
 
-            listener = _.bind(detachBinder, null, binder, viewModel, attributeNameChain, binderInfo);
-            metaData.destroyListener = listener;
-            viewModel.on("destroy", listener);
+                // Listen for the view model being destroyed
+                listener = _.bind(detachBinder, null, binder, viewModel, attributeNameChain, binderInfo);
+                metaData.destroyListener = listener;
+                viewModel.on("destroy", listener);
 
-            attachBinder(binder, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1), binderInfo);
+                // Attach the binding for the next name in the attribute chain
+                attachBinder(binder, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1), binderInfo);
 
-            if (attributeNameChain.length === 2) {
-                startBinder(binder, viewModel, [attributeNameChain[1]], binderInfo);
-                updateBinder(binder, viewModel, [attributeNameChain[1]], binderInfo);
+                // If this is the last view model then start the binder up using it and update its value
+                if (attributeNameChain.length === 2) {
+                    startBinder(binder, viewModel, [attributeNameChain[1]], binderInfo);
+                    updateBinder(binder, viewModel, [attributeNameChain[1]], binderInfo);
+                }
+            }
+            else {
+                // $parent has been encountered in the attribute name chain. Move along the chain for each $parent
+                i = 1;
+                do {
+                    viewModel = binderInfo.context.parents[binderInfo.context.parents.length - i];
+                    i += 1;
+                } while (attributeNameChain[i] === '$parent');
+
+                // Attach the binding for the context's parent
+                attachBinder(binder, viewModel, attributeNameChain.slice(i - 1), binderInfo);
             }
         }
     }
@@ -399,8 +416,9 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
      * Binds an element and all its descendents to a model.
      * @param {Object} element The element to bind to.
      * @param {Object} viewModel The model to bind to.
+     * @param {Object} context The context of the binding.
      */
-    function bindElement (element, viewModel)
+    function bindElement (element, viewModel, context)
     {
         var bindings = getElementBindings(element),
             childNodes = element.childNodes,
@@ -413,6 +431,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             bindingInfo = operators.ops;
             bindingInfo.key = operators.key;
             bindingInfo.element = element;
+            bindingInfo.context = context;
 
             if (_.startsWith(bindingInfo.key, ".")) {
                 binder = databindings["className"];
@@ -436,7 +455,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
         // Bind children
         if (bindChildren) {
             for (var i = 0, length = childNodes.length; i < length; i += 1) {
-                bindElement(childNodes[i], viewModel);
+                bindElement(childNodes[i], viewModel, context);
             }
         }
     }
@@ -496,10 +515,20 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
          * Applies data bindings between a model and the dom.
          * @param {Object} viewModel The model or viewmodel to bind to a dom element and its children.
          * @param {Object} element (Optional) The dom element to bind to. Defaults to document.body.
+         * @param {Object} parentContext (Optional) For internal use. The context of the parents bindings. Used by the foreach binder.
          */
-        applyBindings: function (viewModel, element)
+        applyBindings: function (viewModel, element, parentContext)
         {
-            bindElement(element || document.body, viewModel);
+            var context = {
+                data: viewModel,
+                parents: parentContext ? parentContext.parents.slice(0) : []
+            };
+
+            if (parentContext && parentContext.data) {
+                context.parents.push(parentContext.data);
+            }
+
+            bindElement(element || document.body, viewModel, context);
         },
 
         /**
