@@ -438,6 +438,53 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
 
                 resetItems(element, value, viewModel, info, metaData);
             }
+        },
+
+        /**
+         * @class if
+         * The if binder binds whether or not a dom element's children are rendered
+         * @singleton
+         * @namespace databindings
+         */
+        'if': {
+            bindChildren: false,
+
+            start: function (element, value, info, metaData)
+            {
+                metaData.template = $(element).html();
+                $(element).empty();
+            },
+
+            stop: function (element, metaData)
+            {
+                delete metaData.template;
+            },
+
+            update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
+            {
+                var node = $(element);
+
+                // If the element's children should be rendered
+                if (info["!"] ? !value : !!value) {
+                    // Remove any existing children
+                    node.children().each(function () {
+                        databindings.databind.removeBindings(this);
+                    });
+                    node.empty();
+
+                    // Add the new children
+                    node.html(metaData.template).children().each(function () {
+                        databindings.databind.applyBindings(info.context.root, this);
+                    });
+                }
+                else {
+                    // Remove the children
+                    node.children().each(function () {
+                        databindings.databind.removeBindings(this);
+                    });
+                    node.empty();
+                }
+            }
         }
     };
 

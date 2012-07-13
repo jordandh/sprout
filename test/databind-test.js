@@ -29,6 +29,7 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
                 url: "/Riker",
                 away: true,
                 popular: true,
+                selected: false,
                 rank: "Commander"
             });
 
@@ -1646,10 +1647,10 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             databind.applyBindings(this.authorsViewModel, this.element);
 
             var table = $("table", this.element);
+            var cells = $(".test-outer td", this.element);
 
             assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
-
-            var cells = $(".test-outer td", this.element);
+            assertSame("incorrect number of cells", 18, cells.length);
 
             assertSame("cell 0 value is incorrect", "Author:", cells.eq(0).text());
             assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
@@ -1696,8 +1697,12 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
                 }
             ]));
 
+            table = $("table", this.element);
             cells = $(".test-outer td", this.element);
 
+            assertSame("data bound foreach item count is incorrect after change", 3, table.prop("rows").length);
+            assertSame("incorrect number of cells after change", 18, cells.length);
+            
             assertSame("cell 0 value is incorrect after change", "Author:", cells.eq(0).text());
             assertSame("cell 1 value is incorrect after change", "W R", cells.eq(1).text());
             assertSame("cell 2 value is incorrect after change", "Author:", cells.eq(2).text());
@@ -1766,6 +1771,101 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             assertSame("cell 15 value is incorrect", "NAME", cells.eq(15).text());
             assertSame("cell 16 value is incorrect", this.authorsViewModel.get('authors.2.title').toLowerCase(), cells.eq(16).html().toLowerCase());
             assertSame("cell 17 value is incorrect", "Beverly Crusher", cells.eq(17).text());
+        },
+
+        "test databindings.if does render content": function () {
+            var template = "<div data-bind='if: popular'>If Test</div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "If Test", $("div", this.element).html());
+        },
+
+        "test databindings.if does not render content": function () {
+            var template = "<div data-bind='if: selected'>If Test</div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "", $("div", this.element).html());
+        },
+
+        "test databindings.if does not render content after change": function () {
+            var template = "<div data-bind='if: popular'>If Test</div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "If Test", $("div", this.element).html());
+
+            this.author.set("popular", false);
+
+            assertSame("element has incorrect content after change", "", $("div", this.element).html());
+        },
+
+        "test databindings.if does render content after change": function () {
+            var template = "<div data-bind='if: selected'>If Test</div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "", $("div", this.element).html());
+
+            this.author.set("selected", true);
+
+            assertSame("element has incorrect content after change", "If Test", $("div", this.element).html());
+        },
+
+        "test databindings.if does render children": function () {
+            var template = "<div data-bind='if: popular'><span></span><span></span></div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", 2, $("div span", this.element).length);
+        },
+
+        "test databindings.if does bind children": function () {
+            var template = "<div data-bind='if: popular'><span data-bind='text: firstName'></span><span data-bind='text: lastName'></span></div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            var nodes = $("div span", this.element);
+
+            assertSame("element has incorrect content", 2, nodes.length);
+            assertSame("element span 1 has incorrect content", this.author.get("firstName"), nodes.eq(0).text());
+            assertSame("element span 2 has incorrect content", this.author.get("lastName"), nodes.eq(1).text());
+        },
+
+        "test databindings.if does change value for bound children": function () {
+            var template = "<div data-bind='if: popular'><span data-bind='text: firstName'></span><span data-bind='text: lastName'></span></div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            var nodes = $("div span", this.element);
+
+            assertSame("element has incorrect content", 2, nodes.length);
+            assertSame("element span 1 has incorrect content", this.author.get("firstName"), nodes.eq(0).text());
+            assertSame("element span 2 has incorrect content", this.author.get("lastName"), nodes.eq(1).text());
+
+            this.author.set('firstName', 'Will');
+            this.author.set('lastName', 'Ryk');
+
+            nodes = $("div span", this.element);
+
+            assertSame("element has incorrect content after change", 2, nodes.length);
+            assertSame("element span 1 has incorrect content after change", "Will", nodes.eq(0).text());
+            assertSame("element span 2 has incorrect content after change", "Ryk", nodes.eq(1).text());
         }
     };
 });

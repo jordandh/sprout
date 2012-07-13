@@ -520,6 +520,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
         applyBindings: function (viewModel, element, parentContext)
         {
             var context = {
+                root: viewModel,
                 data: viewModel,
                 parents: parentContext ? parentContext.parents.slice(0) : []
             };
