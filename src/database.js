@@ -134,13 +134,13 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
             /**
              * Override to parse new data. The viewmodel should fill itself out at this point. By parsing the json data from the new data the viewmodel can determine what models to add to itself.
              * @param {Object} payload A JSON object containing the data from the request.
-             * @param {Object} viewModel The viewmodel requesting the data.
-             * @param {String} url The url for the request.
+             * @param {Object} viewModel (Optional) The viewmodel requesting the data.
+             * @param {String} url (Optional) The url for the request.
              * @return {Object} Returns the json data from the payload that belongs to the viewmodel.
              */
             parse: function (payload, viewModel, url)
             {
-                var expires = viewModel.expires,
+                var expires = viewModel ? viewModel.expires : 0,
                     viewModelData = payload.data;
 
                 // Put the models in the tables
