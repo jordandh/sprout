@@ -6,6 +6,12 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
         elementMetaDataStore = {},
         bindingOperators = ["!", "-"],
         restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g,
+        // IE 9 cannot reliably read the "nodeValue" property of a comment node (see https://github.com/SteveSanderson/knockout/issues/186)
+        // but it does give them a nonstandard alternative property called "text" that it can read reliably. Other browsers don't have that property.
+        // So, use node.text where available, and node.nodeValue elsewhere
+        commentNodesHaveTextProperty = document.createComment("test").text === "<!--test-->",
+        startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*data-bind\s+(.*\:.*)\s*-->$/ : /^\s*data-bind\s+(.*\:.*)\s*$/,
+        endCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*\/data-bind\s*-->$/ : /^\s*\/data-bind\s*$/,
         databind;
 
     /**
@@ -213,9 +219,13 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
     function updateBinder (binder, viewModel, attributeNameChain, binderInfo, e)
     {
         var oldViewModel = e ? e.info.oldValue : null;
-
-        // If the element has been removed from the dom since the binding was setup
-        if (!$.contains(document.body, binderInfo.element)) {
+        
+        // If the element is a comment node and has been removed from the dom since the binding was setup
+        if (binderInfo.element.nodeType === 8 && !$.containsComment(document.body, binderInfo.element)) {
+            unbindElement(binderInfo.element);
+        }
+        // Else if the element has been removed from the dom since the binding was setup
+        else if (binderInfo.element.nodeType !== 8 && !$.contains(document.body, binderInfo.element)) {
             unbindElement(binderInfo.element);
         }
         else if (attributeNameChain.length > 1) {
@@ -255,6 +265,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
     /**
      * Restores the tokens that were replaced during parsing.
      * Thanks go to Steve Sanderson's KnockoutJS for this function.
+     * @private
      * @param {String} string The string to restore the tokens in.
      * @param {Array} tokens The tokens being restored.
      * @return {String} Returns the string with its tokens restored.
@@ -276,6 +287,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
      * Thanks go to Steve Sanderson's KnockoutJS for this function.
      * From KnockoutJS:
      * A full tokeniser+lexer would add too much weight to this library, so here's a simple parser that is sufficient just to split an object literal string into a set of top-level key-value pairs.
+     * @private
      * @param {String} objectLiteralString The binding string from a dom element.
      * @return {Array} Returns an array of all the bindings. An item in the array contains the key and value of the binding.
      */
@@ -363,20 +375,39 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
         return result;
     }
 
+    function isStartComment (element)
+    {
+        return (element.nodeType == 8) && (commentNodesHaveTextProperty ? element.text : element.nodeValue).match(startCommentRegex);
+    }
+
+    function isEndComment (element)
+    {
+        return (element.nodeType == 8) && (commentNodesHaveTextProperty ? element.text : element.nodeValue).match(endCommentRegex);
+    }
+
     /**
      * Gets the binding string from an element. The binding string is pulled from an attribute on the element.
+     * @private
      * @param {Object} element The element to get the binding string of.
      * @return {String} Returns the binding string of the element. If the binding attribute does not exist then undefined is returned.
      */
     function getElementBindingsString (element)
     {
+        var match;
+
         if (element.nodeType === 1) {
             return element.getAttribute(dataBindAttributeName);
+        }
+
+        match = isStartComment(element);
+        if (match) {
+            return match[1];
         }
     }
 
     /**
      * Gets the bindings for an element. The bindings are pulled from an attribute on the element.
+     * @private
      * @param {Object} element The element to get the bindings of.
      * @return {Array} Returns the bindings for the element. If bindings do not exist then null is returned.
      */
@@ -388,6 +419,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
 
     /**
      * Gets the operators on a binding key.
+     * @private
      * @param {String} key The binding key to get the operators from.
      * @return {Object} Returns an object containing the binding key with the operators stripped from it. The object also contains the operators as an array of the operator strings.
      */
@@ -414,6 +446,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
 
     /**
      * Binds an element and all its descendents to a model.
+     * @private
      * @param {Object} element The element to bind to.
      * @param {Object} viewModel The model to bind to.
      * @param {Object} context The context of the binding.
@@ -421,9 +454,28 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
     function bindElement (element, viewModel, context)
     {
         var bindings = getElementBindings(element),
+            isStartCommentNode = !!isStartComment(element),
             childNodes = element.childNodes,
-            bindChildren = true;
+            bindChildren = true,
+            sibling, nextSibling, commentContainer, isAnEndComment;
 
+        // If this is a start comment node then remove the following siblings until the end comment node is reached
+        if (isStartCommentNode) {
+            commentContainer = $('<div></div>');
+            sibling = element.nextSibling;
+
+            while (sibling && !(isAnEndComment = isEndComment(sibling))) {
+                nextSibling = sibling.nextSibling;
+                commentContainer.append(sibling);
+                sibling = nextSibling;
+            }
+
+            if (!isAnEndComment) {
+                throw new Error("Databind (comment) is missing end tag.");
+            }
+        }
+
+        // Attach each of the bindings that are on the element
         _.each(bindings, function (binding) {
             var operators = getBindingOperators(binding.key),
                 bindingInfo, binder;
@@ -432,6 +484,8 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             bindingInfo.key = operators.key;
             bindingInfo.element = element;
             bindingInfo.context = context;
+            bindingInfo.isComment = isStartCommentNode;
+            bindingInfo.commentTemplate = isStartCommentNode ? commentContainer.html() : null;
 
             if (_.startsWith(bindingInfo.key, ".")) {
                 binder = databindings["className"];
@@ -454,7 +508,9 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
 
         // Bind children
         if (bindChildren) {
-            for (var i = 0, length = childNodes.length; i < length; i += 1) {
+            //for (var i = 0, length = childNodes.length; i < length; i += 1) {
+            // Do not cache the length of childNodes because comment bindings can change the childNodes object
+            for (var i = 0; i < childNodes.length; i += 1) {
                 bindElement(childNodes[i], viewModel, context);
             }
         }
@@ -462,6 +518,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
 
     /**
      * Removes all bindings for an element and its descendents. Deletes the element's binding meta data and removes all event listeners.
+     * @private
      * @param {Object} element The element to bind to.
      * @param {Object} viewModel The model to bind to.
      */

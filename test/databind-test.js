@@ -1855,17 +1855,125 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             var nodes = $("div span", this.element);
 
             assertSame("element has incorrect content", 2, nodes.length);
-            assertSame("element span 1 has incorrect content", this.author.get("firstName"), nodes.eq(0).text());
-            assertSame("element span 2 has incorrect content", this.author.get("lastName"), nodes.eq(1).text());
+            assertSame("element span 1 has incorrect content", "William", nodes.eq(0).text());
+            assertSame("element span 2 has incorrect content", "Riker", nodes.eq(1).text());
 
             this.author.set('firstName', 'Will');
-            this.author.set('lastName', 'Ryk');
+            this.author.set('lastName', 'Rik');
 
             nodes = $("div span", this.element);
 
             assertSame("element has incorrect content after change", 2, nodes.length);
             assertSame("element span 1 has incorrect content after change", "Will", nodes.eq(0).text());
-            assertSame("element span 2 has incorrect content after change", "Ryk", nodes.eq(1).text());
+            assertSame("element span 2 has incorrect content after change", "Rik", nodes.eq(1).text());
+        },
+
+        "test databindings.if on comment does render content": function () {
+            var template = "<!-- data-bind if: popular -->" +
+                           "If Test" +
+                           "<!-- /data-bind -->";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "If Test", this.node.contents().eq(1).text());
+        },
+
+        "test databindings.if on comment does not render content": function () {
+            var template = "<!-- data-bind if: selected -->If Test<!-- /data-bind -->";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "", this.node.contents().eq(1).text());
+        },
+
+        "test databindings.if on comment does not render content after change": function () {
+            var template = "<!-- data-bind if: popular -->If Test<!-- /data-bind -->";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "If Test", this.node.contents().eq(1).text());
+
+            this.author.set("popular", false);
+
+            assertSame("element has incorrect content", "", this.node.contents().eq(1).text());
+        },
+
+        "test databindings.if on comment does render content after change": function () {
+            var template = "<!-- data-bind if: selected -->If Test<!-- /data-bind -->";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "", this.node.contents().eq(1).text());
+
+            this.author.set("selected", true);
+
+            assertSame("element has incorrect content", "If Test", this.node.contents().eq(1).text());
+        },
+
+        "test databindings.if on comment does render children": function () {
+            var template = "<!-- data-bind if: popular --><span></span><span></span><!-- /data-bind -->";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", 2, this.node.children().length);
+        },
+
+        "test databindings.if on comment does bind children": function () {
+            var template = "<!-- data-bind if: popular --><span data-bind='text: firstName'></span><span data-bind='text: lastName'></span><!-- /data-bind -->";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            var nodes = this.node.children();
+
+            assertSame("element has incorrect content", 2, nodes.length);
+            assertSame("element span 1 has incorrect content", this.author.get("firstName"), nodes.eq(0).text());
+            assertSame("element span 2 has incorrect content", this.author.get("lastName"), nodes.eq(1).text());
+        },
+
+        "test databindings.if on comment does change value for bound children": function () {
+            var template = "<!-- data-bind if: popular --><span data-bind='text: firstName'></span><span data-bind='text: lastName'></span><!-- /data-bind -->";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            var nodes = this.node.children();
+
+            assertSame("element has incorrect content", 2, nodes.length);
+            assertSame("element span 1 has incorrect content", "William", nodes.eq(0).text());
+            assertSame("element span 2 has incorrect content", "Riker", nodes.eq(1).text());
+
+            this.author.set('firstName', 'Will');
+            this.author.set('lastName', 'Rik');
+
+            nodes = this.node.children();
+
+            assertSame("element has incorrect content after change", 2, nodes.length);
+            assertSame("element span 1 has incorrect content after change", "Will", nodes.eq(0).text());
+            assertSame("element span 2 has incorrect content after change", "Rik", nodes.eq(1).text());
+        },
+
+        "test databindings.if on comment does throw exception if there is no end tag": function () {
+            var template = "<!-- data-bind if: popular -->If Test",
+                self = this;
+
+            this.node.html(template);
+
+            assertException("applyBindings did not throw exception", function () {
+                databind.applyBindings(self.author, self.element);
+            });
         }
     };
 });

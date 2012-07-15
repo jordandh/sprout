@@ -1,7 +1,23 @@
 define(["sprout/util", "sprout/dom"], function (_, $) {
     "use strict";
 
-    var foreachExpando = "__cid__";
+    var foreachExpando = "__cid__",
+        // IE 9 cannot reliably read the "nodeValue" property of a comment node (see https://github.com/SteveSanderson/knockout/issues/186)
+        // but it does give them a nonstandard alternative property called "text" that it can read reliably. Other browsers don't have that property.
+        // So, use node.text where available, and node.nodeValue elsewhere
+        commentNodesHaveTextProperty = document.createComment("test").text === "<!--test-->",
+        startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*data-bind\s+(.*\:.*)\s*-->$/ : /^\s*data-bind\s+(.*\:.*)\s*$/,
+        endCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*\/data-bind\s*-->$/ : /^\s*\/data-bind\s*$/;
+
+    function isStartComment (element)
+    {
+        return (element.nodeType == 8) && (commentNodesHaveTextProperty ? element.text : element.nodeValue).match(startCommentRegex);
+    }
+
+    function isEndComment (element)
+    {
+        return (element.nodeType == 8) && (commentNodesHaveTextProperty ? element.text : element.nodeValue).match(endCommentRegex);
+    }
 
     /**
      * Renders an individual item from a foreach binder's collection.
@@ -15,7 +31,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
      */
     function renderItem (element, model, template, viewModel, at, info)
     {
-        var itemElements = $("<div></div>").html(template).children(),
+        var itemElements = $("<div></div>").html(template).contents(),
             cid = model.get("cid");
 
         viewModel.fire('foreach-render', { nodes: itemElements, model: model, at: at }, function () {
@@ -53,7 +69,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
 
         viewModel.fire('foreach-reset', { element: element, collection: col, viewModel: viewModel }, function () {
             // Remove the bindings from the existing foreach items
-            $(element).children().each(function () {
+            $(element).contents().each(function () {
                 databindings.databind.removeBindings(this);
             });
 
@@ -97,7 +113,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
      */
     function afterModelsRemoved (element, viewModel, info, metaData, e)
     {
-        var itemElements = $(element).children();
+        var itemElements = $(element).contents();
 
         // If there is a list view then remove each model from it
         _.each(e.info.items, function (model) {
@@ -451,8 +467,14 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
 
             start: function (element, value, info, metaData)
             {
-                metaData.template = $(element).html();
-                $(element).empty();
+                if (info.isComment) {
+                    metaData.template = info.commentTemplate;
+                }
+                else {
+                    metaData.template = $(element).html();
+                    $(element).empty();
+                }
+                
             },
 
             stop: function (element, metaData)
@@ -462,27 +484,48 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
 
             update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
-                var node = $(element);
+                var node = $(element),
+                    itemElements, sibling, nextSibling, isAnEndComment;
 
-                // If the element's children should be rendered
-                if (info["!"] ? !value : !!value) {
-                    // Remove any existing children
-                    node.children().each(function () {
-                        databindings.databind.removeBindings(this);
-                    });
-                    node.empty();
+                // Remove content
+                if (info.isComment) {
+                    // Remove the siblings
+                    sibling = element.nextSibling;
 
-                    // Add the new children
-                    node.html(metaData.template).children().each(function () {
-                        databindings.databind.applyBindings(info.context.root, this);
-                    });
+                    while (sibling && !(isAnEndComment = isEndComment(sibling))) {
+                        nextSibling = sibling.nextSibling;
+                        databindings.databind.removeBindings(sibling);
+                        $(sibling).remove();
+                        sibling = nextSibling;
+                    }
+
+                    if (!isAnEndComment) {
+                        throw new Error("Databind (comment if) is missing end tag.");
+                    }
                 }
                 else {
                     // Remove the children
-                    node.children().each(function () {
+                    node.contents().each(function () {
                         databindings.databind.removeBindings(this);
                     });
                     node.empty();
+                }
+
+                // If the element's content should be rendered
+                if (info["!"] ? !value : !!value) {
+                    // Render the content
+                    if (info.isComment) {
+                        // Render the siblings
+                        $("<div></div>").html(metaData.template).contents().insertAfter(node).each(function () {
+                            databindings.databind.applyBindings(info.context.root, this);
+                        });
+                    }
+                    else {
+                        // Render the new children
+                        node.html(metaData.template).contents().each(function () {
+                            databindings.databind.applyBindings(info.context.root, this);
+                        });
+                    }
                 }
             }
         }
