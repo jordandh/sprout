@@ -1890,17 +1890,42 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
 
             databind.applyBindings(this.author, this.element);
 
-            assertSame("element has incorrect content", "If Test", this.node.contents().eq(1).text());
+            assertSame("element has incorrect content", "If Test", this.node.text());
         },
 
         "test databindings.if on comment does not render content": function () {
             var template = "<!-- data-bind if: selected -->If Test<!-- /data-bind -->";
 
+            //this.node.html($.clean([template]));
             this.node.html(template);
 
             databind.applyBindings(this.author, this.element);
 
-            assertSame("element has incorrect content", "", this.node.contents().eq(1).text());
+            assertSame("element has incorrect content", "", this.node.text());
+        },
+
+        "test databindings.if on comment inside element does render content": function () {
+            var template = "<div><!-- data-bind if: popular -->" +
+                           "If Test" +
+                           "<!-- /data-bind --></div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element not found", 1, $("div", this.element).length);
+            assertSame("element has incorrect content", "If Test", $("div", this.element).text());
+        },
+
+        "test databindings.if on comment inside element does not render content": function () {
+            var template = "<div><!-- data-bind if: selected -->If Test<!-- /data-bind --></div>";
+
+            this.node.html($.clean([template]));
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element not found", 1, $("div", this.element).length);
+            assertSame("element has incorrect content", "", $("div", this.element).text());
         },
 
         "test databindings.if on comment does not render content after change": function () {
@@ -1910,11 +1935,11 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
 
             databind.applyBindings(this.author, this.element);
 
-            assertSame("element has incorrect content", "If Test", this.node.contents().eq(1).text());
+            assertSame("element has incorrect content", "If Test", this.node.text());
 
             this.author.set("popular", false);
 
-            assertSame("element has incorrect content", "", this.node.contents().eq(1).text());
+            assertSame("element has incorrect content", "", this.node.text());
         },
 
         "test databindings.if on comment does render content after change": function () {
@@ -1924,11 +1949,11 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
 
             databind.applyBindings(this.author, this.element);
 
-            assertSame("element has incorrect content", "", this.node.contents().eq(1).text());
+            assertSame("element has incorrect content", "", this.node.text());
 
             this.author.set("selected", true);
 
-            assertSame("element has incorrect content", "If Test", this.node.contents().eq(1).text());
+            assertSame("element has incorrect content", "If Test", this.node.text());
         },
 
         "test databindings.if on comment does render children": function () {
@@ -1999,8 +2024,9 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
 
             databind.applyBindings(this.author, this.element);
 
+            //assertSame("element has incorrect content", "If Test", this.node.text());
             assertSame("element has incorrect content", "If Test", this.node.contents().eq(1).text());
-            assertSame("element has incorrect content", "William Riker", this.node.contents().eq(3).text());
+            assertSame("element has incorrect content", "William Riker", this.node.children().eq(0).text());
         },
 
         "test databindings.foreach on comment": function () {
@@ -2730,6 +2756,22 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             assertSame("cell 21 value is incorrect", "NAME", cells.eq(21).text());
             assertSame("cell 22 value is incorrect", this.authorsViewModel.get('authors.2.title').toLowerCase(), cells.eq(22).html().toLowerCase());
             assertSame("cell 23 value is incorrect", "Beverly Crusher", cells.eq(23).text());
+        },
+
+        "test databindings.foreach on comment with no parents": function () {
+            var template = "<!-- data-bind foreach: authors --><div data-bind='text: fullName'></div><!-- /data-bind -->";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var children = $("div", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, children.length);
+
+            assertSame("cell 0 value is incorrect", "William Riker", children.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", children.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", children.eq(2).text());
         }
     };
 });
