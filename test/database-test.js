@@ -241,7 +241,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
             var startTime = new Date();
 
             db.sync(vm, { delay: delay }).done(async(function (data, status, xhr) {
-                assert("sync resolution was not delayed", new Date() - startTime >= delay);
+                assert("sync resolution was not delayed", new Date() - startTime >= delay - 20);
                 assertSame("status value is incorrect.", "success", status);
                 assertObject("xhr is not an object.", xhr);
                 assertObject("data is not an object.", data);
@@ -259,7 +259,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
             var startTime = new Date();
 
             db.sync(vm, { delay: delay }).done(async(function (data, status, xhr) {
-                assert("sync resolution was not delayed", new Date() - startTime >= delay);
+                assert("sync resolution was not delayed", new Date() - startTime >= delay - 20);
                 assertSame("status value is incorrect.", "success", status);
                 assertObject("xhr is not an object.", xhr);
                 assertObject("data is not an object.", data);
@@ -268,7 +268,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
                 startTime = new Date();
 
                 db.sync(vm, { delay: delay }).done(async(function (data, status) {
-                    assert("sync resolution was not delayed", new Date() - startTime >= delay);
+                    assert("sync resolution was not delayed", new Date() - startTime >= delay - 20);
                     assertSame("status value is incorrect.", "success", status);
                     assertObject("xhr is not an object.", xhr);
                     assertObject("data is not an object.", data);

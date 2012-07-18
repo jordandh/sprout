@@ -153,7 +153,7 @@ TestCase("data", ["sprout/util", "sprout/model", "sprout/data"], function (_, mo
 			var startTime = new Date();
 
 			data.sync("read", mod, { delay: delay }).done(async(function (data, status, xhr) {
-				assert("sync resolution was not delayed", new Date() - startTime >= delay);
+				assert("sync resolution was not delayed", new Date() - startTime >= delay - 20);
 				assertSame("status value is incorrect.", "success", status);
 				assertObject("xhr is not an object.", xhr);
 				assertObject("data is not an object.", data);
