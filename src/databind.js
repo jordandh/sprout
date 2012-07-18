@@ -3,6 +3,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
 
     var dataBindAttributeName = "data-bind",
         elementExpando = "__databind__",
+        metaDataKeyUniqueId = 0,
         elementMetaDataStore = {},
         bindingOperators = ["!", "-"],
         restoreCapturedTokensRegex = /\@ko_token_(\d+)\@/g,
@@ -30,7 +31,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             elementMetaData, binderMetaData;
 
         if (!_.isString(metaDataKey)) {
-            metaDataKey = element.nodeName + ":" + new Date().getTime();
+            metaDataKey = element.nodeName + ":" + metaDataKeyUniqueId++;
             element[elementExpando] = metaDataKey;
         }
 
@@ -457,7 +458,8 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             isStartCommentNode = !!isStartComment(element),
             childNodes = element.childNodes,
             bindChildren = true,
-            sibling, nextSibling, commentContainer, isAnEndComment;
+            inCommentContents = false,
+            sibling, nextSibling, endCommentElement, commentContainer, isAnEndComment;
 
         // If this is a start comment node then remove the following siblings until the end comment node is reached
         if (isStartCommentNode) {
@@ -473,6 +475,8 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             if (!isAnEndComment) {
                 throw new Error("Databind (comment) is missing end tag.");
             }
+
+            endCommentElement = sibling;
         }
 
         // Attach each of the bindings that are on the element
@@ -486,6 +490,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             bindingInfo.context = context;
             bindingInfo.isComment = isStartCommentNode;
             bindingInfo.commentTemplate = isStartCommentNode ? commentContainer.html() : null;
+            bindingInfo.endCommentElement = isStartCommentNode ? endCommentElement : null;
 
             if (_.startsWith(bindingInfo.key, ".")) {
                 binder = databindings["className"];
@@ -511,7 +516,24 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             //for (var i = 0, length = childNodes.length; i < length; i += 1) {
             // Do not cache the length of childNodes because comment bindings can change the childNodes object
             for (var i = 0; i < childNodes.length; i += 1) {
-                bindElement(childNodes[i], viewModel, context);
+                //bindElement(childNodes[i], viewModel, context);
+
+                // If currently looping through a comment's content then don't bind any of the elements
+                if (inCommentContents) {
+                    // If this is the end of the comment's content
+                    if (isEndComment(childNodes[i])) {
+                        inCommentContents = false;
+                    }
+                }
+                // Else bind the element
+                else {
+                    // If this is the start of a comment's content
+                    if (isStartComment(childNodes[i])) {
+                        inCommentContents = true;
+                    }
+
+                    bindElement(childNodes[i], viewModel, context);
+                }
             }
         }
     }

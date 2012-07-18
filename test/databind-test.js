@@ -1338,7 +1338,7 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
         },
 
-        "test databind.foreach removeBindings": function () {
+        "test databindings.foreach removeBindings": function () {
             var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
 
             this.node.html(template);
@@ -1640,13 +1640,26 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
         },
 
         "test databindings.$parent.foreach in foreach outer foreach value change": function () {
-            var template = "<table><tbody data-bind='foreach: authors'><tr><td><table class='test-outer'><tbody data-bind='foreach: $parent.authors'><tr><td data-bind='text: $parent.$parent.title'></td><td data-bind='text: fullName'></td></tr></tbody></table></td></tr></tbody></table>";
+            var template = "<table class='test-table'>" +
+                             "<tbody data-bind='foreach: authors'>" +
+                               "<tr><td>" +
+                                 "<table class='test-outer'>" +
+                                   "<tbody data-bind='foreach: $parent.authors'>" +
+                                     "<tr>" +
+                                       "<td data-bind='text: $parent.$parent.title'></td>" +
+                                       "<td data-bind='text: fullName'></td>" +
+                                     "</tr>" +
+                                   "</tbody>" +
+                                 "</table>" +
+                               "</td></tr>" +
+                             "</tbody>" +
+                           "</table>";
 
             this.node.html(template);
 
             databind.applyBindings(this.authorsViewModel, this.element);
 
-            var table = $("table", this.element);
+            var table = $(".test-table", this.element);
             var cells = $(".test-outer td", this.element);
 
             assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
@@ -1697,7 +1710,7 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
                 }
             ]));
 
-            table = $("table", this.element);
+            table = $(".test-table", this.element);
             cells = $(".test-outer td", this.element);
 
             assertSame("data bound foreach item count is incorrect after change", 3, table.prop("rows").length);
@@ -1974,6 +1987,749 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             assertException("applyBindings did not throw exception", function () {
                 databind.applyBindings(self.author, self.element);
             });
+        },
+
+        "test databindings.if on comment does bind all sibling content": function () {
+            var template = "<!-- data-bind if: popular -->" +
+                           "If Test" +
+                           "<!-- /data-bind -->" +
+                           "<div data-bind='text: fullName'></div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "If Test", this.node.contents().eq(1).text());
+            assertSame("element has incorrect content", "William Riker", this.node.contents().eq(3).text());
+        },
+
+        "test databindings.foreach on comment": function () {
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+        },
+
+        "test databindings.foreach on comment with multiple top level elements": function () {
+            var template = "<table><tbody><tr><td>Header 1</td><td>Header 2</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: firstName'></td></tr><tr><td data-bind='text: lastName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 7, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header 1", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Header 2", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "William", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Riker", cells.eq(3).text());
+            assertSame("cell 4 value is incorrect", "Deanna", cells.eq(4).text());
+            assertSame("cell 5 value is incorrect", "Troi", cells.eq(5).text());
+            assertSame("cell 6 value is incorrect", "Beverly", cells.eq(6).text());
+            assertSame("cell 7 value is incorrect", "Crusher", cells.eq(7).text());
+        },
+
+        "test databindings.foreach on comment item added": function () {
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+
+            this.authors.add({
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            });
+
+            assertSame("data bound foreach item count is incorrect after add", 5, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+            assertSame("cell 4 value is incorrect", "Jean Luc Picard", cells.eq(4).text());
+        },
+
+        "test databindings.foreach on comment item inserted": function () {
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+
+            this.authors.add({
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            }, { at: 1 });
+
+            assertSame("data bound foreach item count is incorrect after add", 5, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Jean Luc Picard", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Deanna Troi", cells.eq(3).text());
+            assertSame("cell 4 value is incorrect", "Beverly Crusher", cells.eq(4).text());
+        },
+
+        "test databindings.foreach on comment item inserted at front": function () {
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+
+            this.authors.add({
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            }, { at: 0 });
+
+            assertSame("data bound foreach item count is incorrect after add", 5, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Jean Luc Picard", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "William Riker", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Deanna Troi", cells.eq(3).text());
+            assertSame("cell 4 value is incorrect", "Beverly Crusher", cells.eq(4).text());
+        },
+
+        "test databindings.foreach on comment item removed": function () {
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+
+            this.authors.remove(this.authors.at(1));
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+        },
+
+        "test databindings.foreach on comment item removed from front": function () {
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+
+            this.authors.remove(this.authors.at(0));
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna Troi", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly Crusher", cells.eq(2).text());
+        },
+
+        "test databindings.foreach on comment collection reset with no items": function () {
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+
+            this.authors.reset();
+
+            cells = $("td", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 1, table.prop("rows").length);
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+        },
+
+        "test databindings.foreach on comment collection reset with new items": function () {
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+
+            this.authors.reset([{
+                firstName: "Jean Luc",
+                lastName: "Picard",
+                title: "<b>Captain</b>",
+                url: "/Picard",
+                away: true,
+                popular: true
+            }, {
+                firstName: "Geordi",
+                lastName: "La Forge",
+                title: "<b>Chief Engineer</b>",
+                url: "/LaForge",
+                away: true,
+                popular: true
+            }]);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Jean Luc Picard", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Geordi La Forge", cells.eq(2).text());
+        },
+
+        "test databindings.foreach on comment collection sorted": function () {
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+
+            this.authors.sortBy(function (mod) {
+                return mod.get("lastName");
+            });
+
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Beverly Crusher", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "William Riker", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Deanna Troi", cells.eq(3).text());
+        },
+
+        "test databindings.foreach on comment removeBindings": function () {
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var metaData = databind.getMetaData($("tbody", this.element).contents().eq(1).get(0));
+            assertObject("element metaData does not exist", metaData);
+
+            var binderMetaData2 = metaData["foreach:authors"];
+            assertObject("2nd binder metaData does not exist", binderMetaData2);
+
+            var binderMetaData = metaData["foreach:.authors"];
+            assertObject("1st binder metaData does not exist", binderMetaData);
+
+            assertFunction("1st binder metaData does not have a listener", binderMetaData.listener);
+            assertFunction("2nd binder metaData does not have a collection add listener", binderMetaData2.addListener);
+            assertFunction("2nd binder metaData does not have a collection remove listener", binderMetaData2.removeListener);
+            assertFunction("2nd binder metaData does not have a collection reset listener", binderMetaData2.resetListener);
+            assertFunction("2nd binder metaData does not have a collection sort listener", binderMetaData2.sortListener);
+            assertString("2nd binder metaData does not have a template", binderMetaData2.template);
+
+            var listeners = this.authorsViewModel.events.authorschange.after;
+            var foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data listener is not on the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.add.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.addListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data add listener is not on the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.remove.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.removeListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data remove listener is not on the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.reset.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.resetListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data reset listener is not on the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.sort.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.sortListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assert("meta data sort listener is not on the view model", foundListener);
+
+            databind.removeBindings(this.element);
+
+            metaData = databind.getMetaData($("tbody", this.element).get(0));
+            assertUndefined("element metaData exists after bindings were removed", metaData);
+
+            listeners = this.authorsViewModel.events.authorschange.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData.listener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data listener function was not removed from the view model", foundListener);
+
+            isteners = this.authorsViewModel.get("authors").events.add.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.addListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data add listener was not removed from the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.remove.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.removeListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data remove listener was not removed from the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.reset.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.resetListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data reset listener was not removed from the view model", foundListener);
+
+            listeners = this.authorsViewModel.get("authors").events.sort.after;
+            foundListener = false;
+
+            for (var i = 0, length = listeners.length; i < length; i += 1) {
+                if (listeners[i].handler === binderMetaData2.sortListener) {
+                    foundListener = true;
+                    break;
+                }
+            }
+            assertFalse("meta data sort listener was not removed from the view model", foundListener);
+        },
+
+        "test databindings.foreach-render on comment event": function () {
+            expectAsserts(14);
+
+            var error = null;
+
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            this.authorsViewModel.after('foreach-render', function (e) {
+                try {
+                    assertObject('event item model has incorrect value', e.info.model);
+                    assertUndefined('event item at has incorrect value', e.info.at);
+                    assertObject('event item nodes has incorrect value', e.info.nodes);
+                }
+                catch (ex) {
+                    error = ex;
+                }
+            });
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+
+            if (error !== null) {
+                throw error;
+            }
+        },
+
+        "test databindings.foreach-reset on comment event": function () {
+            expectAsserts(11);
+
+            var error = null;
+
+            var template = "<table><tbody><tr><td>Header</td></tr><!-- data-bind foreach: authors --><tr><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table>";
+
+            this.node.html(template);
+
+            this.authorsViewModel.after('foreach-reset', function (e) {
+                try {
+                    assertObject('event item viewModel has incorrect value', e.info.viewModel);
+                    assertObject('event item element has incorrect value', e.info.element);
+                    assertObject('event item collection has incorrect value', e.info.collection);
+                }
+                catch (ex) {
+                    error = ex;
+                }
+            });
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 4, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "William Riker", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Deanna Troi", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "Beverly Crusher", cells.eq(3).text());
+
+            this.authorsViewModel.get('authors').reset();
+
+            if (error !== null) {
+                throw error;
+            }
+        },
+
+        "test databindings.$parent.foreach in foreach on comment": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td><table class='test'><tbody><tr><td>Header 1</td><td>Header 2</td></tr><!-- data-bind foreach: $parent.authors --><tr><td data-bind='text: $parent.$parent.title'></td><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound outer foreach item count is incorrect", 3, table.prop("rows").length);
+            assertSame("data bound inner foreach item count is incorrect", 4, $(".test").prop("rows").length);
+
+            var cells = $(".test td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header 1", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Header 2", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Author:", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "William Riker", cells.eq(3).text());
+            assertSame("cell 4 value is incorrect", "Author:", cells.eq(4).text());
+            assertSame("cell 5 value is incorrect", "Deanna Troi", cells.eq(5).text());
+            assertSame("cell 6 value is incorrect", "Author:", cells.eq(6).text());
+            assertSame("cell 7 value is incorrect", "Beverly Crusher", cells.eq(7).text());
+
+            assertSame("cell 8 value is incorrect", "Header 1", cells.eq(8).text());
+            assertSame("cell 9 value is incorrect", "Header 2", cells.eq(9).text());
+            assertSame("cell 10 value is incorrect", "Author:", cells.eq(10).text());
+            assertSame("cell 11 value is incorrect", "William Riker", cells.eq(11).text());
+            assertSame("cell 12 value is incorrect", "Author:", cells.eq(12).text());
+            assertSame("cell 13 value is incorrect", "Deanna Troi", cells.eq(13).text());
+            assertSame("cell 14 value is incorrect", "Author:", cells.eq(14).text());
+            assertSame("cell 15 value is incorrect", "Beverly Crusher", cells.eq(15).text());
+
+            assertSame("cell 16 value is incorrect", "Header 1", cells.eq(16).text());
+            assertSame("cell 17 value is incorrect", "Header 2", cells.eq(17).text());
+            assertSame("cell 18 value is incorrect", "Author:", cells.eq(18).text());
+            assertSame("cell 19 value is incorrect", "William Riker", cells.eq(19).text());
+            assertSame("cell 20 value is incorrect", "Author:", cells.eq(20).text());
+            assertSame("cell 21 value is incorrect", "Deanna Troi", cells.eq(21).text());
+            assertSame("cell 22 value is incorrect", "Author:", cells.eq(22).text());
+            assertSame("cell 23 value is incorrect", "Beverly Crusher", cells.eq(23).text());
+        },
+
+        "test databindings.$parent.foreach in foreach outer foreach on comment value change": function () {
+            var template = "<table class='table-test-2'><tbody data-bind='foreach: authors'><tr><td><table class='test-outer'><tbody><tr><td>Header 1</td><td>Header 2</td></tr><!-- data-bind foreach: $parent.authors --><tr><td data-bind='text: $parent.$parent.title'></td><td data-bind='text: fullName'></td></tr><!-- /data-bind --></tbody></table></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $(".table-test-2", this.element);
+            var cells = $(".test-outer td", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+            assertSame("data bound inner foreach item count is incorrect", 4, $(".test-outer").prop("rows").length);
+            assertSame("incorrect number of cells", 24, cells.length);
+
+            assertSame("cell 0 value is incorrect", "Header 1", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Header 2", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Author:", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", "William Riker", cells.eq(3).text());
+            assertSame("cell 4 value is incorrect", "Author:", cells.eq(4).text());
+            assertSame("cell 5 value is incorrect", "Deanna Troi", cells.eq(5).text());
+            assertSame("cell 6 value is incorrect", "Author:", cells.eq(6).text());
+            assertSame("cell 7 value is incorrect", "Beverly Crusher", cells.eq(7).text());
+
+            assertSame("cell 8 value is incorrect", "Header 1", cells.eq(8).text());
+            assertSame("cell 9 value is incorrect", "Header 2", cells.eq(9).text());
+            assertSame("cell 10 value is incorrect", "Author:", cells.eq(10).text());
+            assertSame("cell 11 value is incorrect", "William Riker", cells.eq(11).text());
+            assertSame("cell 12 value is incorrect", "Author:", cells.eq(12).text());
+            assertSame("cell 13 value is incorrect", "Deanna Troi", cells.eq(13).text());
+            assertSame("cell 14 value is incorrect", "Author:", cells.eq(14).text());
+            assertSame("cell 15 value is incorrect", "Beverly Crusher", cells.eq(15).text());
+
+            assertSame("cell 16 value is incorrect", "Header 1", cells.eq(16).text());
+            assertSame("cell 17 value is incorrect", "Header 2", cells.eq(17).text());
+            assertSame("cell 18 value is incorrect", "Author:", cells.eq(18).text());
+            assertSame("cell 19 value is incorrect", "William Riker", cells.eq(19).text());
+            assertSame("cell 20 value is incorrect", "Author:", cells.eq(20).text());
+            assertSame("cell 21 value is incorrect", "Deanna Troi", cells.eq(21).text());
+            assertSame("cell 22 value is incorrect", "Author:", cells.eq(22).text());
+            assertSame("cell 23 value is incorrect", "Beverly Crusher", cells.eq(23).text());
+
+            this.authorsViewModel.set('authors', Authors.create([{
+                    firstName: "W",
+                    lastName: "R",
+                    title: "<b>Number One</b>",
+                    url: "/Riker",
+                    away: true,
+                    popular: true
+                }, {
+                    firstName: "D",
+                    lastName: "T",
+                    title: "<b>Counselor</b>",
+                    url: "/Troi",
+                    away: true,
+                    popular: true
+                }, {
+                    firstName: "B",
+                    lastName: "C",
+                    title: "<b>Doctor</b>",
+                    url: "/Crusher",
+                    away: true,
+                    popular: true
+                }
+            ]));
+
+            table = $(".table-test-2", this.element);
+            cells = $(".test-outer td", this.element);
+
+            assertSame("data bound foreach item count is incorrect after change", 3, table.prop("rows").length);
+            assertSame("data bound inner foreach item count is incorrect after change", 4, $(".test-outer").prop("rows").length);
+            assertSame("incorrect number of cells after change", 24, cells.length);
+            
+            assertSame("cell 0 value is incorrect after change", "Header 1", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect after change", "Header 2", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect after change", "Author:", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect after change", "W R", cells.eq(3).text());
+            assertSame("cell 4 value is incorrect after change", "Author:", cells.eq(4).text());
+            assertSame("cell 5 value is incorrect after change", "D T", cells.eq(5).text());
+            assertSame("cell 6 value is incorrect after change after change", "Author:", cells.eq(6).text());
+            assertSame("cell 7 value is incorrect after change", "B C", cells.eq(7).text());
+
+            assertSame("cell 8 value is incorrect after change", "Header 1", cells.eq(8).text());
+            assertSame("cell 9 value is incorrect after change", "Header 2", cells.eq(9).text());
+            assertSame("cell 10 value is incorrect after change", "Author:", cells.eq(10).text());
+            assertSame("cell 11 value is incorrect after change", "W R", cells.eq(11).text());
+            assertSame("cell 12 value is incorrect after change", "Author:", cells.eq(12).text());
+            assertSame("cell 13 value is incorrect after change", "D T", cells.eq(13).text());
+            assertSame("cell 14 value is incorrect after change", "Author:", cells.eq(14).text());
+            assertSame("cell 15 value is incorrect after change", "B C", cells.eq(15).text());
+
+            assertSame("cell 16 value is incorrect after change", "Header 1", cells.eq(16).text());
+            assertSame("cell 17 value is incorrect after change", "Header 2", cells.eq(17).text());
+            assertSame("cell 18 value is incorrect after change", "Author:", cells.eq(18).text());
+            assertSame("cell 19 value is incorrect after change", "W R", cells.eq(19).text());
+            assertSame("cell 20 value is incorrect after change", "Author:", cells.eq(20).text());
+            assertSame("cell 21 value is incorrect after change", "D T", cells.eq(21).text());
+            assertSame("cell 22 value is incorrect after change", "Author:", cells.eq(22).text());
+            assertSame("cell 23 value is incorrect after change", "B C", cells.eq(23).text());
+        },
+
+        "test databindings.$parent.foreach in foreach inner foreach on comment value change": function () {
+            var template = "<table><tbody data-bind='foreach: authors'>" +
+                             "<tr><td>" +
+                               "<table class='test-inner'><tbody>" +
+                                 "<tr><td>Header 1</td><td>Header 2</td></tr><!-- data-bind foreach: $parent.columns -->" +
+                                 "<tr><td data-bind='text: name'></td><td data-bind='html: $parent.title'></td><td data-bind='text: $parent.fullName'></td></tr>" +
+                                 "<!-- /data-bind -->" +
+                               "</tbody></table>" +
+                             "</td></tr>" +
+                           "</tbody></table>";
+
+            this.node.html(template);
+
+            this.authorsViewModel.set('columns', collection.create([{
+                    name: 'TITLE'
+                }, {
+                    name: 'NAME'
+                }
+            ]));
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+            assertSame("data bound inner foreach item count is incorrect", 3, $(".test-inner").prop("rows").length);
+
+            var cells = $(".test-inner td", this.element);
+
+            assertSame("cell 0 value is incorrect", "Header 1", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Header 2", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "TITLE", cells.eq(2).text());
+            assertSame("cell 3 value is incorrect", this.authorsViewModel.get('authors.0.title').toLowerCase(), cells.eq(3).html().toLowerCase());
+            assertSame("cell 4 value is incorrect", "William Riker", cells.eq(4).text());
+            assertSame("cell 5 value is incorrect", "NAME", cells.eq(5).text());
+            assertSame("cell 6 value is incorrect", this.authorsViewModel.get('authors.0.title').toLowerCase(), cells.eq(6).html().toLowerCase());
+            assertSame("cell 7 value is incorrect", "William Riker", cells.eq(7).text());
+
+            assertSame("cell 8 value is incorrect", "Header 1", cells.eq(8).text());
+            assertSame("cell 9 value is incorrect", "Header 2", cells.eq(9).text());
+            assertSame("cell 10 value is incorrect", "TITLE", cells.eq(10).text());
+            assertSame("cell 11 value is incorrect", this.authorsViewModel.get('authors.1.title').toLowerCase(), cells.eq(11).html().toLowerCase());
+            assertSame("cell 12 value is incorrect", "Deanna Troi", cells.eq(12).text());
+            assertSame("cell 13 value is incorrect", "NAME", cells.eq(13).text());
+            assertSame("cell 14 value is incorrect", this.authorsViewModel.get('authors.1.title').toLowerCase(), cells.eq(14).html().toLowerCase());
+            assertSame("cell 15 value is incorrect", "Deanna Troi", cells.eq(15).text());
+
+            assertSame("cell 16 value is incorrect after change", "Header 1", cells.eq(16).text());
+            assertSame("cell 17 value is incorrect after change", "Header 2", cells.eq(17).text());
+            assertSame("cell 18 value is incorrect", "TITLE", cells.eq(18).text());
+            assertSame("cell 19 value is incorrect", this.authorsViewModel.get('authors.2.title').toLowerCase(), cells.eq(19).html().toLowerCase());
+            assertSame("cell 20 value is incorrect", "Beverly Crusher", cells.eq(20).text());
+            assertSame("cell 21 value is incorrect", "NAME", cells.eq(21).text());
+            assertSame("cell 22 value is incorrect", this.authorsViewModel.get('authors.2.title').toLowerCase(), cells.eq(22).html().toLowerCase());
+            assertSame("cell 23 value is incorrect", "Beverly Crusher", cells.eq(23).text());
         }
     };
 });

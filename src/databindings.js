@@ -9,6 +9,8 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
         startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*data-bind\s+(.*\:.*)\s*-->$/ : /^\s*data-bind\s+(.*\:.*)\s*$/,
         endCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*\/data-bind\s*-->$/ : /^\s*\/data-bind\s*$/;
 
+    // TODO: the comment regex and comment functions are defined in the databind module as well. Best to have just one version of each defined.
+    // TODO: maybe define them in databindings.util and databind can access them from there.
     function isStartComment (element)
     {
         return (element.nodeType == 8) && (commentNodesHaveTextProperty ? element.text : element.nodeValue).match(startCommentRegex);
@@ -17,6 +19,19 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
     function isEndComment (element)
     {
         return (element.nodeType == 8) && (commentNodesHaveTextProperty ? element.text : element.nodeValue).match(endCommentRegex);
+    }
+
+    function removeCommentContent (startCommentElement, endCommentElement)
+    {
+        var sibling = startCommentElement.nextSibling,
+            nextSibling;
+
+        while (sibling && sibling !== endCommentElement) {
+            nextSibling = sibling.nextSibling;
+            databindings.databind.removeBindings(sibling);
+            $(sibling).remove();
+            sibling = nextSibling;
+        }
     }
 
     /**
@@ -35,16 +50,33 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
             cid = model.get("cid");
 
         viewModel.fire('foreach-render', { nodes: itemElements, model: model, at: at }, function () {
-            if (_.isNumber(at)) {
-                if (at === 0) {
-                    itemElements.prependTo(element);
+            // If this is a comment element then render items as siblings
+            if (info.isComment) {
+                if (_.isNumber(at)) {
+                    if (at === 0) {
+                        itemElements.insertAfter(element);
+                    }
+                    else {
+                        $(element).nextUntil(info.endCommentElement).eq(at - 1).after(itemElements);
+                    }
                 }
                 else {
-                    $('> tr', element).eq(at - 1).after(itemElements);
+                    itemElements.insertBefore(info.endCommentElement);
                 }
             }
+            // Else render items as children
             else {
-                itemElements.appendTo(element);
+                if (_.isNumber(at)) {
+                    if (at === 0) {
+                        itemElements.prependTo(element);
+                    }
+                    else {
+                        $('> tr', element).eq(at - 1).after(itemElements);
+                    }
+                }
+                else {
+                    itemElements.appendTo(element);
+                }
             }
 
             itemElements.each(function () {
@@ -65,15 +97,21 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
      */
     function resetItems (element, col, viewModel, info, metaData)
     {
-        var template = metaData.template;
+        var template = metaData.template,
+            node = $(element);
 
         viewModel.fire('foreach-reset', { element: element, collection: col, viewModel: viewModel }, function () {
             // Remove the bindings from the existing foreach items
-            $(element).contents().each(function () {
-                databindings.databind.removeBindings(this);
-            });
+            if (info.isComment) {
+                removeCommentContent(element, info.endCommentElement);
+            }
+            else {
+                node.contents().each(function () {
+                    databindings.databind.removeBindings(this);
+                });
 
-            $(element).empty();
+                node.empty();
+            }
 
             if (col) {
                 col.each(function (model) {
@@ -113,7 +151,8 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
      */
     function afterModelsRemoved (element, viewModel, info, metaData, e)
     {
-        var itemElements = $(element).contents();
+        // For a comment element grab the siblings otherwise grab the siblings
+        var itemElements = info.isComment ? $(element).nextUntil(info.endCommentElement) : $(element).contents();
 
         // If there is a list view then remove each model from it
         _.each(e.info.items, function (model) {
@@ -397,8 +436,13 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
 
             start: function (element, value, info, metaData)
             {
-                metaData.template = $(element).html();
-                $(element).empty();
+                if (info.isComment) {
+                    metaData.template = info.commentTemplate;
+                }
+                else {
+                    metaData.template = $(element).html();
+                    $(element).empty();
+                }
             },
 
             stop: function (element, metaData)
@@ -474,7 +518,6 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                     metaData.template = $(element).html();
                     $(element).empty();
                 }
-                
             },
 
             stop: function (element, metaData)
@@ -490,18 +533,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                 // Remove content
                 if (info.isComment) {
                     // Remove the siblings
-                    sibling = element.nextSibling;
-
-                    while (sibling && !(isAnEndComment = isEndComment(sibling))) {
-                        nextSibling = sibling.nextSibling;
-                        databindings.databind.removeBindings(sibling);
-                        $(sibling).remove();
-                        sibling = nextSibling;
-                    }
-
-                    if (!isAnEndComment) {
-                        throw new Error("Databind (comment if) is missing end tag.");
-                    }
+                    removeCommentContent(element, info.endCommentElement);
                 }
                 else {
                     // Remove the children
