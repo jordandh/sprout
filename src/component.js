@@ -15,6 +15,7 @@ define(["sprout/util", "sprout/base", "sprout/pubsub"], function (_, base, pubsu
          */
         start: function ()
         {
+            this.pubsubHandles = [];
         },
 
         /**
@@ -24,6 +25,44 @@ define(["sprout/util", "sprout/base", "sprout/pubsub"], function (_, base, pubsu
          */
         stop: function ()
         {
+            _.each(this.pubsubHandles, function (handle) {
+                pubsub.unsubscribe(handle);
+            });
+
+            this.pubsubHandles = null;
+        },
+
+        /**
+         * Publishes a message using the pubsub module.
+         * @param {String} message The name of the message being published.
+         * @param {Object} info An object that contains information about the message.
+         * @param {Object} src The object that is publishing the event.
+         */
+        publish: function (message, info, src)
+        {
+            pubsub.publish(message, info, src);
+        },
+
+        /**
+         * Adds a listener to a pubsub message. The handler function is passed an event object. The event object contains name, src, and info member properties.
+         * The name property is the name of the message. The src property is the object that published the event. And the info property contains information related to the event.
+         * @param {String} message The name of the message being published.
+         * @param {Function} handler A callback function to call whenever the message is published.
+         * @param {Object} context (Optional) The context to run the handler in.
+         * @return {Array} Returns a handle that can be used to unsubscribe from a message.
+         */
+        subscribe: function (message, handler, context)
+        {
+            this.pubsubHandles.push(pubsub.subscribe(message, handler, context || this));
+        },
+
+        /**
+         * Removes a listener from a pubsub message. Only handles returned by subscribe should be used with this function.
+         * @param {Array} handle The handle returned by pubsub.subscribe.
+         */
+        unsubscribe: function (handle)
+        {
+            pubsub.unsubscribe(handle);
         },
 
         failed: function (error)
