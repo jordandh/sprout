@@ -33,13 +33,16 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                 }
             }
             catch (ex) {
-                pubsub.publish("error", {
+                var error = {
                     exception: ex,
                     info: {
-                        action: "creating component",
-                        component: component
+                        action: "stopping component",
+                        component: this
                     }
-                }, this);
+                };
+                delete error.info.component.app;
+
+                pubsub.publish("error", error, this);
             }
         });
     }
@@ -66,13 +69,16 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                 this.module.resources = null;
             }
             catch (ex) {
-                pubsub.publish("error", {
+                var error = {
                     exception: ex,
                     info: {
                         action: "stopping component",
                         component: this
                     }
-                }, this);
+                };
+                delete error.info.component.app;
+
+                pubsub.publish("error", error, this);
             }
         }
     }
@@ -105,13 +111,16 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                 this.module.start();
             }
             catch (ex) {
-                pubsub.publish("error", {
+                var error = {
                     exception: ex,
                     info: {
-                        action: "starting component",
+                        action: "stopping component",
                         component: this
                     }
-                }, this);
+                };
+                delete error.info.component.app;
+
+                pubsub.publish("error", error, this);
             }
         }
     }
