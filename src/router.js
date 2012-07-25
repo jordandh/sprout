@@ -89,7 +89,7 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
         _.each(matches, function (match) {
             if (_.isFunction(match.route.start)) {
                 try {
-                    match.route.start.apply(match.route.context, match.parameters);
+                    match.route.start.apply(match.route.context, [match.route.name].concat(match.parameters));
                 }
                 catch (ex) {
                     pubsub.publish("error", {
@@ -142,7 +142,7 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
         startRoutes.call(this, getRelativePath(), this.routes);
     }
 
-    return base.extend({
+    var router = base.extend({
         /**
          * Initializes the router.
          */
@@ -171,6 +171,11 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
         start: function (rootUrl)
         {
             var match;
+
+            // If already started then just return
+            if (this.boundListener) {
+                return;
+            }
 
             this.boundListener = _.bind(afterPathChanged, this);
             $(window).bind("statechange", this.boundListener);
@@ -249,10 +254,19 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
         navigate: function (path)
         {
             if (!_.startsWith(path, this.rootUrl)) {
-                path = _.joinPaths(this.rootUrl, path);
+                path = _.joinPaths('/', this.rootUrl, path);
             }
 
-            history.pushState(null, null, path);
+            if (history.enabled) {
+                history.pushState(null, null, path);
+            }
+            else {
+                document.location = path;
+            }
         }
     });
+
+    router.defaultRouter = router.create();
+
+    return router;
 });

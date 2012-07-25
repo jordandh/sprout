@@ -89,7 +89,7 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
             try {
                 this.module.resources = {
                     router: this.app.router,
-                    config: this.config,
+                    config: this.config || {},
                     startComponents: function () {
                         _.each(component.components, function (childComponent) {
                             childComponent.start();
@@ -161,12 +161,19 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
             _.defaults(options, {
                 components: null,
                 routing: true,
+                uniqueRouter: false,
                 rootUrl: ""
             });
 
             // Start up the router
             if (options.routing) {
-                this.router = router.create();
+                if (options.uniqueRouter) {
+                    this.router = router.create();
+                }
+                else {
+                    this.router = router.defaultRouter;
+                }
+
                 this.router.start(options.rootUrl);
             }
 

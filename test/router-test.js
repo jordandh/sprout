@@ -821,7 +821,7 @@ TestCase("router", ["sprout/router"], function (router) {
 
             var r = router.create(),
                 onStarfleet = function () {},
-                onDepartment = function (department, doctor) {
+                onDepartment = function (name, department, doctor) {
                     assertSame("route has incorrect context", dep, this);
                     assertSame("department parameter has incorrect value", "medical", department);
                     assertSame("doctor parameter has incorrect value", "bcrusher", doctor);
