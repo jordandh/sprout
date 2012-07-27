@@ -446,7 +446,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                     metaData.template = info.commentTemplate;
                 }
                 else {
-                    metaData.template = $(element).html();
+                    metaData.template = _.trim($(element).html());
                     $(element).empty();
                 }
             },

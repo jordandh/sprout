@@ -2569,7 +2569,7 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             var table = $("table", this.element);
 
             assertSame("data bound outer foreach item count is incorrect", 3, table.prop("rows").length);
-            assertSame("data bound inner foreach item count is incorrect", 4, $(".test").prop("rows").length);
+            assertSame("data bound inner foreach item count is incorrect", 4, table.find(".test").prop("rows").length);
 
             var cells = $(".test td", this.element);
 
@@ -2612,7 +2612,7 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             var cells = $(".test-outer td", this.element);
 
             assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
-            assertSame("data bound inner foreach item count is incorrect", 4, $(".test-outer").prop("rows").length);
+            assertSame("data bound inner foreach item count is incorrect", 4, table.find(".test-outer").prop("rows").length);
             assertSame("incorrect number of cells", 24, cells.length);
 
             assertSame("cell 0 value is incorrect", "Header 1", cells.eq(0).text());
@@ -2670,7 +2670,7 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             cells = $(".test-outer td", this.element);
 
             assertSame("data bound foreach item count is incorrect after change", 3, table.prop("rows").length);
-            assertSame("data bound inner foreach item count is incorrect after change", 4, $(".test-outer").prop("rows").length);
+            assertSame("data bound inner foreach item count is incorrect after change", 4, table.find(".test-outer").prop("rows").length);
             assertSame("incorrect number of cells after change", 24, cells.length);
             
             assertSame("cell 0 value is incorrect after change", "Header 1", cells.eq(0).text());
@@ -2726,7 +2726,7 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             var table = $("table", this.element);
 
             assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
-            assertSame("data bound inner foreach item count is incorrect", 3, $(".test-inner").prop("rows").length);
+            assertSame("data bound inner foreach item count is incorrect", 3, table.find(".test-inner").prop("rows").length);
 
             var cells = $(".test-inner td", this.element);
 
@@ -2772,6 +2772,30 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             assertSame("cell 0 value is incorrect", "William Riker", children.eq(0).text());
             assertSame("cell 1 value is incorrect", "Deanna Troi", children.eq(1).text());
             assertSame("cell 2 value is incorrect", "Beverly Crusher", children.eq(2).text());
+        },
+
+        "test databindings.foreach for select node": function () {
+            var template = "<select data-bind='foreach: authors'><option data-bind='text: fullName, value: lastName'></option></select>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var sel = this.node.find("select");
+
+            assertSame("select has incorrect number of options", 3, sel.prop('options').length);
+        },
+
+        "test databindings.foreach for select node with whitespace": function () {
+            var template = "<select data-bind='foreach: authors'> <option data-bind='text: fullName, value: lastName'></option> </select>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.authorsViewModel, this.element);
+
+            var sel = this.node.find("select");
+
+            assertSame("select has incorrect number of options", 3, sel.prop('options').length);
         }
     };
 });
