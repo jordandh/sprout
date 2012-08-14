@@ -40,7 +40,10 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                         component: this
                     }
                 };
-                delete error.info.component.app;
+
+                if (error.info.component) {
+                    delete error.info.component.app;
+                }
 
                 pubsub.publish("error", error, this);
             }
@@ -54,7 +57,7 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                 addComponent.call(this, component, waitToStart);
             }, this);
         }
-        else if (_.isObject(components)) {
+        else if (_.isObject(components) && !_.isEmpty(components)) {
             addComponent.call(this, components, waitToStart);
         }
     }
@@ -76,7 +79,10 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                         component: this
                     }
                 };
-                delete error.info.component.app;
+                
+                if (error.info.component) {
+                    delete error.info.component.app;
+                }
 
                 pubsub.publish("error", error, this);
             }
@@ -118,7 +124,10 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                         component: this
                     }
                 };
-                delete error.info.component.app;
+                
+                if (error.info.component) {
+                    delete error.info.component.app;
+                }
 
                 pubsub.publish("error", error, this);
             }

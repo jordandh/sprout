@@ -273,7 +273,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
         text: {
             update: function (element, value)
             {
-                $(element).text(value);
+                $(element).text(value === null ? "" : value);
             }
         },
 
@@ -341,8 +341,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
         "class": {
             update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
-                $(element).removeClass(oldValue);
-                $(element).addClass(value);
+                $(element).removeClass(oldValue).addClass(value);
             }
         },
 

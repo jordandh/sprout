@@ -65,6 +65,13 @@ define(['sprout/util', 'sprout/dom'], function (_, $) {
 			deferred[method].apply(null, args);
 		}
 	}
+
+	function wrapData (data, wrapper)
+	{
+		var wrappedData = {};
+		wrappedData[wrapper] = data;
+		return wrappedData;
+	}
 	
 	/**
      * @class data
@@ -87,6 +94,7 @@ define(['sprout/util', 'sprout/dom'], function (_, $) {
          * @param {Object} options (Optional) Equivalent to the option parameter for jQuery's ajax function with some extra functionality.
          * @options
          * {Number} delay undefined If a number then delays (in milliseconds) when the sync operation resolves or rejects itself with a starting point of when the sync function was called. If the sync operation takes longer than the delay then the operation resolves or rejects itself immediately.
+         * {String} wrap undefined If supplied then the data is nested in an object in the json data with the name being wrap's value.
          * @return {Promise} Returns a promise for the sync transaction.
          */
 		sync: function (method, model, options)
@@ -108,7 +116,9 @@ define(['sprout/util', 'sprout/dom'], function (_, $) {
 			// When sending data to save or create send as JSON
 			if (method === 'create' || method === 'update') {
 				options.contentType = 'application/json';
-				options.data = JSON.stringify(options.data || model.toJSON());
+				options.data = options.data || model.toJSON();
+				//options.data = JSON.stringify(options.data || model.toJSON());
+				options.data = JSON.stringify(options.wrap ? wrapData(options.data, options.wrap) : options.data);
 			}
 			
 			// Don't process data for GET requests

@@ -1,6 +1,16 @@
 define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], function (_, $, base, collection) {
     "use strict";
 
+    /*
+     * An object map for converting sync method types to HTTP verbs.
+     */
+    var methodToType = {
+        'read': 'GET',
+        'update': 'PUT',
+        'create': 'POST',
+        'delete': 'DELETE'
+    };
+    
     /**
      * Resolves or rejects a derrered object with the given arguments and optionally delayed.
      * @param {Object} deferred The deferred object for the sync.
@@ -185,9 +195,10 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
              * {Number} wait undefined If a number then makes the sync operation wait before resolving or rejecting itself. This is done with a wait count option. The wait count is decremented with the releaseHold method on the promise returned by the sync function. Once the wait count reaches zero the sync operation resolves or rejects itself (assuming the sync operation has finished). If the sync operation finishes and the wait count is zero then the sync operation resolves or rejects itself immediately.
              * @return {Promise} Returns a promise for the sync transaction.
              */
-            sync: function (viewModel, options)
+            sync: function (method, viewModel, options)
             {
-                var expires = viewModel.expires,
+                var verb = methodToType[method],
+                    expires = viewModel.expires,
                     deferred = $.Deferred(),
                     promise = deferred.promise(),
                     db = this,
@@ -195,14 +206,21 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
                     cachedData, jqXHR;
 
                 options = options || {};
-                options.type = "GET";
+                options.type = verb;
                 options.dataType = "json";
                 
                 if (!options.url) {
                     options.url = viewModel.url();
                 }
 
-                cachedData = this.cache[options.url];
+                // When sending data to save or create send as JSON
+                if (method === 'create' || method === 'update') {
+                    options.contentType = 'application/json';
+                    options.data = JSON.stringify(options.data);
+                }
+                else if (method === 'read') {
+                    cachedData = this.cache[options.url];
+                }
 
                 // If a delay should be applied then make note of the start time
                 if (_.isNumber(options.delay)) {
@@ -234,7 +252,7 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
                 };
 
                 // If the data is cached and it never expires or it hasn't expired
-                if (!_.isUndefined(cachedData) && (!_.isNumber(expires) || new Date() - cachedData.time < expires)) {
+                if (method === 'read' && !_.isUndefined(cachedData) && (!_.isNumber(expires) || new Date() - cachedData.time < expires)) {
                     finishDeferred(deferred, 'resolve', [cachedData.data, "success", null], deferredOptions);
                 }
                 else {

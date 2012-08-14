@@ -1,6 +1,22 @@
 define(["sprout/pubsub", "sprout/dom"], function (pubsub, $) {
     "use strict";
 
+    function pruneErrorForJSON (error)
+    {
+        _.each(error, function (value, key) {
+            if (_.isObject(value) && !_.isArray(value)) {
+                if (value.nodeType) {
+                    delete error[key];
+                }
+                else {
+                    pruneErrorForJSON(value);
+                }
+            }
+        });
+
+        return error;
+    }
+
     function packageError (error)
     {
         var err = {
@@ -68,6 +84,7 @@ define(["sprout/pubsub", "sprout/dom"], function (pubsub, $) {
         err.navigator.language = navigator.language;
         err.window.location = window.location.toString();
 
+        //return pruneErrorForJSON(err);
         return err;
     }
 
@@ -81,6 +98,7 @@ define(["sprout/pubsub", "sprout/dom"], function (pubsub, $) {
                     dataType: "json",
                     contentType: "application/json",
                     data: JSON.stringify(packageError(error))
+                    //data: json.make(error)
                 });
             }
         }

@@ -41,7 +41,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
                 }
             });
 
-            db.sync(vm).done(async(function (data, status, xhr) {
+            db.sync("read", vm).done(async(function (data, status, xhr) {
                 assertSame("status value is incorrect.", "success", status);
                 assertObject("xhr is not an object.", xhr);
                 assertObject("data is not an object.", data);
@@ -61,7 +61,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
             var db = dbms.get("test-sync"),
                 vm = foo.create();
 
-            db.sync(vm).done(async(function (data, status) {
+            db.sync("read", vm).done(async(function (data, status) {
                 assertSame("status value is incorrect.", "success", status);
                 assertSame("data.name value is incorrect.", "Data", data.name);
                 assertSame("data.age value is incorrect.", 26, data.age);
@@ -88,7 +88,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
             var db = dbms.get("test-sync"),
                 vm = foobar.create();
 
-            db.sync(vm).done(async(function (data, status) {
+            db.sync("read", vm).done(async(function (data, status) {
                 assertSame("status value is incorrect.", "success", status);
                 assertSame("data.name value is incorrect.", "Data", data.name);
                 assertSame("data.age value is incorrect.", 26, data.age);
@@ -108,7 +108,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
             var db = dbms.get("test-sync"),
                 vm = foobar.create();
 
-            db.sync(vm).done(async(function (data, status) {
+            db.sync("read", vm).done(async(function (data, status) {
                 assertSame("status value is incorrect.", "success", status);
                 assertSame("data.name value is incorrect.", "Data", data.name);
                 assertSame("data.age value is incorrect.", 26, data.age);
@@ -141,18 +141,18 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
                 }
             });
 
-            db.sync(vm).done(async(function (data, status) {
+            db.sync("read", vm).done(async(function (data, status) {
                 assertSame("status value is incorrect.", "success", status);
                 assertSame("data.name value is incorrect.", "Data", data.name);
                 assertSame("data.age value is incorrect.", 26, data.age);
 
-                db.sync(vm).done(async(function (data, status) {
+                db.sync("read", vm).done(async(function (data, status) {
                     assertSame("status value is incorrect.", "success", status);
                     assertSame("data.name value is incorrect.", "Data", data.name);
                     assertSame("data.age value is incorrect.", 26, data.age);
 
                     setTimeout(async(function () {
-                        db.sync(vm).done(async(function (data, status) {
+                        db.sync("read", vm).done(async(function (data, status) {
                             assertSame("status value is incorrect.", "success", status);
                             assertSame("data.name value is incorrect.", "Data", data.name);
                             assertSame("data.age value is incorrect.", 26, data.age);
@@ -179,7 +179,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
                 assertSame("error has incorrect value", "Not Found", e.info.error);
             }));
 
-            db.sync(vm).fail(async(function (xhr, status, error) {
+            db.sync("read", vm).fail(async(function (xhr, status, error) {
                 assertSame("status value is incorrect.", "error", status);
                 assertSame("error value is incorrect.", "Not Found", _.trim(error));
                 assertObject("xhr is not an object.", xhr);
@@ -202,7 +202,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
                 e.preventDefault = true;
             });
 
-            db.sync(vm).fail(function (data, status) {
+            db.sync("read", vm).fail(function (data, status) {
                 assertSame("status value is incorrect.", "abort", status);
             });
         },
@@ -215,7 +215,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
             var db = dbms.get("test-sync"),
                 vm = bar.create();
 
-            db.sync(vm, { url: "/assets/sprout/test/database-url-override-test.json" }).done(async(function (data, status) {
+            db.sync("read", vm, { url: "/assets/sprout/test/database-url-override-test.json" }).done(async(function (data, status) {
                 try {
                     assertSame("status value is incorrect.", "success", status);
                     assertSame("data.name value is incorrect.", "Lore", data.name);
@@ -240,7 +240,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
             var delay = 5000;
             var startTime = new Date();
 
-            db.sync(vm, { delay: delay }).done(async(function (data, status, xhr) {
+            db.sync("read", vm, { delay: delay }).done(async(function (data, status, xhr) {
                 assert("sync resolution was not delayed", new Date() - startTime >= delay - 20);
                 assertSame("status value is incorrect.", "success", status);
                 assertObject("xhr is not an object.", xhr);
@@ -258,7 +258,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
             var delay = 5000;
             var startTime = new Date();
 
-            db.sync(vm, { delay: delay }).done(async(function (data, status, xhr) {
+            db.sync("read", vm, { delay: delay }).done(async(function (data, status, xhr) {
                 assert("sync resolution was not delayed", new Date() - startTime >= delay - 20);
                 assertSame("status value is incorrect.", "success", status);
                 assertObject("xhr is not an object.", xhr);
@@ -267,7 +267,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
 
                 startTime = new Date();
 
-                db.sync(vm, { delay: delay }).done(async(function (data, status) {
+                db.sync("read", vm, { delay: delay }).done(async(function (data, status) {
                     assert("sync resolution was not delayed", new Date() - startTime >= delay - 20);
                     assertSame("status value is incorrect.", "success", status);
                     assertObject("xhr is not an object.", xhr);
@@ -286,7 +286,7 @@ TestCase("database", ["sprout/util", "sprout/viewmodel", "sprout/database"], fun
             var wait = 1;
             var startTime = new Date();
 
-            var promise = db.sync(vm, { wait: wait }).done(async(function (data, status, xhr) {
+            var promise = db.sync("read", vm, { wait: wait }).done(async(function (data, status, xhr) {
                 assertSame("status value is incorrect.", "success", status);
                 assertObject("xhr is not an object.", xhr);
                 assertObject("data is not an object.", data);

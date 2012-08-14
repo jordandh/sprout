@@ -20,7 +20,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
      * The data.sync function is used to communicate with the resource. This can be overridden by a model by defining a sync function on it.
      * A common scenario for this is to save the model to a client side db or cookies instead of to the server. If overridden this function's signature must match that of data.sync.
      * By default the url function uses the model's rootUrl and the model's id to build a url. Both of these members can be overridden to provide different behavior.
-     * The model object is meant to be extended for each model type in your application. Overriding members to tailor it for each model type.
+     * The model object is meant to be extended for each model type in your application. Ovuerriding members to tailor it for each model type.
      * Common members to override are rootUrl, url, and sync. The rootUrl property points to the model's resource.
      * The url function returns the url specific to an instance of the model.
      * The model's values themselves are stored as attributes and can be used just like base.attributes.
@@ -200,10 +200,11 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
          * Saves a model's attributes to its resource. If the model is new then the model is updated on its resource.
          * If the model is not new then the model is created on its resource.
          * @param {Object} attributes Attributes to set on the model. Use options.wait to set the attributes only after the model has been saved to its resource.
-         * @param {Object} options Equivalent to the option parameter for jQuery's ajax function.
+         * @param {Object} options Equivalent to the option parameter for jQuery's ajax function and includes the options for the model's sync function.
          * @options
          * {String} url model.url() Overrides the url used to sync the model with its resource. The default url is model.url().
          * {Boolean} wait false If true then any attributes passed in are not set until after the model has been saved to its resource.
+         * {Boolean} mix false If true then any attributes passed in are mixed with the model's other attributes and saved to its resource.
          * @return {Promise} Returns a promise for the save request.
          */
         save: function (attributes, options)
@@ -212,12 +213,19 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
 
             options = options || {};
 
+            options.wrap = this.wrap;
+
             // If attributes are being set on this save
             if (attributes) {
                 // If the attributes should be set only after the server returns with a success
                 if (options.wait) {
                     // Then send over the model's current state with the new attribute values
-                    options.data = _.extend(this.toJSON(), attributes);
+                    if (options.mix) {
+                        options.data = _.extend(this.toJSON(), attributes);
+                    }
+                    else {
+                        options.data = attributes;
+                    }
                 }
                 else {
                     // Else just set the attribtues on the model now
@@ -228,9 +236,10 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
             promise = (this.sync || data.sync)(this.isNew() ? "create" : "update", this, options).fail(_.bind(onSyncFailed, this));
             promise.done(_.bind(function (json) {
                 // If the attributes should be set after the server returns with a success
-                if (options.wait && attributes) {
+                if (options.wait && attributes && options.mix) {
                     // Then change the results from the server to include the attributes
                     json = _.extend(attributes, json);
+                    //this.parse(attributes);
                 }
 
                 this.parse(json);

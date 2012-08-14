@@ -145,7 +145,17 @@ define(["sprout/util", "sprout/base", "sprout/database"], function (_, base, dat
          */
         fetch: function (options)
         {
-            return this.db.sync(this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
+            return this.db.sync("read", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
+        },
+
+        save: function (options)
+        {
+            return this.db.sync("update", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
+        },
+
+        erase: function ()
+        {
+            return this.db.sync("delete", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
         }
     });
 });

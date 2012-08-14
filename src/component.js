@@ -68,14 +68,20 @@ define(["sprout/util", "sprout/base", "sprout/pubsub"], function (_, base, pubsu
         failed: function (error)
         {
             try {
-                // TODO: this puts the component into a failed state. An Application object can detect that the component is in a failed state and do something about it. (e.g. restart it or report an error)
-                pubsub.publish("error", {
+                var err = {
                     exception: error,
                     info: {
                         action: "component failed",
                         component: this
                     }
-                }, this);
+                };
+
+                if (err.info.component) {
+                    delete err.info.component.app;
+                }
+
+                // TODO: this puts the component into a failed state. An Application object can detect that the component is in a failed state and do something about it. (e.g. restart it or report an error)
+                pubsub.publish("error", err, this);
             }
             catch (ex) {
             }
