@@ -231,15 +231,26 @@ TestCase("model", ["sprout/util", "sprout/model"], function (_, model) {
 		{
 			expectAsserts(1);
 
+			var error = null;
+
 			var mod = simple.create();
 
 			mod.after("update", function (e) {
-				assertSame("model.one has incorrect value after update", 12, e.src.get("one"));
+				try {
+					assertSame("mod.one has incorrect value after update", 11, e.src.get("one"));
+				}
+				catch (ex) {
+					error = ex;
+				}
 			});
 
 			mod.parse({
 				one: 11
 			});
+
+			if (error !== null) {
+				throw error;
+			}
 		},
 
 		"test model.update event does not fire on no attributes changed in parse": function ()
@@ -249,7 +260,7 @@ TestCase("model", ["sprout/util", "sprout/model"], function (_, model) {
 			var mod = simple.create();
 
 			mod.after("update", function (e) {
-				assert("model should not have fired update event", false);
+				assert("mod should not have fired update event", false);
 			});
 
 			mod.parse({

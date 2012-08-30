@@ -138,7 +138,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
             }, this);
 
             if (valueChanged) {
-                this.fire('update', null);
+                this.fire("update");
             }
         },
         

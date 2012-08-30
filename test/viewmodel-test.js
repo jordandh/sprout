@@ -52,6 +52,73 @@ TestCase("viewmodel", ["sprout/util", "sprout/viewmodel", "sprout/database"], fu
             assertSame("age has incorrect value", 27, vm.get("age"));
         },
 
+        "test viewmodel.update event fires on attribute change in parse": function ()
+        {
+            expectAsserts(2);
+
+            var error = null;
+
+            var vm = bar.create();
+
+            vm.parse({
+                one: 1,
+                two: 2
+            });
+
+            assertSame("vm.one has incorrect value", 1, vm.get("one"));
+
+            vm.after("update", function (e) {
+                try {
+                    assertSame("vm.one has incorrect value after update", 11, e.src.get("one"));
+                }
+                catch (ex) {
+                    error = ex;
+                }
+            });
+
+            vm.parse({
+                one: 11
+            });
+
+            if (error !== null) {
+                throw error;
+            }
+        },
+
+        "test viewmodel.update event does not fire on no attributes changed in parse": function ()
+        {
+            expectAsserts(1);
+
+            var error = null;
+
+            var vm = bar.create();
+
+            vm.parse({
+                one: 1,
+                two: 2
+            });
+
+            assertSame("vm.one has incorrect value", 1, vm.get("one"));
+
+            vm.after("update", function (e) {
+                try {
+                    assert("model should not have fired update event", false);
+                }
+                catch (ex) {
+                    error = ex;
+                }
+            });
+
+            vm.parse({
+                one: 1,
+                two: 2
+            });
+
+            if (error !== null) {
+                throw error;
+            }
+        },
+
         "test viewmodel.fetch": function () {
             expectAsserts(2);
 

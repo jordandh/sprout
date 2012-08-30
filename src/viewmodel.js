@@ -114,16 +114,22 @@ define(["sprout/util", "sprout/base", "sprout/database"], function (_, base, dat
          */
         parse: function (json)
         {
+            var valueChanged = false;
+
             _.each(json, function (value, name) {
                 var attribute = this.getAttribute(name);
                 
                 if (attribute && (attribute.model || attribute.collection)) {
-                    this.set(name, (attribute.model || attribute.collection).create(value));
+                    valueChanged |= this.set(name, (attribute.model || attribute.collection).create(value));
                 }
                 else {
-                    this.set(name, value);
+                    valueChanged |= this.set(name, value);
                 }
             }, this);
+
+            if (valueChanged) {
+                this.fire("update");
+            }
         },
 
         /**
