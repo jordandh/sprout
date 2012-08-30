@@ -153,7 +153,7 @@ define(["sprout/util", "sprout/base", "sprout/database"], function (_, base, dat
             return this.db.sync("update", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
         },
 
-        erase: function ()
+        erase: function (options)
         {
             return this.db.sync("delete", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
         }

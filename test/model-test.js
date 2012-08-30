@@ -227,6 +227,38 @@ TestCase("model", ["sprout/util", "sprout/model"], function (_, model) {
 			assertSame("c attribute has incorrect value.", "c3po", mod.get("c"));
 		},
 
+		"test model.update event fires on attribute change in parse": function ()
+		{
+			expectAsserts(1);
+
+			var mod = simple.create();
+
+			mod.after("update", function (e) {
+				assertSame("model.one has incorrect value after update", 12, e.src.get("one"));
+			});
+
+			mod.parse({
+				one: 11
+			});
+		},
+
+		"test model.update event does not fire on no attributes changed in parse": function ()
+		{
+			expectAsserts(0);
+
+			var mod = simple.create();
+
+			mod.after("update", function (e) {
+				assert("model should not have fired update event", false);
+			});
+
+			mod.parse({
+				one: 1,
+				two: 2,
+				three: 3
+			});
+		},
+
 		"test model.isNew on new model": function ()
 		{
 			var mod = foobar.create();
