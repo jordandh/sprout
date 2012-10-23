@@ -198,6 +198,13 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
                     }
                 });
             },
+
+            clone: function ()
+            {
+                return collection.create(this.map(function (item) {
+                    return item;
+                }));
+            },
             
             /**
              * Parses a JSON array of items to add to the collection. Any existing items in the array are removed.
@@ -222,11 +229,19 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
             /**
              * Returns the item with a matching id in the collection.
              * @param {String} id The id of the item to get.
+             * @param {Boolean} createIfMissing If the item is not in the collection then one is created with the given id and returned.
              * @return {model} Returns the model with the matching id.
              */
-            getById: function (id)
+            getById: function (id, createIfMissing)
             {
-                return this.itemsById[id];
+                var item = this.itemsById[id];
+
+                if (createIfMissing && !item) {
+                    item = this.model.create({ id: id });
+                    this.itemsById[id] = item;
+                }
+
+                return item;
             },
 
             /**

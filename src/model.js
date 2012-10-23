@@ -172,7 +172,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
          */
         isNew: function ()
         {
-            return _.isUndefined(this.get("id"));
+            return this.get("id") === null || _.isUndefined(this.get("id"));
         },
         
         /**

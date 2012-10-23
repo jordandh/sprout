@@ -150,7 +150,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
     {
         var listener, metaData, i;
 
-        if (attributeNameChain.length > 1) {
+        if (viewModel && attributeNameChain.length > 1) {
             // If this binding should be done using the view model's parent
             if (attributeNameChain[1] !== '$parent') {
                 // Listen for the attribute value changing
@@ -555,6 +555,28 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             unbindElement(childNodes[i]);
         }
     }
+
+    /**
+     * Applies data bindings between a model and the dom.
+     * @private
+     * @param {Object} viewModel The model or viewmodel to bind to a dom element and its children.
+     * @param {Object} element (Optional) The dom element to bind to. Defaults to document.body.
+     * @param {Object} parentContext (Optional) For internal use. The context of the parents bindings. Used by the foreach binder.
+     */
+    function applyBindings (viewModel, element, parentContext)
+    {
+        var context = {
+            root: viewModel,
+            data: viewModel,
+            parents: parentContext ? parentContext.parents.slice(0) : []
+        };
+
+        if (parentContext && parentContext.data) {
+            context.parents.push(parentContext.data);
+        }
+
+        bindElement(element || document.body, viewModel, context);
+    }
     
     /**
      * @class databind
@@ -593,22 +615,14 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
         /**
          * Applies data bindings between a model and the dom.
          * @param {Object} viewModel The model or viewmodel to bind to a dom element and its children.
-         * @param {Object} element (Optional) The dom element to bind to. Defaults to document.body.
+         * @param {Object} selector (Optional) The elements to bind to. Can be any value that the jQuery function can take. Defaults to document.body.
          * @param {Object} parentContext (Optional) For internal use. The context of the parents bindings. Used by the foreach binder.
          */
-        applyBindings: function (viewModel, element, parentContext)
+        applyBindings: function (viewModel, selector, parentContext)
         {
-            var context = {
-                root: viewModel,
-                data: viewModel,
-                parents: parentContext ? parentContext.parents.slice(0) : []
-            };
-
-            if (parentContext && parentContext.data) {
-                context.parents.push(parentContext.data);
-            }
-
-            bindElement(element || document.body, viewModel, context);
+            $(selector || document.body).each(function () {
+                applyBindings(viewModel, this, parentContext);
+            });
         },
 
         /**
