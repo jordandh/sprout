@@ -13,7 +13,7 @@
 - underscore.js
 - jQuery
 - history.js (only needed if the router module is used) [this library is included in sprout]
-- jQuery-URL-Parser (only needed if hte url module is used) [this library is included in sprout]
+- jQuery-URL-Parser (only needed if the url module is used) [this library is included in sprout]
 
 ##Licensing
 
