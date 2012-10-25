@@ -94,6 +94,15 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
          * @type String
          */
         rootUrl: "",
+
+        /**
+         * Returns a string representation of the model's attributes.
+         * @return {String} Returns a string representation of the model's attributes.
+         */
+        toString: function ()
+        {
+            return JSON.stringify(this.toJSON());
+        },
         
         /**
          * Returns an object of the model's attributes for JSON stringification. The results of this function can be used as the argument for model.parse.
