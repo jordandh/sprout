@@ -13,6 +13,7 @@
 - underscore.js
 - jQuery
 - history.js (only needed if the router module is used)
+- jQuery-URL-Parser (only needed if hte url module is used)
 
 ##Licensing
 
