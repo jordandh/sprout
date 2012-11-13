@@ -36,7 +36,7 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                 var error = {
                     exception: ex,
                     info: {
-                        action: "stopping component",
+                        action: "adding component",
                         component: this
                     }
                 };
@@ -120,7 +120,7 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                 var error = {
                     exception: ex,
                     info: {
-                        action: "stopping component",
+                        action: "starting component",
                         component: this
                     }
                 };

@@ -1,6 +1,15 @@
 define(["sprout/pubsub", "sprout/dom"], function (pubsub, $) {
     "use strict";
 
+    var errorModule = {
+        requestOptions: {
+            url: "/SubmitError.erb",
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json"
+        }
+    };
+
     function pruneErrorForJSON (error)
     {
         _.each(error, function (value, key) {
@@ -92,14 +101,17 @@ define(["sprout/pubsub", "sprout/dom"], function (pubsub, $) {
     {
         try {
             if (error) {
-                $.ajax({
+                /*$.ajax({
                     url: "/SubmitError.erb",
                     type: "POST",
                     dataType: "json",
                     contentType: "application/json",
                     data: JSON.stringify(packageError(error))
-                    //data: json.make(error)
-                });
+                });*/
+
+                $.ajax($.extend({}, errorModule.requestOptions, {
+                    data: JSON.stringify(packageError(error))
+                }));
             }
         }
         catch (ex) { /* Empty */ }
@@ -136,4 +148,6 @@ define(["sprout/pubsub", "sprout/dom"], function (pubsub, $) {
             }
         });
     };
+
+    return errorModule;
 });
