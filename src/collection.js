@@ -1,4 +1,4 @@
-define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (_, base, model, data) {
+define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom"], function (_, base, model, data, $) {
     "use strict";
     
     /**
@@ -401,14 +401,25 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data"], function (
              * {String} url model.url() Overrides the url used to sync the model with its resource. The default url is model.url().
              * {Boolean} silent false If true then no event is fired for adding the item. This is false by default.
              * {Number} at undefined The index to insert the items at in the collection. By default the item is added to the end of the collection.
+             * @return {Promise} Returns a promise for the save request.
              */
             make: function (mod, options)
             {
+                var deferred = new $.Deferred();
+
                 if (!model.isPrototypeOf(mod)) {
                     mod = this.model.create(mod);
                 }
 
-                return mod.save(null, options).done(_.bind(this.add, this, mod, options));
+                //return mod.save(null, options).done(_.bind(this.add, this, mod, options));
+
+                mod.save(null, options).done(_.bind(this.add, this, mod, options)).done(function () {
+                    deferred.resolve.apply(null, [mod].concat(arguments));
+                }).fail(function () {
+                    deferred.reject.apply(null, arguments);
+                });
+
+                return deferred.promise();
             },
 
             /**
