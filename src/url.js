@@ -1,6 +1,16 @@
 define(['sprout/util', 'sprout/purl'], function (_, purl) {
 	'use strict';
 
+	var namedParam = /:\w+/g,
+        splatParam = /\*\w+/g,
+        escapeRegExp = /[-[\]{}()+?.,\\^$|#\s]/g,
+        pathStripper = /^[#\/]/;
+
+	function toPathRegExp (path)
+    {
+        return new RegExp('^' + path.replace(escapeRegExp, '\\$&').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)') + '$');
+    }
+
 	/**
      * @class url
      * Provides functionality for manipulating urls including the querystring, hash, and navigation.
@@ -51,13 +61,17 @@ define(['sprout/util', 'sprout/purl'], function (_, purl) {
 		 */
 		url.navigate = function () {
 			var path = [this.data.attr.base, this.data.attr.path],
+				param = this.param(),
 				count = 0;
 
 			// Querystring
-			_.each(this.data.param.query, function (val, key) {
-				path.push(count > 0 ? '&' : '?', encodeURIComponent(key), '=', encodeURIComponent(val));
-				count += 1;
-			});
+			//_.each(this.data.param.query, function (val, key) {
+			if (param !== '') {
+				_.each(param, function (val, key) {
+					path.push(count > 0 ? '&' : '?', encodeURIComponent(key), '=', encodeURIComponent(val));
+					count += 1;
+				});
+			}
 
 			// Hash/Fragment
 			/*count = 0;
@@ -69,6 +83,14 @@ define(['sprout/util', 'sprout/purl'], function (_, purl) {
 			document.location.href = path.join('');
 
 			return this;
+		};
+
+		/**
+		 * Determines whether the url's path matches a given pattern.
+		 * @return {Boolean} Returns true if the url's path matches the pattern, false otherwise.
+		 */
+		url.match = function (pattern) {
+			return (_.isRegExp(pattern) ? pattern : toPathRegExp(pattern)).test(this.attr('path').replace(pathStripper, ''));
 		};
 
 		return url;

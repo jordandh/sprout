@@ -8,11 +8,7 @@
 ;(function(factory) {
 	if (typeof define === 'function' && define.amd) {
 		// AMD available; use anonymous module
-		if ( typeof jQuery !== 'undefined' ) {
-			define(['jquery'], factory);	
-		} else {
-			define([], factory);
-		}
+		define(['jquery'], factory);
 	} else {
 		// No AMD available; mutate global vars
 		if ( typeof jQuery !== 'undefined' ) {

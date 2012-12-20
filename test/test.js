@@ -80,6 +80,7 @@
         "assets/sprout/test/dom-test.js",
         "assets/sprout/test/base-test.js",
         "assets/sprout/test/plugin-test.js",
+        "assets/sprout/test/url-test.js",
         "assets/sprout/test/router-test.js",
         "assets/sprout/test/data-test.js",
         "assets/sprout/test/model-test.js",

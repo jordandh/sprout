@@ -115,10 +115,12 @@ define(['sprout/util', 'sprout/dom'], function (_, $) {
 			
 			// When sending data to save or create send as JSON
 			if (method === 'create' || method === 'update') {
-				options.contentType = 'application/json';
+				options.contentType = _.isUndefined(options.contentType) || _.isNull(options.contentType) ? 'application/json' : options.contentType;
 				options.data = options.data || model.toJSON();
-				//options.data = JSON.stringify(options.data || model.toJSON());
-				options.data = JSON.stringify(options.wrap ? wrapData(options.data, options.wrap) : options.data);
+
+				if (options.contentType === 'application/json') {
+					options.data = JSON.stringify(options.wrap ? wrapData(options.data, options.wrap) : options.data);
+				}
 			}
 			
 			// Don't process data for GET requests

@@ -228,7 +228,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
 
             options = options || {};
 
-            options.wrap = this.wrap;
+            options.wrap = _.isBoolean(options.wrap) ? options.wrap : this.wrap;
 
             // If attributes are being set on this save
             if (attributes) {
