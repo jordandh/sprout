@@ -341,7 +341,12 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
         "class": {
             update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
-                $(element).removeClass(oldValue).addClass(value);
+                var $element = $(element);
+                if (oldValue) {
+                    $element.removeClass(oldValue);
+                }
+
+                $element.addClass(value);
             }
         },
 

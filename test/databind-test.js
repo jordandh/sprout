@@ -576,6 +576,33 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             assert("data bound class value does not have new class name", $("span", this.element).hasClass("Captain"));
         },
 
+        "test databindings.class with no value": function () {
+            var template = "<span class='class-test' data-bind='class: rank'></span>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound class value is incorrect", $("span", this.element).hasClass("Commander"));
+            assert("data bound class value does not have static class name", $("span", this.element).hasClass("class-test"));
+
+            this.author.set("rank", "Captain");
+
+            assertFalse("data bound class value has old class name", $("span", this.element).hasClass("Commander"));
+            assert("data bound class value does not have new class name", $("span", this.element).hasClass("Captain"));
+            assert("data bound class value does not have static class name", $("span", this.element).hasClass("class-test"));
+
+            this.author.set("rank", void(0));
+
+            assertFalse("data bound class value has old class name", $("span", this.element).hasClass("Captain"));
+            assert("data bound class value does not have static class name", $("span", this.element).hasClass("class-test"));
+
+            this.author.set("rank", "Chief");
+
+            assert("data bound class value does not have new class name", $("span", this.element).hasClass("Chief"));
+            assert("data bound class value does not have static class name", $("span", this.element).hasClass("class-test"));
+        },
+
         "test databindings.checked on checkbox with boolean": function () {
             var template = "<input type='checkbox' data-bind='checked: away'></input>";
 
