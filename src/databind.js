@@ -615,11 +615,15 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
         /**
          * Applies data bindings between a model and the dom.
          * @param {Object} viewModel The model or viewmodel to bind to a dom element and its children.
-         * @param {Object} selector (Optional) The elements to bind to. Can be any value that the jQuery function can take. Defaults to document.body.
+         * @param {Object} selector The elements to bind to. Can be any value that the jQuery function can take.
          * @param {Object} parentContext (Optional) For internal use. The context of the parents bindings. Used by the foreach binder.
          */
         applyBindings: function (viewModel, selector, parentContext)
         {
+            if (!selector) {
+                throw new Error('Databind error, no selector provided.');
+            }
+
             $(selector || document.body).each(function () {
                 applyBindings(viewModel, this, parentContext);
             });

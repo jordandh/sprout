@@ -68,8 +68,10 @@ define(['sprout/util', 'sprout/purl'], function (_, purl) {
 			//_.each(this.data.param.query, function (val, key) {
 			if (param !== '') {
 				_.each(param, function (val, key) {
-					path.push(count > 0 ? '&' : '?', encodeURIComponent(key), '=', encodeURIComponent(val));
-					count += 1;
+					if (key !== '') {
+						path.push(count > 0 ? '&' : '?', encodeURIComponent(key), '=', encodeURIComponent(val));
+						count += 1;
+					}
 				});
 			}
 
