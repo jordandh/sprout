@@ -1,29 +1,36 @@
-define(["sprout/pubsub", "sprout/dom"], function (pubsub, $) {
+define(["sprout/pubsub", "sprout/util", "sprout/dom"], function (pubsub, _, $) {
     "use strict";
 
     var errorModule = {
         requestOptions: {
-            url: "/SubmitError.erb",
+            url: "/errors",
             type: "POST",
             dataType: "json",
             contentType: "application/json"
         }
     };
 
-    function pruneErrorForJSON (error)
+    function jsonReplacer (key, value)
     {
-        _.each(error, function (value, key) {
-            if (_.isObject(value) && !_.isArray(value)) {
-                if (value.nodeType) {
-                    delete error[key];
-                }
-                else {
-                    pruneErrorForJSON(value);
-                }
-            }
-        });
+        var obj = value;
 
-        return error;
+        // If this is a dom element then only stringify parts of it
+        if (value && value.nodeType) {
+            obj = {
+                nodeType: value.nodeType,
+                tagName: value.tagName,
+                id: value.id,
+                name: value.name,
+                value: value.value,
+                className: value.className
+            };
+
+            _.each(value.attributes, function (attribute) {
+                obj[attribute.name] = attribute.value;
+            });
+        }
+
+        return obj;
     }
 
     function packageError (error)
@@ -101,16 +108,8 @@ define(["sprout/pubsub", "sprout/dom"], function (pubsub, $) {
     {
         try {
             if (error) {
-                /*$.ajax({
-                    url: "/SubmitError.erb",
-                    type: "POST",
-                    dataType: "json",
-                    contentType: "application/json",
-                    data: JSON.stringify(packageError(error))
-                });*/
-
                 $.ajax($.extend({}, errorModule.requestOptions, {
-                    data: JSON.stringify(packageError(error))
+                    data: JSON.stringify(packageError(error), jsonReplacer)
                 }));
             }
         }

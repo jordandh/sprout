@@ -238,7 +238,9 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
 
                 if (createIfMissing && !item) {
                     item = this.model.create({ id: id });
+                    // TODO: Should this be a call to add?
                     this.itemsById[id] = item;
+                    this.itemsByCid[item.get("cid")] = item;
                 }
 
                 return item;
