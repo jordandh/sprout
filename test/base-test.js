@@ -1102,6 +1102,65 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 			
 			assertFalse("property value is incorrect", snake.alive);
 		},
+
+		"test base.mixin with no attributes": function ()
+		{
+			var Human = Base.extend({
+				attributes: {
+					name: {
+						value: "",
+						validator: _.isString
+					}
+				}
+			});
+
+			Human.mixin({
+				text: "Hello I am",
+				talk: function () {
+					return this.text + " " + this.get("name");
+				}
+			});
+
+			var h = Human.create({
+				name: "Data"
+			});
+
+			assertSame("the value from talk is incorrect", "Hello I am Data", h.talk());
+		},
+
+		"test base.mixin with attributes": function ()
+		{
+			var Human = Base.extend({
+				attributes: {
+					name: {
+						value: "",
+						validator: _.isString
+					}
+				}
+			});
+
+			Human.mixin({
+				text: "Hello I am",
+				talk: function () {
+					return this.text + " " + this.get("name");
+				},
+
+				attributes: {
+					gender: ""
+				},
+				speak: function () {
+					return this.text + " " + this.get("gender");
+				}
+			});
+
+			var h = Human.create({
+				name: "Picard",
+				gender: "male"
+			});
+
+			assertSame("the value from talk is incorrect", "Hello I am Picard", h.talk());
+			assertSame("the value from talk is incorrect", "Hello I am male", h.speak());
+		},
 		
 		"test base.create attributes parameter": function ()
 		{

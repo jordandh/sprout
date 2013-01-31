@@ -314,6 +314,23 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             },
 
             /**
+             * Mixes in the members with this object.
+             * If members contains a property named attributes then those attributes are added to this object's current attributes property.
+             * @param {Object} members A key/value hash of methods and properties that are added to this object.
+             */
+            mixin: function (members)
+            {
+                var attributes = members.attributes;
+                delete members.attributes;
+
+                _.extend(this, members);
+
+                if (attributes) {
+                    _.extend(this.attributes, attributes);
+                }
+            },
+
+            /**
              * Creates a new object that extends from this object instance. Any new members override the origin object's members. Any new attributes are added to the proxy object.
              * This function is useful when you want to treat an object like the origin object but add some extra functionality on top of it.
              * The proxy safely adds the functionality without changing the origin object. This way anything already using the origin object does not have access to the new proxy members.
