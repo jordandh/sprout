@@ -498,6 +498,36 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
             });
         }
 
+        function attachCollection (col, state)
+        {
+            if (col) {
+                state.addListener = _.bind(afterItemIsAdded, null, state);
+                col.after('add', state.addListener);
+                state.removeListener = _.bind(afterItemIsRemoved, null, state);
+                col.after('remove', state.removeListener);
+                state.afterResetListener = _.bind(afterReset, null, state);
+                col.after('reset', state.afterResetListener);
+                state.onResetListener = _.bind(onReset, null, state);
+                col.on('reset', state.onResetListener);
+
+                // Bind the collection's items
+                attachItems(col.items, state);
+            }
+        }
+
+        function detachCollection (col, state)
+        {
+            if (col) {
+                col.detachAfter('add', state.addListener);
+                col.detachAfter('remove', state.removeListener);
+                col.detachAfter('reset', state.afterResetListener);
+                col.detachOn('reset', state.onResetListener);
+
+                // Unbind the collection's items
+                detachItems(col.items, state);
+            }
+        }
+
         function afterItemIsAdded (state, e)
         {
             attachItems(e.info.items, state);
@@ -536,38 +566,15 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                 };
 
             this.after(collectionName + 'Change', function (e) {
-                var oldCollection = e.info.oldValue,
-                    newCollection = e.info.newValue;
-
-                // Unbind the old collection
-                if (oldCollection) {
-                    oldCollection.detachAfter('add', state.addListener);
-                    oldCollection.detachAfter('remove', state.removeListener);
-                    oldCollection.detachAfter('reset', state.afterResetListener);
-                    oldCollection.detachOn('reset', state.onResetListener);
-
-                    // Unbind the collection's items
-                    detachItems(oldCollection.items, state);
-                }
-
-                // Bind the new collection
-                if (newCollection) {
-                    state.addListener = _.bind(afterItemIsAdded, this, state);
-                    newCollection.after('add', state.addListener);
-                    state.removeListener = _.bind(afterItemIsRemoved, this, state);
-                    newCollection.after('remove', state.removeListener);
-                    state.afterResetListener = _.bind(afterReset, this, state);
-                    newCollection.after('reset', state.afterResetListener);
-                    state.onResetListener = _.bind(onReset, this, state);
-                    newCollection.on('reset', state.onResetListener);
-
-                    // Bind the collection's items
-                    attachItems(newCollection.items, state);
-                }
+                detachCollection(e.info.oldValue, state);
+                attachCollection(e.info.newValue, state);
 
                 // The collection itself changed so fire the change event
                 state.fireChange();
             }, this);
+
+            // Attach the collection for the first time
+            attachCollection(this.get(collectionName), state);
         }
 
         base.setupAttribute = function (name, attribute) {
