@@ -974,6 +974,32 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 			assertSame("name attribute value is incorrect after change", "Worf", c.get("name"));
 			assertSame("test attribute value is undefined after change", "I am Worf", c.get("test"));
 		},
+
+		"test base.addAttribute with computable value does not add duplicate event listeners on dependencies": function ()
+		{
+			var c = Base.create();
+			c.set("name", "Data");
+
+			assertUndefined("test attribute is defined", c.getAttribute("test"));
+			assertUndefined("test attribute value is defined", c.get("test"));
+
+			c.addAttribute("test", {
+				get: function () {
+					return "I am " + this.get("name");
+				},
+				uses: "name"
+			});
+
+			assertObject("test attribute is undefined", c.getAttribute("test"));
+			assertSame("test attribute dependency handler count is incorrect", 1, c.events["namechange"].after.length);
+
+			c.addAttribute("test2", {
+				value: 1
+			});
+
+			assertObject("test2 attribute is undefined", c.getAttribute("test2"));
+			assertSame("test attribute dependency handler count is incorrect after addAttribute was called again", 1, c.events["namechange"].after.length);
+		},
 		
 		"test base.extend isPrototypeOf": function () {
 			var Animal = Base.extend({}),

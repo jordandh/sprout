@@ -103,52 +103,6 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             }
         },
         /*
-         * fireAttributeChangeEvents
-         */
-        fireAttributeChangeEvents = function (attribute, name, oldValue, newValue)
-        {
-            var eventName = name + "Change",
-                event1 = this.events[eventName.toLowerCase()],
-                event2 = this.events.change,
-                valueChanged = false,
-                e;
-            
-            if (_.isObject(event1) || _.isObject(event2)) {
-                // Before handlers
-                e = {
-                    name: eventName,
-                    info: { name: name, oldValue: oldValue, newValue: newValue },
-                    src: this,
-                    preventDefault: false
-                };
-                fireAttributeChange.call(this, "before", e, event1);
-                
-                e.name = "change";
-                fireAttributeChange.call(this, "before", e, event2);
-                
-                if (!e.preventDefault) {
-                    valueChanged = changeAttribute.call(this, attribute, name, oldValue, e.info.newValue);
-                    
-                    // On handlers
-                    e.name = eventName;
-                    fireAttributeChange.call(this, "on", e, event1);
-                    e.name = "change";
-                    fireAttributeChange.call(this, "on", e, event2);
-                    
-                    // After handlers
-                    e.name = eventName;
-                    fireAttributeChange.call(this, "after", e, event1);
-                    e.name = "change";
-                    fireAttributeChange.call(this, "after", e, event2);
-                }
-            }
-            else {
-                valueChanged = changeAttribute.call(this, attribute, name, oldValue, newValue);
-            }
-
-            return valueChanged;
-        },
-        /*
          * getAttributes
          */
         getAttributes = function ()
@@ -217,7 +171,8 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             
             if (oldValue !== value) {
                 if (!options.silent) {
-                    valueChanged = fireAttributeChangeEvents.call(this, attribute, name, oldValue, value);
+                    //valueChanged = fireAttributeChangeEvents.call(this, attribute, name, oldValue, value);
+                    valueChanged = this.fireAttributeChangeEvents(attribute, name, oldValue, value);
                 }
                 else {
                     valueChanged = changeAttribute.call(this, attribute, name, oldValue, value);
@@ -233,17 +188,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
         {
             // Loop through all the attributes and setup any dependencies for computable attributes
             _.each(attributes, function (attribute, name) {
-                var uses = attribute.uses;
-
-                if (_.isString(uses)) {
-                    uses = [uses];
-                }
-
-                if (_.isArray(uses)) {
-                    _.each(uses, function (dependency) {
-                        this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
-                    }, this);
-                }
+                this.setupAttribute(name, attribute);
             }, this);
         },
         /*
@@ -251,7 +196,8 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
          */
         afterDependencyChanged = function (attribute, name, e)
         {
-            fireAttributeChangeEvents.call(this, attribute, name, null, attribute.get.call(this));
+            //fireAttributeChangeEvents.call(this, attribute, name, null, attribute.get.call(this));
+            this.fireAttributeChangeEvents(attribute, name, null, attribute.get.call(this));
         },
         /**
          * @class base
@@ -399,19 +345,6 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
 
                 // Loop through all the attributes and setup any dependencies for computable attributes
                 setupAttributes.call(this, getAttributes.call(this));
-                /*_.each(getAttributes.call(this), function (attribute, name) {
-                    var uses = attribute.uses;
-
-                    if (_.isString(uses)) {
-                        uses = [uses];
-                    }
-
-                    if (_.isArray(uses)) {
-                        _.each(uses, function (dependency) {
-                            this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
-                        }, this);
-                    }
-                }, this);*/
             },
             
             /**
@@ -596,6 +529,12 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                 }
             },
 
+            /**
+             * Adds attributes to the object instance.
+             * @param {String|Object} attributes The name of the attribute or an object containing a map of attribute names to attribute configuration objects.
+             * @param {Object} config (Optional) The configuration for the attribute if the first parameter is a string.
+             * @param {Object} attribute The attribute's configuration.
+             */
             addAttribute: function (attributes)
             {
                 if (_.isString(attributes)) {
@@ -606,21 +545,6 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
 
                 _.extend(this.attributes, attributes);
                 setupAttributes.call(this, attributes);
-
-                // Loop through all the attributes and setup any dependencies for computable attributes
-                /*_.each(attributes, function (attribute, name) {
-                    var uses = attribute.uses;
-
-                    if (_.isString(uses)) {
-                        uses = [uses];
-                    }
-
-                    if (_.isArray(uses)) {
-                        _.each(uses, function (dependency) {
-                            this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
-                        }, this);
-                    }
-                }, this);*/
             },
             
             /**
@@ -647,6 +571,80 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                 });
                 
                 return attribute;
+            },
+
+            /**
+             * When an attribute is added to the object instance during construction or via addAttribute this method is called.
+             * Any initialization work needed by that attribute is done here.
+             * @private
+             * @param {String} name The name of the attribute.
+             * @param {Object} attribute The attribute's configuration.
+             */
+            setupAttribute: function (name, attribute)
+            {
+                var uses = attribute.uses;
+
+                if (_.isString(uses)) {
+                    uses = [uses];
+                }
+
+                if (_.isArray(uses)) {
+                    _.each(uses, function (dependency) {
+                        this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
+                    }, this);
+                }
+            },
+
+            /*
+             * Causes a change event to fire for an attribute. Changes the value of the attribute if the event's default action is not prevented.
+             * @private
+             * @param {Object} attribute The attribute's configuration object.
+             * @param {String} name THe name of the attribute.
+             * @param {Object} oldValue The old value of the attribute.
+             * @param {Object} newValue The new value of the attribute.
+             */
+            fireAttributeChangeEvents: function (attribute, name, oldValue, newValue)
+            {
+                var eventName = name + "Change",
+                    event1 = this.events[eventName.toLowerCase()],
+                    event2 = this.events.change,
+                    valueChanged = false,
+                    e;
+                
+                if (_.isObject(event1) || _.isObject(event2)) {
+                    // Before handlers
+                    e = {
+                        name: eventName,
+                        info: { name: name, oldValue: oldValue, newValue: newValue },
+                        src: this,
+                        preventDefault: false
+                    };
+                    fireAttributeChange.call(this, "before", e, event1);
+                    
+                    e.name = "change";
+                    fireAttributeChange.call(this, "before", e, event2);
+                    
+                    if (!e.preventDefault) {
+                        valueChanged = changeAttribute.call(this, attribute, name, oldValue, e.info.newValue);
+                        
+                        // On handlers
+                        e.name = eventName;
+                        fireAttributeChange.call(this, "on", e, event1);
+                        e.name = "change";
+                        fireAttributeChange.call(this, "on", e, event2);
+                        
+                        // After handlers
+                        e.name = eventName;
+                        fireAttributeChange.call(this, "after", e, event1);
+                        e.name = "change";
+                        fireAttributeChange.call(this, "after", e, event2);
+                    }
+                }
+                else {
+                    valueChanged = changeAttribute.call(this, attribute, name, oldValue, newValue);
+                }
+
+                return valueChanged;
             },
             
             /**

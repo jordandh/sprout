@@ -965,6 +965,453 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			col.reset();
 			assertUndefined("model by cid A is not undefined", col.getByCid(mod.get('cid')));
 			assertUndefined("model by cid B is not undefined", col.getByCid(mod.get('cid')));
+		},
+
+		/*
+		 * collection attribute.reduce
+		 */
+		"test collection.attribute.reduce fires on item value changes": function ()
+		{
+			expectAsserts(7);
+
+			// Make a model with a reduce attribute
+			var park = zoo.extend({
+				attributes: {
+					ageTotal: {
+						get: function () {
+							return this.get("animals").reduce(function (ageTotal, a) {
+								return ageTotal + a.get("age");
+							},0);
+						},
+						reduce: {
+							animals: "age"
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: [{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				]
+			});
+
+			assertSame("the age total does not match", 18, sd.get("ageTotal"));
+
+			var count = 0;
+			sd.after("ageTotalChange", function (e) {
+				if (count === 0) {
+					assertSame("the e.info.newValue age total does not match (1)", 22, e.info.newValue);
+					assertSame("the age total does not match in the after event (1)", 22, sd.get("ageTotal"));
+				}
+				else {
+					assertSame("the e.info.newValue age total does not match (2)", 14, e.info.newValue);
+					assertSame("the age total does not match in the after event (2)", 14, sd.get("ageTotal"));
+				}
+
+				count += 1;
+			});
+
+			sd.get("animals").getById("A").set("age", 12);
+
+			assertSame("the age total does not match after changing an age (1)", 22, sd.get("ageTotal"));
+
+			sd.get("animals").getById("A").set("age", 4);
+
+			assertSame("the age total does not match after changing an age (2)", 14, sd.get("ageTotal"));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.reduce after removing an item": function ()
+		{
+			expectAsserts(9);
+
+			// Make a model with a reduce attribute
+			var park = zoo.extend({
+				attributes: {
+					ageTotal: {
+						get: function () {
+							return this.get("animals").reduce(function (ageTotal, a) {
+								return ageTotal + a.get("age");
+							},0);
+						},
+						reduce: {
+							animals: "age"
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: [{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				]
+			});
+
+			assertSame("the age total does not match", 18, sd.get("ageTotal"));
+
+			var count = 0;
+			sd.after("ageTotalChange", function (e) {
+				if (count === 0) {
+					assertSame("the e.info.newValue age total does not match (1)", 22, e.info.newValue);
+					assertSame("the age total does not match in the after event (1)", 22, sd.get("ageTotal"));
+				}
+				else {
+					assertSame("the e.info.newValue age total does not match (2)", 10, e.info.newValue);
+					assertSame("the age total does not match in the after event (2)", 10, sd.get("ageTotal"));
+				}
+
+				count += 1;
+			});
+
+			var aniA = sd.get("animals").getById("A");
+
+			assertSame("aniA does not have the correct number of listeners (1)", 1, aniA.events["agechange"].after.length);
+
+			aniA.set("age", 12);
+
+			assertSame("the age total does not match after changing an age", 22, sd.get("ageTotal"));
+
+			sd.get("animals").remove(aniA);
+
+			assertSame("aniA does not have the correct number of listeners (2)", 0, aniA.events["agechange"].after.length);
+			assertSame("the age total does not match after removing an item", 10, sd.get("ageTotal"));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.reduce after adding an item": function ()
+		{
+			expectAsserts(8);
+
+			// Make a model with a reduce attribute
+			var park = zoo.extend({
+				attributes: {
+					ageTotal: {
+						get: function () {
+							return this.get("animals").reduce(function (ageTotal, a) {
+								return ageTotal + a.get("age");
+							},0);
+						},
+						reduce: {
+							animals: "age"
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: [{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				]
+			});
+
+			assertSame("the age total does not match", 18, sd.get("ageTotal"));
+
+			var count = 0;
+			sd.after("ageTotalChange", function (e) {
+				if (count === 0) {
+					assertSame("the e.info.newValue age total does not match (1)", 22, e.info.newValue);
+					assertSame("the age total does not match in the after event (1)", 22, sd.get("ageTotal"));
+				}
+				else {
+					assertSame("the e.info.newValue age total does not match (2)", 24, e.info.newValue);
+					assertSame("the age total does not match in the after event (2)", 24, sd.get("ageTotal"));
+				}
+
+				count += 1;
+			});
+
+			var aniA = sd.get("animals").getById("A");
+
+			aniA.set("age", 12);
+
+			assertSame("the age total does not match after changing an age", 22, sd.get("ageTotal"));
+
+			sd.get("animals").add({
+				id: "C",
+				name: "Hound",
+				age: 2
+			});
+
+			var aniC = sd.get("animals").getById("C");
+
+			assertSame("aniC does not have the correct number of listeners (1)", 1, aniA.events["agechange"].after.length);
+			assertSame("the age total does not match after adding an item", 24, sd.get("ageTotal"));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.reduce after resetting list to empty": function ()
+		{
+			expectAsserts(11);
+
+			// Make a model with a reduce attribute
+			var park = zoo.extend({
+				attributes: {
+					ageTotal: {
+						get: function () {
+							return this.get("animals").reduce(function (ageTotal, a) {
+								return ageTotal + a.get("age");
+							},0);
+						},
+						reduce: {
+							animals: "age"
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: [{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				]
+			});
+
+			assertSame("the age total does not match", 18, sd.get("ageTotal"));
+
+			var count = 0;
+			sd.after("ageTotalChange", function (e) {
+				if (count === 0) {
+					assertSame("the e.info.newValue age total does not match (1)", 22, e.info.newValue);
+					assertSame("the age total does not match in the after event (1)", 22, sd.get("ageTotal"));
+				}
+				else {
+					assertSame("the e.info.newValue age total does not match (2)", 0, e.info.newValue);
+					assertSame("the age total does not match in the after event (2)", 0, sd.get("ageTotal"));
+				}
+
+				count += 1;
+			});
+
+			var aniA = sd.get("animals").getById("A");
+			var aniB = sd.get("animals").getById("B");
+
+			assertSame("aniA does not have the correct number of listeners (1)", 1, aniA.events["agechange"].after.length);
+			assertSame("aniB does not have the correct number of listeners (1)", 1, aniB.events["agechange"].after.length);
+
+			aniA.set("age", 12);
+
+			assertSame("the age total does not match after changing an age", 22, sd.get("ageTotal"));
+
+			sd.get("animals").reset();
+
+			assertSame("aniA does not have the correct number of listeners (2)", 0, aniA.events["agechange"].after.length);
+			assertSame("aniB does not have the correct number of listeners (2)", 0, aniB.events["agechange"].after.length);
+			assertSame("the age total does not match after resetting the list", 0, sd.get("ageTotal"));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.reduce after resetting list with other items": function ()
+		{
+			expectAsserts(13);
+
+			// Make a model with a reduce attribute
+			var park = zoo.extend({
+				attributes: {
+					ageTotal: {
+						get: function () {
+							return this.get("animals").reduce(function (ageTotal, a) {
+								return ageTotal + a.get("age");
+							},0);
+						},
+						reduce: {
+							animals: "age"
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: [{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				]
+			});
+
+			assertSame("the age total does not match", 18, sd.get("ageTotal"));
+
+			var count = 0;
+			sd.after("ageTotalChange", function (e) {
+				if (count === 0) {
+					assertSame("the e.info.newValue age total does not match (1)", 22, e.info.newValue);
+					assertSame("the age total does not match in the after event (1)", 22, sd.get("ageTotal"));
+				}
+				else {
+					assertSame("the e.info.newValue age total does not match (2)", 5, e.info.newValue);
+					assertSame("the age total does not match in the after event (2)", 5, sd.get("ageTotal"));
+				}
+
+				count += 1;
+			});
+
+			var aniA = sd.get("animals").getById("A");
+			var aniB = sd.get("animals").getById("B");
+
+			assertSame("aniA does not have the correct number of listeners (1)", 1, aniA.events["agechange"].after.length);
+			assertSame("aniB does not have the correct number of listeners (1)", 1, aniB.events["agechange"].after.length);
+
+			aniA.set("age", 12);
+
+			assertSame("the age total does not match after changing an age", 22, sd.get("ageTotal"));
+
+			sd.get("animals").reset([{
+					id: "C",
+					name: "Hound",
+					age: 2
+				}, {
+					id: "D",
+					name: "Mouse",
+					age: 3
+				}
+			]);
+
+			assertSame("aniA does not have the correct number of listeners (2)", 0, aniA.events["agechange"].after.length);
+			assertSame("aniB does not have the correct number of listeners (2)", 0, aniB.events["agechange"].after.length);
+
+			var aniC = sd.get("animals").getById("C");
+			var aniD = sd.get("animals").getById("D");
+
+			assertSame("aniC does not have the correct number of listeners (1)", 1, aniC.events["agechange"].after.length);
+			assertSame("aniD does not have the correct number of listeners (1)", 1, aniD.events["agechange"].after.length);
+			assertSame("the age total does not match after resetting the list", 5, sd.get("ageTotal"));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.reduce after changing the collection": function ()
+		{
+			expectAsserts(21);
+
+			// Make a model with a reduce attribute
+			var park = zoo.extend({
+				attributes: {
+					ageTotal: {
+						get: function () {
+							return this.get("animals").reduce(function (ageTotal, a) {
+								return ageTotal + a.get("age");
+							},0);
+						},
+						reduce: {
+							animals: "age"
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: [{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				]
+			});
+
+			var animals = sd.get("animals");
+
+			assertSame("animals does not have the correct number of add listeners (1)", 1, animals.events["add"].after.length);
+			assertSame("animals does not have the correct number of remove listeners (1)", 1, animals.events["remove"].after.length);
+			assertSame("animals does not have the correct number of on reset listeners (1)", 1, animals.events["reset"].on.length);
+			assertSame("animals does not have the correct number of after reset listeners (1)", 1, animals.events["reset"].after.length);
+			assertSame("the age total does not match", 18, sd.get("ageTotal"));
+
+			var count = 0;
+			sd.after("ageTotalChange", function (e) {
+				if (count === 0) {
+					assertSame("the e.info.newValue age total does not match (1)", 22, e.info.newValue);
+					assertSame("the age total does not match in the after event (1)", 22, sd.get("ageTotal"));
+				}
+				else {
+					assertSame("the e.info.newValue age total does not match (2)", 5, e.info.newValue);
+					assertSame("the age total does not match in the after event (2)", 5, sd.get("ageTotal"));
+				}
+
+				count += 1;
+			});
+
+			var aniA = sd.get("animals").getById("A");
+			var aniB = sd.get("animals").getById("B");
+
+			assertSame("aniA does not have the correct number of listeners (1)", 1, aniA.events["agechange"].after.length);
+			assertSame("aniB does not have the correct number of listeners (1)", 1, aniB.events["agechange"].after.length);
+
+			aniA.set("age", 12);
+
+			assertSame("the age total does not match after changing an age", 22, sd.get("ageTotal"));
+
+			sd.set("animals", collection.create([{
+					id: "C",
+					name: "Hound",
+					age: 2
+				}, {
+					id: "D",
+					name: "Mouse",
+					age: 3
+				}
+			]));
+
+			assertSame("animals does not have the correct number of add listeners (2)", 0, animals.events["add"].after.length);
+			assertSame("animals does not have the correct number of remove listeners (2)", 0, animals.events["remove"].after.length);
+			assertSame("animals does not have the correct number of on reset listeners (2)", 0, animals.events["reset"].on.length);
+			assertSame("animals does not have the correct number of after reset listeners (2)", 0, animals.events["reset"].after.length);
+			assertSame("aniA does not have the correct number of listeners (2)", 0, aniA.events["agechange"].after.length);
+			assertSame("aniB does not have the correct number of listeners (2)", 0, aniB.events["agechange"].after.length);
+
+			var aniC = sd.get("animals").getById("C");
+			var aniD = sd.get("animals").getById("D");
+
+			assertSame("aniC does not have the correct number of listeners (1)", 1, aniC.events["agechange"].after.length);
+			assertSame("aniD does not have the correct number of listeners (1)", 1, aniD.events["agechange"].after.length);
+			assertSame("the age total does not match after changing the list", 5, sd.get("ageTotal"));
+
+			sd.destroy();
 		}
 	};
 });

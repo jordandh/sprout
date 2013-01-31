@@ -477,6 +477,111 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
             return _[methodName].apply(_, [this.items].concat(_.toArray(arguments)));
         };
     });
+
+    // Add collection dependency to base attributes
+    _.override(base.setupAttribute, function (setupAttribute) {
+        function attachItems (items, state)
+        {
+            _.each(items, function (item) {
+                _.each(state.dependencies, function (dependency) {
+                    item.after(dependency + 'Change', state.fireChange);
+                });
+            });
+        }
+
+        function detachItems (items, state)
+        {
+            _.each(items, function (item) {
+                _.each(state.dependencies, function (dependency) {
+                    item.detachAfter(dependency + 'Change', state.fireChange);
+                });
+            });
+        }
+
+        function afterItemIsAdded (state, e)
+        {
+            attachItems(e.info.items, state);
+            state.fireChange();
+        }
+
+        function afterItemIsRemoved (state, e)
+        {
+            detachItems(e.info.items, state);
+            state.fireChange();
+        }
+
+        function onReset (state, e)
+        {
+            detachItems(e.src.items, state);
+        }
+
+        function afterReset (state, e)
+        {
+            attachItems(e.info.items, state);
+            state.fireChange();
+        }
+
+        function bindCollection (name, attribute, collectionName, dependencies)
+        {
+            var self = this,
+                state = {
+                    addListener: null,
+                    removeListener: null,
+                    onResetListener: null,
+                    afterResetListener: null,
+                    dependencies: dependencies,
+                    fireChange: function () {
+                        self.fireAttributeChangeEvents(attribute, name, null, attribute.get.call(self));
+                    }
+                };
+
+            this.after(collectionName + 'Change', function (e) {
+                var oldCollection = e.info.oldValue,
+                    newCollection = e.info.newValue;
+
+                // Unbind the old collection
+                if (oldCollection) {
+                    oldCollection.detachAfter('add', state.addListener);
+                    oldCollection.detachAfter('remove', state.removeListener);
+                    oldCollection.detachAfter('reset', state.afterResetListener);
+                    oldCollection.detachOn('reset', state.onResetListener);
+
+                    // Unbind the collection's items
+                    detachItems(oldCollection.items, state);
+                }
+
+                // Bind the new collection
+                if (newCollection) {
+                    state.addListener = _.bind(afterItemIsAdded, this, state);
+                    newCollection.after('add', state.addListener);
+                    state.removeListener = _.bind(afterItemIsRemoved, this, state);
+                    newCollection.after('remove', state.removeListener);
+                    state.afterResetListener = _.bind(afterReset, this, state);
+                    newCollection.after('reset', state.afterResetListener);
+                    state.onResetListener = _.bind(onReset, this, state);
+                    newCollection.on('reset', state.onResetListener);
+
+                    // Bind the collection's items
+                    attachItems(newCollection.items, state);
+                }
+
+                // The collection itself changed so fire the change event
+                state.fireChange();
+            }, this);
+        }
+
+        base.setupAttribute = function (name, attribute) {
+            setupAttribute.apply(this, arguments);
+
+            var reduce = attribute.reduce;
+
+            if (_.isObject(reduce)) {
+                _.each(reduce, function (dependencies, collectionName) {
+                    bindCollection.call(this, name, attribute, collectionName, _.isString(dependencies) ? [dependencies] : dependencies);
+                }, this);
+            }
+        };
+    });
     
     return collection;
 });

@@ -88,6 +88,11 @@ define(["underscore", "underscore.string"], function (_, _s) {
             });
         },
 
+        override: function (originalFunction, callback, context)
+        {
+            callback.call(context, originalFunction, context);
+        },
+
         /**
          * Joins strings together to create a path. The path pieces are joined together with a '/'.
          * @param {String} ... Supply any number of strings as arguments to join together.
