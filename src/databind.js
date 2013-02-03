@@ -12,7 +12,8 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
         // So, use node.text where available, and node.nodeValue elsewhere
         commentNodesHaveTextProperty = document.createComment("test").text === "<!--test-->",
         startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*data-bind\s+(.*\:.*)\s*-->$/ : /^\s*data-bind\s+(.*\:.*)\s*$/,
-        endCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*\/data-bind\s*-->$/ : /^\s*\/data-bind\s*$/,
+        //endCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*\/data-bind\s*-->$/ : /^\s*\/data-bind\s*$/,
+        endCommentRegex = commentNodesHaveTextProperty ? /^^<!--\s*\/data-bind\s*\w*\s*-->$/ : /^\s*\/data-bind\s*.*$/,
         databind;
 
     /**
@@ -459,6 +460,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             childNodes = element.childNodes,
             bindChildren = true,
             inCommentContents = false,
+            startCommentCount = 0,
             sibling, nextSibling, endCommentElement, commentContainer, isAnEndComment;
 
         // If this is a start comment node then remove the following siblings until the end comment node is reached
@@ -466,7 +468,22 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             commentContainer = $('<div></div>');
             sibling = element.nextSibling;
 
-            while (sibling && !(isAnEndComment = isEndComment(sibling))) {
+            //while (sibling && !(isAnEndComment = isEndComment(sibling))) {
+            while (sibling) {
+                // If this is an data-bind end comment
+                if (isEndComment(sibling)) {
+                    // If this isn't a nested data-bind end comment then we are all done
+                    if (startCommentCount === 0) {
+                        isAnEndComment = true;
+                        break;
+                    }
+                    startCommentCount -= 1;
+                }
+                // Else if this is the start of a data-bind comment then it is nested, keep track in order to skip over its matching end comment
+                else if (isStartComment(sibling)) {
+                    startCommentCount += 1;
+                }
+
                 nextSibling = sibling.nextSibling;
                 commentContainer.append(sibling);
                 sibling = nextSibling;

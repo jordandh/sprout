@@ -2823,6 +2823,26 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             var sel = this.node.find("select");
 
             assertSame("select has incorrect number of options", 3, sel.prop('options').length);
-        }
+        },
+
+        "test databindings.if on comment with nested comment": function () {
+            var template = '<!-- data-bind if: selected -->' +
+                           '    <!-- data-bind if: popular -->' +
+                           '        <span>popular</span>' +
+                           '    <!-- /data-bind inner -->' +
+                           '    <p>selected</p>' +
+                           '<!-- /data-bind outer -->';
+
+            this.node.html(template);
+
+            this.author.set('selected', false);
+            this.author.set('popular', false);
+
+            databind.applyBindings(this.author, this.element);
+
+            var children = this.node.find("p");
+
+            assertSame("content was rendered when it should not have been", 0, children.length);
+        },
     };
 });
