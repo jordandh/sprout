@@ -2829,9 +2829,9 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             var template = '<!-- data-bind if: selected -->' +
                            '    <!-- data-bind if: popular -->' +
                            '        <span>popular</span>' +
-                           '    <!-- /data-bind inner -->' +
+                           '    <!-- /data-bind -->' +
                            '    <p>selected</p>' +
-                           '<!-- /data-bind outer -->';
+                           '<!-- /data-bind -->';
 
             this.node.html(template);
 

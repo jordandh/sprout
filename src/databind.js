@@ -12,8 +12,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
         // So, use node.text where available, and node.nodeValue elsewhere
         commentNodesHaveTextProperty = document.createComment("test").text === "<!--test-->",
         startCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*data-bind\s+(.*\:.*)\s*-->$/ : /^\s*data-bind\s+(.*\:.*)\s*$/,
-        //endCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*\/data-bind\s*-->$/ : /^\s*\/data-bind\s*$/,
-        endCommentRegex = commentNodesHaveTextProperty ? /^^<!--\s*\/data-bind\s*\w*\s*-->$/ : /^\s*\/data-bind\s*.*$/,
+        endCommentRegex = commentNodesHaveTextProperty ? /^<!--\s*\/data-bind\s*-->$/ : /^\s*\/data-bind\s*$/,
         databind;
 
     /**
