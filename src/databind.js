@@ -467,9 +467,8 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             commentContainer = $('<div></div>');
             sibling = element.nextSibling;
 
-            //while (sibling && !(isAnEndComment = isEndComment(sibling))) {
             while (sibling) {
-                // If this is an data-bind end comment
+                // If this is a data-bind end comment
                 if (isEndComment(sibling)) {
                     // If this isn't a nested data-bind end comment then we are all done
                     if (startCommentCount === 0) {
