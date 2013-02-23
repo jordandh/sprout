@@ -87,6 +87,37 @@ define(['sprout/util', 'sprout/purl'], function (_, purl) {
 			return this;
 		};
 
+		url.url = function (skipEncoding) {
+			var path = [this.data.attr.base, this.data.attr.path],
+				param = this.param(),
+				count = 0;
+
+			// Querystring
+			if (param !== '') {
+				_.each(param, function (val, key) {
+					if (key !== '') {
+						if (skipEncoding) {
+							path.push(count > 0 ? '&' : '?', key, '=', val);
+						}
+						else {
+							path.push(count > 0 ? '&' : '?', encodeURIComponent(key), '=', encodeURIComponent(val));
+						}
+
+						count += 1;
+					}
+				});
+			}
+
+			// Hash/Fragment
+			/*count = 0;
+			_.each(this.data.param.fragment, function (val, key) {
+				path.push(count > 0 ? '&' : '#', encodeURIComponent(key), '=', encodeURIComponent(val));
+				count += 1;
+			});*/
+
+			return path.join('');
+		};
+
 		/**
 		 * Determines whether the url's path matches a given pattern.
 		 * @return {Boolean} Returns true if the url's path matches the pattern, false otherwise.
