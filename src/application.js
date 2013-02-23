@@ -25,11 +25,43 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
 
         require([component.path], function (module) {
             try {
+                var route = component.route;
+
                 component.module = module.create();
 
                 // If the component should not wait to start (usually the case for child components) AND the component should start at all (usually the case when a parent component is stopped before its child components are started)
                 if (!component.appConfig.waitToStart && !component.appConfig.doNotStart) {
-                    component.start();
+                    if (_.isString(route)) {
+                        route = [route];
+                    }
+
+                    if (_.isArray(route)) {
+                        component.routeNames = [];
+
+                        _.each(route, function (url) {
+                            var routeName = _.uniqueId(component.name + '.') + '.' + url;
+                            component.routeNames.push(routeName);
+
+                            component.app.router.add(routeName, {
+                                path: url,
+                                start: function () {
+                                    // There are cases where a component can start up before one of the routes is added for the component. So check the component's started state
+                                    if (!component.appConfig.started) {
+                                        // Start up the component
+                                        component.start();
+                                    }
+
+                                    // Remove the route now that the component has been started. But wait to do so after processing all the routes for this component
+                                    _.defer(function () {
+                                        _.each(component.routeNames, _.bind(component.app.router.remove, component.app.router));
+                                    });
+                                }
+                            });
+                        });
+                    }
+                    else {
+                        component.start();
+                    }
                 }
             }
             catch (ex) {
@@ -115,6 +147,7 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                 };
 
                 this.module.start();
+                this.appConfig.started = true;
             }
             catch (ex) {
                 var error = {
