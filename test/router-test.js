@@ -460,6 +460,36 @@ TestCase("router", ["sprout/router"], function (router) {
             r.destroy();
         },
 
+        "test router.match plain text single path with trailing /": function () {
+            var r = router.create(),
+                onStarfleet = function () {},
+                onMedical = function () {},
+                o = {},
+                med = {};
+
+            r.add({
+                "starfleet": {
+                    path: "starfleet",
+                    start: onStarfleet,
+                    context: o
+                },
+                "medical": {
+                    path: "starfleet/medical",
+                    start: onMedical,
+                    context: med
+                }
+            });
+
+            var result = r.match("starfleet/");
+
+            assertArray("starfleet did not match", result);
+            assertSame("starfleet did not match correct number of routes", 1, result.length);
+            assertSame("route has incorrect start handler", onStarfleet, result[0].route.start);
+            assertSame("route has incorrect number of parameters", 0, result[0].parameters.length);
+
+            r.destroy();
+        },
+
         "test router.match variable text": function () {
             var r = router.create(),
                 onStarfleet = function () {},

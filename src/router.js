@@ -4,7 +4,8 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
     var namedParam = /:\w+/g,
         splatParam = /\*\w+/g,
         escapeRegExp = /[-[\]{}()+?.,\\^$|#\s]/g,
-        pathStripper = /^[#\/]/;
+        pathStripper = /^[#\/]/,
+        trailingStripper = /\/$/;
 
     function hasPathRegExp (path)
     {
@@ -57,7 +58,7 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
         var matches = [];
 
         // Match the rootUrl portion of the path
-        path = path.replace(pathStripper, "");
+        path = path.replace(pathStripper, "").replace(trailingStripper, "");
         if (_.startsWith(path, this.rootUrl)) {
             path = path.substring(this.rootUrl.length).replace(pathStripper, "");
         }
