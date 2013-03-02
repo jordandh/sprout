@@ -76,6 +76,7 @@
     });
 
     require([
+        "assets/sprout/test/error-test.js",
         "assets/sprout/test/util-test.js",
         "assets/sprout/test/dom-test.js",
         "assets/sprout/test/base-test.js",

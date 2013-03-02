@@ -112,6 +112,28 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
             },
 
             /**
+             * Looks up a model type in the schema and returns the corresponding collection the type belongs in.
+             * @param {String} type The name of the model type.
+             * @return {Object} Returns the collection that the model type belongs in.
+             */
+            getCollectionForType: function (type)
+            {
+                var schema = this.get("schema"),
+                    col;
+
+                if (schema) {
+                    _.find(schema, function (colSchema, colName) {
+                        if (type === colSchema.type) {
+                            col = this.get(colName);
+                            return true;
+                        }
+                    }, this);
+                }
+
+                return col;
+            },
+
+            /**
              * Any attributes accessed that do not exist are turned into collections that belong to the database.
              * @param {String} name The name of the collection.
              * @return {Object} Returns the collection that was created and added to the database.

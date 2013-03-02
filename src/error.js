@@ -7,8 +7,93 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom"], function (pubsub, _, $) {
             type: "POST",
             dataType: "json",
             contentType: "application/json"
+        },
+
+        stringify: function (error) {
+            return JSON.stringify(decycle(packageError(error)), jsonReplacer);
         }
     };
+
+    /*
+     * Crockford's decycle
+     */
+    function decycle (object) {
+// Make a deep copy of an object or array, assuring that there is at most
+// one instance of each object or array in the resulting structure. The
+// duplicate references (which might be forming cycles) are replaced with
+// an object of the form
+//      {$ref: PATH}
+// where the PATH is a JSONPath string that locates the first occurance.
+// So,
+//      var a = [];
+//      a[0] = a;
+//      return JSON.stringify(JSON.decycle(a));
+// produces the string '[{"$ref":"$"}]'.
+
+// JSONPath is used to locate the unique object. $ indicates the top level of
+// the object or array. [NUMBER] or [STRING] indicates a child member or
+// property.
+
+        var objects = [],   // Keep a reference to each unique object or array
+            paths = [];     // Keep the path to each unique object or array
+
+        return (function derez(value, path) {
+
+// The derez recurses through the object, producing the deep copy.
+
+            var i,          // The loop counter
+                name,       // Property name
+                nu;         // The new object or array
+
+// typeof null === 'object', so go on if this value is really an object but not
+// one of the weird builtin objects.
+
+            if (typeof value === 'object' && value !== null &&
+                    !(value instanceof Boolean) &&
+                    !(value instanceof Date)    &&
+                    !(value instanceof Number)  &&
+                    !(value instanceof RegExp)  &&
+                    !(value instanceof String)) {
+
+// If the value is an object or array, look to see if we have already
+// encountered it. If so, return a $ref/path object. This is a hard way,
+// linear search that will get slower as the number of unique objects grows.
+
+                for (i = 0; i < objects.length; i += 1) {
+                    if (objects[i] === value) {
+                        return {$ref: paths[i]};
+                    }
+                }
+
+// Otherwise, accumulate the unique value and its path.
+
+                objects.push(value);
+                paths.push(path);
+
+// If it is an array, replicate the array.
+
+                if (Object.prototype.toString.apply(value) === '[object Array]') {
+                    nu = [];
+                    for (i = 0; i < value.length; i += 1) {
+                        nu[i] = derez(value[i], path + '[' + i + ']');
+                    }
+                } else {
+
+// If it is an object, replicate the object.
+
+                    nu = {};
+                    for (name in value) {
+                        if (Object.prototype.hasOwnProperty.call(value, name)) {
+                            nu[name] = derez(value[name],
+                                path + '[' + JSON.stringify(name) + ']');
+                        }
+                    }
+                }
+                return nu;
+            }
+            return value;
+        }(object, '$'));
+    }
 
     function jsonReplacer (key, value)
     {
@@ -45,44 +130,46 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom"], function (pubsub, _, $) {
             ex, exInfo;
 
         // Grab the exception information
-        for (var i = 0, length = error.exceptions.length; i < length; i += 1) {
-            ex = error.exceptions[i];
+        if (error.exceptions) {
+            for (var i = 0, length = error.exceptions.length; i < length; i += 1) {
+                ex = error.exceptions[i];
 
-            if (ex) {
-                exInfo = {
-                    name: ex.name,
-                    message: ex.message
-                };
+                if (ex) {
+                    exInfo = {
+                        name: ex.name,
+                        message: ex.message
+                    };
 
-                if (ex.fileName) {
-                    exInfo.fileName = ex.fileName;
+                    if (ex.fileName) {
+                        exInfo.fileName = ex.fileName;
+                    }
+
+                    if (ex.lineNumber) {
+                        exInfo.lineNumber = ex.lineNumber;
+                    }
+
+                    if (ex.type) {
+                        exInfo.type = ex.type;
+                    }
+
+                    if (ex.description) {
+                        exInfo.description = ex.description;
+                    }
+
+                    if (ex.number) {
+                        exInfo.number = ex.number;
+                    }
+
+                    if (ex.arguments) {
+                        exInfo.arguments = ex.arguments;
+                    }
+
+                    if (ex.stack) {
+                        exInfo.stack = ex.stack;
+                    }
+
+                    err.exceptions.push(exInfo);
                 }
-
-                if (ex.lineNumber) {
-                    exInfo.lineNumber = ex.lineNumber;
-                }
-
-                if (ex.type) {
-                    exInfo.type = ex.type;
-                }
-
-                if (ex.description) {
-                    exInfo.description = ex.description;
-                }
-
-                if (ex.number) {
-                    exInfo.number = ex.number;
-                }
-
-                if (ex.arguments) {
-                    exInfo.arguments = ex.arguments;
-                }
-
-                if (ex.stack) {
-                    exInfo.stack = ex.stack;
-                }
-
-                err.exceptions.push(exInfo);
             }
         }
 
@@ -109,7 +196,7 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom"], function (pubsub, _, $) {
         try {
             if (error) {
                 $.ajax($.extend({}, errorModule.requestOptions, {
-                    data: JSON.stringify(packageError(error), jsonReplacer)
+                    data: errorModule.stringify(error)
                 }));
             }
         }

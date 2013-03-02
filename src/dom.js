@@ -35,6 +35,22 @@ define(['jquery'], function ($) {
 
 		return html.apply(this, arguments);
 	};
+
+	/**
+     * Returns all the attributes of the first element as an object.
+     * @return {Object} Returns all the attributes of the first element as an object.
+     */
+	$.fn.attrs = function () {
+		var attributes = {};
+
+		if (this.length) {
+            $.each(this[0].attributes, function (index, attr) {
+                attributes[attr.name] = attr.value;
+            });
+        }
+
+        return attributes;
+	};
     
     return $;
 });
