@@ -369,6 +369,12 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
              */
             destructor: function ()
             {
+                // Stop any attribute timers
+                _.each(this.attributeTimers, function (timer) {
+                    clearInterval(timer);
+                });
+                this.attributeTimers = null;
+
                 // Destroy any plugins on this object
                 _.each(this.get("plugins"), function (plugin) {
                     plugin.destroy();
@@ -599,8 +605,10 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
              */
             setupAttribute: function (name, attribute)
             {
-                var uses = attribute.uses;
+                var uses = attribute.uses,
+                    timer = attribute.timer;
 
+                // Setup the uses property
                 if (_.isString(uses)) {
                     uses = [uses];
                 }
@@ -609,6 +617,12 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     _.each(uses, function (dependency) {
                         this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
                     }, this);
+                }
+
+                // Set up the timer property
+                if (_.isNumber(timer)) {
+                    this.attributeTimers = this.attributeTimers || [];
+                    this.attributeTimers.push(setInterval(_.bind(afterDependencyChanged, this, attribute, name), timer));
                 }
             },
 
