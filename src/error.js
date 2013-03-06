@@ -1,4 +1,4 @@
-define(["sprout/pubsub", "sprout/util", "sprout/dom", "sprout/cereal"], function (pubsub, _, $, cereal) {
+define(["sprout/pubsub", "sprout/util", "sprout/dom"], function (pubsub, _, $) {
     "use strict";
 
     var errorModule = {
