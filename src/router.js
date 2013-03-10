@@ -260,10 +260,13 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
 
             if (history.enabled) {
                 history.pushState(null, null, path);
+                return true;
             }
             else {
                 document.location = path;
             }
+
+            return false;
         }
     });
 
