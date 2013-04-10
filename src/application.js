@@ -9,6 +9,10 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
      */
     function addComponent (component, waitToStart)
     {
+        if (component.disabled) {
+            return;
+        }
+
         // Setup the component
         component.app = this;
         component.start = startComponent;
@@ -111,7 +115,7 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                         component: this
                     }
                 };
-                
+
                 if (error.info.component) {
                     delete error.info.component.app;
                 }
