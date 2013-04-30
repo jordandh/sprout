@@ -1,9 +1,9 @@
-define(["sprout/util", "sprout/base", "sprout/pubsub"], function (_, base, pubsub) {
-    "use strict";
+define(['sprout/util', 'sprout/base', 'sprout/pubsub'], function (_, base, pubsub) {
+    'use strict';
 
     function loadSettings ()
     {
-        return _.extend({}, JSON.parse(localStorage[this.settings] || null), JSON.parse(localStorage[this.settings + "-" + this.id] || null));
+        return _.extend({}, JSON.parse(localStorage[this.settings] || null), JSON.parse(localStorage[this.settings + '-' + this.id] || null));
     }
 
     function afterAttributeChanged (e)
@@ -14,27 +14,27 @@ define(["sprout/util", "sprout/base", "sprout/pubsub"], function (_, base, pubsu
 
         if (attribute && attribute.storage) {
             // If the attribute that was just set is a global storage value
-            if (attribute.storage === "global") {
+            if (attribute.storage === 'global') {
                 // Then grab all the global storage values to store
                 storageName = this.settings;
 
                 _.each(this.get(), function (value, name) {
                     var attribute = this.getAttribute(name);
 
-                    if (attribute && attribute.storage === "global") {
+                    if (attribute && attribute.storage === 'global') {
                         data[name] = value;
                     }
                 }, this);
             }
             // Else if the attribute that was just set is an instance storage value
-            else if (attribute.storage === "instance") {
+            else if (attribute.storage === 'instance') {
                 // Then grab all the instance storage values to store
-                storageName = this.settings + "-" + this.get("id");
+                storageName = this.settings + '-' + this.get('id');
 
                 _.each(this.get(), function (value, name) {
                     var attribute = this.getAttribute(name);
 
-                    if (attribute && attribute.storage === "instance") {
+                    if (attribute && attribute.storage === 'instance') {
                         data[name] = value;
                     }
                 }, this);
@@ -51,13 +51,58 @@ define(["sprout/util", "sprout/base", "sprout/pubsub"], function (_, base, pubsu
         }
     }
 
+    function reportError (error, action)
+    {
+        try {
+            var err = {
+                exception: error,
+                info: {
+                    action: action,
+                    componentName: this.name,
+                    functionName: error.functionName,
+                    component: this
+                }
+            };
+
+            if (err.info.component) {
+                delete err.info.component.app;
+            }
+
+            pubsub.publish('error', err, this);
+        }
+        catch (ex) {}
+    }
+
+    function exceptionWrap (func, name)
+    {
+        return function () {
+            try {
+                func.apply(this, arguments);
+            }
+            catch (ex) {
+                reportError.call(this, _.extend(ex, {
+                    functionName: name
+                }), 'component errored');
+            }
+        };
+    }
+
     /**
      * @class component
      * Components are modules that run on a page. They can be started, stopped, and restarted in an application. Components are the pieces of an application that make it unique.
      * The component object is meant to be inherited from. Components should be started in an application by using the application object.
      * @extends base
      */
-	return base.extend({
+    return base.extend({
+        extend: function (members)
+        {
+            _.each(_.functions(members), function (name) {
+                members[name] = exceptionWrap(members[name], name);
+            });
+
+            return base.extend.call(this, members);
+        },
+
         /**
          * Starts up a component on a page. Child component objects should override this method to define its start up logic.
          * @param {Object} resources
@@ -69,7 +114,7 @@ define(["sprout/util", "sprout/base", "sprout/pubsub"], function (_, base, pubsu
 
             if (this.settings) {
                 this.set(loadSettings.call(this));
-                this.after("change", afterAttributeChanged, this);
+                this.after('change', afterAttributeChanged, this);
             }
         },
 
@@ -122,24 +167,27 @@ define(["sprout/util", "sprout/base", "sprout/pubsub"], function (_, base, pubsu
 
         failed: function (error)
         {
-            try {
-                var err = {
-                    exception: error,
-                    info: {
-                        action: "component failed",
-                        component: this
-                    }
-                };
+            // TODO: this puts the component into a failed state. An Application object can detect that the component is in a failed state and do something about it. (e.g. restart it or report an error)
+            reportError.call(this, error, 'component failed');
 
-                if (err.info.component) {
-                    delete err.info.component.app;
-                }
+            // try {
+            //     var err = {
+            //         exception: error,
+            //         info: {
+            //             action: "component failed",
+            //             component: this
+            //         }
+            //     };
 
-                // TODO: this puts the component into a failed state. An Application object can detect that the component is in a failed state and do something about it. (e.g. restart it or report an error)
-                pubsub.publish("error", err, this);
-            }
-            catch (ex) {
-            }
+            //     if (err.info.component) {
+            //         delete err.info.component.app;
+            //     }
+
+            //     // TODO: this puts the component into a failed state. An Application object can detect that the component is in a failed state and do something about it. (e.g. restart it or report an error)
+            //     pubsub.publish("error", err, this);
+            // }
+            // catch (ex) {
+            // }
         }
-	});
+    });
 });
