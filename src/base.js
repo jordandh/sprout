@@ -68,7 +68,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                 setter, handler, callback;
             
             // Validate the value
-            if (_.isFunction(validator) && !validator(newValue, name)) {
+            if (_.isFunction(validator) && !validator.call(this, newValue, name)) {
                 this.fire("attributeInvalidated", { name: name, newValue: newValue, oldValue: oldValue });
                 return false;
             }
