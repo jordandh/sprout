@@ -62,7 +62,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
             }
             return instance;
         },
-        
+
         /**
          * Initializes the model.
          */
@@ -71,7 +71,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
             base.constructor.call(this);
             this.set("cid", _.uniqueId("c"), { force: true });
         },
-        
+
         /**
          * The attributes for the model.
          * @property
@@ -84,10 +84,11 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
              * @readOnly
              */
             cid: {
-                readOnly: true
+                readOnly: true,
+                enum: false
             }
         },
-        
+
         /**
          * The root url for this model's resource.
          * @property
@@ -103,7 +104,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
         {
             return JSON.stringify(this.toJSON());
         },
-        
+
         /**
          * Returns an object of the model's attributes for JSON stringification. The results of this function can be used as the argument for model.parse.
          * @return {Object} Returns an object of the model's attributes for JSON stringification.
@@ -111,10 +112,12 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
         toJSON: function ()
         {
             var json = {};
-            
+
             _.each(this.get(), function (value, name) {
-                // Do not add all attributes to the json object
-                if (name !== "cid" && name !== "destroyed" && name !== "plugins") {
+                var attribute = this.getAttribute(name);
+
+                // Default is for enum to be true but it is not actually set on the attribute so check for false
+                if (!attribute || attribute.enum !== false) {
                     if (model.isPrototypeOf(value)) {
                         json[name] = value.toJSON();
                     }
@@ -122,11 +125,11 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
                         json[name] = _.clone(value);
                     }
                 }
-            });
-            
+            }, this);
+
             return json;
         },
-        
+
         /**
          * Parses a JSON object representation of the model's attributes. The result of model.toJSON can be used as the argument for this function.
          * @param {Object} json The JSON object of this model's attributes.
@@ -137,7 +140,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
 
             _.each(json, function (value, name) {
                 var attribute = this.getAttribute(name);
-                
+
                 if (attribute && (attribute.model || attribute.collection)) {
                     valueChanged |= this.set(name, (attribute.model || attribute.collection).create(value));
                 }
@@ -150,7 +153,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
                 this.fire("update");
             }
         },
-        
+
         /**
          * Creates a shallow-copied clone. Caller of clone is responsible for releasing the cloned model.
          * @return {Boolean} Returns a shallow-copied clone of this model.

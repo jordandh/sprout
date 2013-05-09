@@ -535,7 +535,8 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                  */
                 destroyed: {
                     value: false,
-                    readOnly: true
+                    readOnly: true,
+                    enum: false
                 },
                 /**
                  * @cfg {Array} plugins The plugins attached to the instance of this object.
@@ -543,7 +544,8 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                  * @readOnly
                  */
                 plugins: {
-                    readOnly: true
+                    readOnly: true,
+                    enum: false
                 }
             },
 
