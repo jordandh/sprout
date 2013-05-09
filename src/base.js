@@ -2,21 +2,127 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
     "use strict";
 
     var rgxNumber = /^\d+$/,
+        invokeBindHandler = function (handler, context, oldValue, newValue)
+        {
+            try {
+                handler.call(context, {
+                    name: 'bind',
+                    info: { oldValue: oldValue, newValue: newValue },
+                    src: this
+                });
+            }
+            catch (ex) {
+                pubsub.publish("error", {
+                    exception: ex,
+                    info: {
+                        handler: handler,
+                        context: context
+                    }
+                }, this);
+            }
+        },
+        afterChainedListenerValueChanged = function (eventInfo, nameChain, e)
+        {
+            var oldValue = e.info.oldValue,
+                newValue = e.info.newValue,
+                oldBoundValue, newBoundValue;
+
+            // Unbind old value
+            if (nameChain.length > 0 && oldValue) {
+                oldValue.unbind(nameChain, eventInfo.handler, eventInfo.context);
+                oldBoundValue = oldValue.get(nameChain);
+            }
+
+            // Rebind new value
+            if (nameChain.length > 0 && newValue) {
+                newValue.bind(nameChain, eventInfo.handler, eventInfo.context);
+                newBoundValue = newValue.get(nameChain);
+            }
+
+            if (nameChain.length === 0) {
+                oldBoundValue = oldValue;
+                newBoundValue = newValue;
+            }
+
+            // Invoke the handler because a change occurred
+            invokeBindHandler.call(this, eventInfo.handler, eventInfo.context, oldBoundValue, newBoundValue);
+        },
+        /*
+         * addChainedListener
+         */
+        addChainedListener = function (name, nameChain, handler, context)
+        {
+            var value = this.get(name),
+                listener, event, eventInfo;
+
+            // Setup the event state
+            event = this.bindEvents[name] || { after: [] };
+            this.bindEvents[name] = event;
+
+            eventInfo = {
+                handler: handler,
+                context: context,
+                name: name,
+                nameChain: nameChain
+            };
+
+            // Listen to the value changing
+            eventInfo.listener = _.bind(afterChainedListenerValueChanged, this, eventInfo, nameChain);
+            this.after(name + 'Change', eventInfo.listener);
+
+            // Bind the next item in the chain
+            if (nameChain.length > 0) {
+                if (value) {
+                    value.bind(nameChain, handler, context);
+                }
+            }
+
+            // Store the event state
+            event.after.push(eventInfo);
+        },
+        /*
+         * removeChainedListener
+         */
+        removeChainedListener = function (name, nameChain, handler, context)
+        {
+            var event, value;
+
+            if (this.bindEvents) {
+                event = this.bindEvents[name];
+
+                if (_.isObject(event)) {
+                    _.remove(event.after, function (info) {
+                        if (info.handler === handler && info.context === context) {
+                            this.detachAfter(name + 'Change', info.listener);
+                            return true;
+                        }
+                    }, this);
+                }
+            }
+
+            // Unbind the next item in the chain
+            if (nameChain.length > 0) {
+                value = this.get(name);
+                if (value) {
+                    value.unbind(nameChain, handler, context);
+                }
+            }
+        },
         /*
          * addListener
          */
         addListener = function (type, name, handler, context)
         {
             name = name.toLowerCase();
-            
+
             var event = this.events[name] || {
                 before: [],
                 on: [],
                 after: []
             };
-            
+
             this.events[name] = event;
-            
+
             event[type].push({
                 handler: handler,
                 context: context
@@ -29,7 +135,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
         {
             if (this.events) {
                 var event = this.events[name.toLowerCase()];
-                
+
                 if (_.isObject(event)) {
                     _.remove(event[type], function (info) {
                         return info.handler === handler && info.context === context;
@@ -66,15 +172,15 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
         {
             var validator = attribute.validator,
                 setter, handler, callback;
-            
+
             // Validate the value
             if (_.isFunction(validator) && !validator.call(this, newValue, name)) {
                 this.fire("attributeInvalidated", { name: name, newValue: newValue, oldValue: oldValue });
                 return false;
             }
-            
+
             setter = attribute.set;
-            
+
             // Set the value
             if (_.isFunction(setter)) {
                 newValue = setter.call(this, newValue, oldValue, name);
@@ -82,15 +188,15 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     return false;
                 }
             }
-            
+
             this.values[name] = newValue;
-            
+
             handler = attribute.handler || this;
             callback = handler[name + "Changed"];
             if (_.isFunction(callback)) {
                 callback.call(handler, newValue, oldValue);
             }
-            
+
             return true;
         },
         /*
@@ -108,14 +214,14 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
         getAttributes = function ()
         {
             var attributes = {};
-            
+
             // Grab the values for each attribute in the prototype chain starting from the bottom up
             _.each(_.prototypes(this).reverse(), function (obj) {
                 _.each(obj.attributes, function (attribute, name) {
                     attributes[name] = attribute;
                 });
             });
-            
+
             return attributes;
         },
         /*
@@ -132,11 +238,11 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     return getter.call(this, name);
                 }
             }
-            
+
             if (this.values.hasOwnProperty(name)) {
                 return this.values[name];
             }
-            
+
             if (attribute) {
                 return attribute.value;
             }
@@ -156,19 +262,19 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             var attribute = this.getAttribute(name) || {},
                 valueChanged = false,
                 oldValue, event1, event2, e;
-            
+
             options = options || {};
             _.defaults(options, {
                 silent: false,
                 force: false
             });
-            
+
             if (_.isUndefined(attribute) || (attribute.readOnly && !options.force)) {
                 return false;
             }
-            
+
             oldValue = getValue.call(this, name);
-            
+
             if (oldValue !== value) {
                 if (!options.silent) {
                     //valueChanged = fireAttributeChangeEvents.call(this, attribute, name, oldValue, value);
@@ -178,7 +284,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     valueChanged = changeAttribute.call(this, attribute, name, oldValue, value);
                 }
             }
-            
+
             return valueChanged;
         },
         /*
@@ -295,14 +401,14 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             {
                 var instance = _.create(this);
                 instance.constructor.apply(instance, arguments);
-                
+
                 if (attributes) {
                     instance.set(attributes);
                 }
-                
+
                 return instance;
             },
-            
+
             /**
              * Creates a new object that inherits from this object.
              * @param {Object} members A key/value hash of methods and properties that are added to the new object.
@@ -348,7 +454,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
 
                 return proxy;
             },
-            
+
             /**
              * Initializes the object.
              */
@@ -359,11 +465,12 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     plugins: {}
                 };
                 this.events = {};
+                this.bindEvents = {};
 
                 // Loop through all the attributes and setup any dependencies for computable attributes
                 setupAttributes.call(this, getAttributes.call(this));
             },
-            
+
             /**
              * Deinitializes the object.
              */
@@ -379,7 +486,14 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                 _.each(this.get("plugins"), function (plugin) {
                     plugin.destroy();
                 });
-                
+
+                // Unbind any bindEvents
+                _.each(this.bindEvents, function (event) {
+                    _.each(event.after, function (info) {
+                        this.unbind(info.name + '.' + info.nameChain, info.handler, info.context);
+                    }, this);
+                }, this);
+
                 // Loop through all values that have been defined as attributes and delete them
                 _.each(getAttributes.call(this), function (attribute, name) {
                     if (this.values.hasOwnProperty(name)) {
@@ -393,9 +507,10 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                         delete this.values[name];
                     }
                 }, this);
-                
+
                 this.attributes = null;
                 this.events = null;
+                this.bindEvents = null;
                 this.values = {
                     destroyed: true
                 };
@@ -405,7 +520,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
              * Support for non-ES5 browsers
              */
             prototypeObject: Object.prototype,
-            
+
             /**
              * The attributes for the object.
              * @property
@@ -431,7 +546,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     readOnly: true
                 }
             },
-            
+
             /**
              * Destroys the object causing its destructor to be called.
              */
@@ -440,12 +555,12 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                 if (this.get("destroyed")) {
                     throw new Error("This object has already been destroyed.");
                 }
-                
+
                 this.fire("destroy", null, function () {
                     this.destructor();
                 });
             },
-            
+
             /**
              * Adds a plugin to this object. Only one instance of a plugin can be attached to an object at a time. Any attempts to attach the same plugin multiple times will be ignored.
              * @param {Object} plugin A plugin object to create an instance of and attach to this object.
@@ -454,13 +569,13 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             {
                 this.fire("plug", { plugin: plugin }, function (e) {
                     var plugins = this.get("plugins");
-                    
+
                     if (_.isUndefined(plugins[e.info.plugin.name])) {
                         plugins[e.info.plugin.name] = e.info.plugin.create(this);
                     }
                 });
             },
-            
+
             /**
              * Removes a plugin from this object.
              * @param {Object} plugin A plugin object to detach from this object.
@@ -469,14 +584,14 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             {
                 this.fire("unplug", { plugin: plugin }, function (e) {
                     var plugins = this.get("plugins");
-                    
+
                     if (!_.isUndefined(plugins[e.info.plugin.name])) {
                         plugins[e.info.plugin.name].destroy();
                         delete plugins[e.info.plugin.name];
                     }
                 });
             },
-            
+
             /**
              * Sets the value of one or more attributes. This function has two signatures (name, value, options) and (attributes, options).
              * @param {String} name The name of the attribute to set.
@@ -491,7 +606,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             set: function (name)
             {
                 var options;
-                
+
                 if (_.isObject(name)) {
                     options = arguments[1];
                     _.each(name, function (value, name) {
@@ -502,7 +617,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     return setAttribute.call(this, name, arguments[1], arguments[2]);
                 }
             },
-            
+
             /**
              * Retrieves the value of an attribute.
              * @param {String} name The name of the attribute.
@@ -512,11 +627,11 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             {
                 var names = _.isString(name) ? name.split(".") : null,
                     attribute, value, values;
-                
+
                 if (names && names.length > 1) {
                     name = names.shift();
                     value = this.get(name);
-                    
+
                     if (base.isPrototypeOf(value)) {
                         return value.get(names.join("."));
                     }
@@ -530,7 +645,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                             values[name] = attribute.value;
                         });
                     });
-                    
+
                     // Add the values unique to this instance and return the result
                     return _.extend(values, this.values);
                 }
@@ -569,7 +684,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                 _.extend(this.attributes, attributes);
                 setupAttributes.call(this, attributes);
             },
-            
+
             /**
              * Retrieves an attribute that belongs to this object.
              * @param {String} name The name of the attribute.
@@ -578,13 +693,13 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             getAttribute: function (name)
             {
                 var attribute;
-                
+
                 // Move down the prototype chain searching for the attribute
                 _.all(_.prototypes(this), function (obj) {
                     // If this object in the chain has the attribute then end the search
                     if (obj.hasOwnProperty("attributes") && _.isObject(obj.attributes)) {
                         attribute = obj.attributes[name];
-                        
+
                         if (attribute) {
                             return false;
                         }
@@ -592,7 +707,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
 
                     return true;
                 });
-                
+
                 return attribute;
             },
 
@@ -641,7 +756,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     event2 = this.events.change,
                     valueChanged = false,
                     e;
-                
+
                 if (_.isObject(event1) || _.isObject(event2)) {
                     // Before handlers
                     e = {
@@ -651,19 +766,19 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                         preventDefault: false
                     };
                     fireAttributeChange.call(this, "before", e, event1);
-                    
+
                     e.name = "change";
                     fireAttributeChange.call(this, "before", e, event2);
-                    
+
                     if (!e.preventDefault) {
                         valueChanged = changeAttribute.call(this, attribute, name, oldValue, e.info.newValue);
-                        
+
                         // On handlers
                         e.name = eventName;
                         fireAttributeChange.call(this, "on", e, event1);
                         e.name = "change";
                         fireAttributeChange.call(this, "on", e, event2);
-                        
+
                         // After handlers
                         e.name = eventName;
                         fireAttributeChange.call(this, "after", e, event1);
@@ -677,7 +792,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
 
                 return valueChanged;
             },
-            
+
             /**
              * Fires an event notifying each listener. The defaultAction and preventedAction functions are normally passed one argument: the event object that represents the event.
              * If async is true then a function is passed to the defaultAction function as the second parameter. Calling this function will trigger the after event.
@@ -705,11 +820,11 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                         src: this,
                         preventDefault: false
                     };
-                
+
                 if (_.isObject(event)) {
                     // Before handlers
                     fire.call(this, "before", e, event);
-                    
+
                     if (e.preventDefault) {
                         if (_.isFunction(preventedAction)) {
                             preventedAction.call(this, e);
@@ -718,7 +833,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     else {
                         // On handlers
                         fire.call(this, "on", e, event);
-                        
+
                         if (_.isFunction(defaultAction)) {
                             defaultAction.call(this, e, async ? _.bind(function () { fire.call(this, "after", e, event); }, this) : void 0);
                         }
@@ -735,7 +850,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     }
                 }
             },
-            
+
             /**
              * Attaches a callback to an event that is called before the event's default action occurs. The callback function is passed an event object:
              * <pre><code>
@@ -757,7 +872,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             {
                 addListener.call(this, "before", name, handler, context);
             },
-            
+
             /**
              * Attaches a callback to an event that is called before the event's default action occurs. The callback function is passed an event object:
              * <pre><code>
@@ -777,7 +892,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             {
                 addListener.call(this, "on", name, handler, context);
             },
-            
+
             /**
              * Attaches a callback to an event that is called after the event's default action occurs. The callback function is passed an event object:
              * <pre><code>
@@ -797,7 +912,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             {
                 addListener.call(this, "after", name, handler, context);
             },
-            
+
             /**
              * Detaches a callback from an event that was attached using base.before.
              * @param {String} name The name of the event to detach from.
@@ -808,7 +923,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             {
                 removeListener.call(this, "before", name, handler, context);
             },
-            
+
             /**
              * Detaches a callback from an event that was attached using base.on.
              * @param {String} name The name of the event to detach from.
@@ -819,7 +934,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             {
                 removeListener.call(this, "on", name, handler, context);
             },
-            
+
             /**
              * Detaches a callback from an event that was attached using base.after.
              * @param {String} name The name of the event to detach from.
@@ -829,8 +944,36 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             detachAfter: function (name, handler, context)
             {
                 removeListener.call(this, "after", name, handler, context);
+            },
+
+            bind: function (name, handler, context)
+            {
+                var names = name.split(".");
+
+                // if (names && names.length > 1) {
+                //     addChainedListener.call(this, names.shift(), names.join("."), name, handler, context);
+                // }
+                // else {
+                //     addListener.call(this, "after", name, handler, context);
+                // }
+
+                addChainedListener.call(this, names.shift(), names.join("."), handler, context);
+            },
+
+            unbind: function (name, handler, context)
+            {
+                var names = name.split(".");
+
+                // if (names && names.length > 1) {
+                //     removeChainedListener.call(this, names.shift(), names.join("."), name, handler, context);
+                // }
+                // else {
+                //     removeListener.call(this, "after", name, handler, context);
+                // }
+
+                removeChainedListener.call(this, names.shift(), names.join("."), handler, context);
             }
         };
-    
+
     return base;
 });

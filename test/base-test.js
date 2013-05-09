@@ -1218,6 +1218,404 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 			assertObject("the proxy object does not have a testName attribute after set", c.getAttribute("testName"));
 
 			assertSame("the proxy object has a testName attribute value after set", "foobar", c.get("testName"));
+		},
+
+		/*
+		 * bind tests
+		 */
+		"test base.bind with short chained attribute": function () {
+			expectAsserts(19);
+
+			var error = null,
+				event, eventInfo;
+			
+			var b = Base.create({
+				name: 'Picard'
+			});
+
+			var a = Base.create({
+				person: b
+			});
+
+			var handler = function (e) {
+				try {
+					assertNotSame("name has not changed", e.info.oldValue, e.info.newValue);
+					assertSame("old value is incorrect", 'Picard', e.info.oldValue);
+					assertSame("new value is incorrect", 'Ryker', e.info.newValue);
+				}
+				catch (ex) {
+					error = ex;
+				}
+			};
+			
+			a.bind("person.name", handler);
+
+			// Check event binding data for person
+			event = a.bindEvents["person"];
+			assertObject('person event does not exist', event);
+			assertSame('person event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('person eventInfo does not exist', eventInfo);
+			assertSame('person eventInfo.handler is incorrect', handler, eventInfo.handler);
+
+			event = a.events["personchange"];
+			assertObject('personchange event does not exist', event);
+			assertSame('personchange event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('personchange eventInfo does not exist', eventInfo);
+			assertFunction('personchange eventInfo.handler is incorrect', eventInfo.handler);
+
+			// Check event binding data for person.name
+			event = a.get('person').bindEvents["name"];
+			assertObject('person.name event does not exist', event);
+			assertSame('person.name event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('person.name eventInfo does not exist', eventInfo);
+			assertSame('person.name eventInfo.handler is incorrect', handler, eventInfo.handler);
+
+			event = a.get('person').events["namechange"];
+			assertObject('person.namechange event does not exist', event);
+			assertSame('person.namechange event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('person.namechange eventInfo does not exist', eventInfo);
+			assertFunction('person.namechange eventInfo.handler is incorrect', eventInfo.handler);
+
+			// Update the name value
+			b.set('name', 'Ryker');
+
+			if (error !== null) {
+				throw error;
+			}
+		},
+
+		"test base.bind with multiple short chained attribute bindings": function () {
+			expectAsserts(39);
+
+			var error = null,
+				event, eventInfo;
+			
+			var b = Base.create({
+				name: 'Picard'
+			});
+
+			var a = Base.create({
+				person: b
+			});
+
+			var handler = function (e) {
+				try {
+					assertNotSame("name has not changed", e.info.oldValue, e.info.newValue);
+					assertSame("old value is incorrect", 'Picard', e.info.oldValue);
+					assertSame("new value is incorrect", 'Ryker', e.info.newValue);
+				}
+				catch (ex) {
+					error = ex;
+				}
+			};
+
+			var handler2 = function (e) {
+				try {
+					assert("in handler2", true);
+					assertNotSame("name has not changed", e.info.oldValue, e.info.newValue);
+					assertSame("old value is incorrect", 'Picard', e.info.oldValue);
+					assertSame("new value is incorrect", 'Ryker', e.info.newValue);
+				}
+				catch (ex) {
+					error = ex;
+				}
+			};
+			
+			a.bind("person.name", handler);
+
+			// Check event binding data for person
+			event = a.bindEvents["person"];
+			assertObject('person event does not exist', event);
+			assertSame('person event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('person eventInfo does not exist', eventInfo);
+			assertSame('person eventInfo.handler is incorrect', handler, eventInfo.handler);
+
+			event = a.events["personchange"];
+			assertObject('personchange event does not exist', event);
+			assertSame('personchange event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('personchange eventInfo does not exist', eventInfo);
+			assertFunction('personchange eventInfo.handler is incorrect', eventInfo.handler);
+
+			// Check event binding data for person.name
+			event = a.get('person').bindEvents["name"];
+			assertObject('person.name event does not exist', event);
+			assertSame('person.name event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('person.name eventInfo does not exist', eventInfo);
+			assertSame('person.name eventInfo.handler is incorrect', handler, eventInfo.handler);
+
+			event = a.get('person').events["namechange"];
+			assertObject('person.namechange event does not exist', event);
+			assertSame('person.namechange event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('person.namechange eventInfo does not exist', eventInfo);
+			assertFunction('person.namechange eventInfo.handler is incorrect', eventInfo.handler);
+
+			// Add another binding
+			a.bind("person.name", handler2);
+
+			// Check event binding data for person
+			event = a.bindEvents["person"];
+			assertObject('person event does not exist', event);
+			assertSame('person event does not have correct number of bound handlers', 2, event.after.length);
+
+			eventInfo = event.after[1];
+			assertObject('person eventInfo does not exist', eventInfo);
+			assertSame('person eventInfo.handler is incorrect', handler2, eventInfo.handler);
+
+			event = a.events["personchange"];
+			assertObject('personchange event does not exist', event);
+			assertSame('personchange event does not have correct number of bound handlers', 2, event.after.length);
+
+			eventInfo = event.after[1];
+			assertObject('personchange eventInfo does not exist', eventInfo);
+			assertFunction('personchange eventInfo.handler is incorrect', eventInfo.handler);
+
+			// Check event binding data for person.name
+			event = a.get('person').bindEvents["name"];
+			assertObject('person.name event does not exist', event);
+			assertSame('person.name event does not have correct number of bound handlers', 2, event.after.length);
+
+			eventInfo = event.after[1];
+			assertObject('person.name eventInfo does not exist', eventInfo);
+			assertSame('person.name eventInfo.handler is incorrect', handler2, eventInfo.handler);
+
+			event = a.get('person').events["namechange"];
+			assertObject('person.namechange event does not exist', event);
+			assertSame('person.namechange event does not have correct number of bound handlers', 2, event.after.length);
+
+			eventInfo = event.after[1];
+			assertObject('person.namechange eventInfo does not exist', eventInfo);
+			assertFunction('person.namechange eventInfo.handler is incorrect', eventInfo.handler);
+
+			// Update the name value
+			b.set('name', 'Ryker');
+
+			if (error !== null) {
+				throw error;
+			}
+		},
+
+		"test base.bind with long chained attribute": function () {
+			expectAsserts(3);
+
+			var error = null;
+
+			var c = Base.create({
+				name: 'Picard'
+			});
+			
+			var b = Base.create({
+				captain: c
+			});
+
+			var a = Base.create({
+				ship: b
+			});
+			
+			a.bind("ship.captain.name", function (e) {
+				try {
+					assertNotSame("name has not changed", e.info.oldValue, e.info.newValue);
+					assertSame("old value is incorrect", 'Picard', e.info.oldValue);
+					assertSame("new value is incorrect", 'Ryker', e.info.newValue);
+				}
+				catch (ex) {
+					error = ex;
+				}
+			});
+
+			c.set('name', 'Ryker');
+
+			if (error !== null) {
+				throw error;
+			}
+		},
+
+		"test base.bind with upchain change on chained attribute": function () {
+			expectAsserts(5);
+
+			var error = null,
+				event, eventInfo;
+			
+			var b = Base.create({
+				name: 'Picard'
+			});
+
+			var c = Base.create({
+				name: 'Ryker'
+			});
+
+			var a = Base.create({
+				person: b
+			});
+			
+			a.bind("person.name", function (e) {
+				try {
+					assertNotSame("name has not changed", e.info.oldValue, e.info.newValue);
+					assertSame("old value is incorrect", 'Picard', e.info.oldValue);
+					assertSame("new value is incorrect", 'Ryker', e.info.newValue);
+				}
+				catch (ex) {
+					error = ex;
+				}
+			});
+
+			a.set('person', c);
+
+			event = b.events["namechange"];
+			assertObject('namechange event does not exist', event);
+			assertSame('namechange event does not have correct number of bound handlers', 0, event.after.length);
+
+			if (error !== null) {
+				throw error;
+			}
+		},
+
+		/*
+		 * unbind tests
+		 */
+		"test base.unbind": function () {
+			expectAsserts(8);
+
+			var error = null,
+				event;
+			
+			var b = Base.create({
+				name: 'Picard'
+			});
+
+			var a = Base.create({
+				person: b
+			});
+
+			var handler = function (e) {};
+			
+			a.bind("person.name", handler);
+			a.unbind("person.name", handler);
+
+			// Check event binding data for person
+			event = a.bindEvents["person"];
+			assertObject('person event does not exist', event);
+			assertSame('person event does not have correct number of bound handlers', 0, event.after.length);
+
+			event = a.events["personchange"];
+			assertObject('personchange event does not exist', event);
+			assertSame('personchange event does not have correct number of bound handlers', 0, event.after.length);
+
+			// Check event binding data for person.name
+			event = a.get('person').bindEvents["name"];
+			assertObject('person.name event does not exist', event);
+			assertSame('person.name event does not have correct number of bound handlers', 0, event.after.length);
+
+			event = a.get('person').events["namechange"];
+			assertObject('person.namechange event does not exist', event);
+			assertSame('person.namechange event does not have correct number of bound handlers', 0, event.after.length);
+
+			if (error !== null) {
+				throw error;
+			}
+		},
+
+		"test base.unbind with multiple binds of the same name": function () {
+			expectAsserts(16);
+
+			var error = null,
+				event;
+			
+			var b = Base.create({
+				name: 'Picard'
+			});
+
+			var a = Base.create({
+				person: b
+			});
+
+			var handler = function (e) {};
+			var handler2 = function (e) {};
+			
+			a.bind("person.name", handler);
+			a.bind("person.name", handler2);
+			a.unbind("person.name", handler);
+
+			// Check event binding data for person
+			event = a.bindEvents["person"];
+			assertObject('person event does not exist', event);
+			assertSame('person event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('person eventInfo does not exist', eventInfo);
+			assertSame('person eventInfo.handler is incorrect', handler2, eventInfo.handler);
+
+			event = a.events["personchange"];
+			assertObject('personchange event does not exist', event);
+			assertSame('personchange event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('personchange eventInfo does not exist', eventInfo);
+			assertFunction('personchange eventInfo.handler is incorrect', eventInfo.handler);
+
+			// Check event binding data for person.name
+			event = a.get('person').bindEvents["name"];
+			assertObject('person.name event does not exist', event);
+			assertSame('person.name event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('person.name eventInfo does not exist', eventInfo);
+			assertSame('person.name eventInfo.handler is incorrect', handler2, eventInfo.handler);
+
+			event = a.get('person').events["namechange"];
+			assertObject('person.namechange event does not exist', event);
+			assertSame('person.namechange event does not have correct number of bound handlers', 1, event.after.length);
+
+			eventInfo = event.after[0];
+			assertObject('person.namechange eventInfo does not exist', eventInfo);
+			assertFunction('person.namechange eventInfo.handler is incorrect', eventInfo.handler);
+
+			if (error !== null) {
+				throw error;
+			}
+		},
+
+		"test bound event are removed on destroy": function () {
+			expectAsserts(4);
+
+			var event;
+			
+			var b = Base.create({
+				name: 'Picard'
+			});
+
+			var a = Base.create({
+				person: b
+			});
+
+			var handler = function (e) {};
+			
+			a.bind("person.name", handler);
+			a.destroy();
+
+			// Check event binding data for person.name
+			event = b.bindEvents["name"];
+			assertObject('person.name event does not exist', event);
+			assertSame('person.name event does not have correct number of bound handlers', 0, event.after.length);
+
+			event = b.events["namechange"];
+			assertObject('person.namechange event does not exist', event);
+			assertSame('person.namechange event does not have correct number of bound handlers', 0, event.after.length);
 		}
 	};
 });
