@@ -70,7 +70,30 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 				fireAfter();
 			}, null, true);
 		},
-		
+
+		"test base.fire calls all handlers when a handler is detached during the fire": function () {
+			expectAsserts(3);
+
+			var c = Base.create();
+
+			var handler2 = function (e) {
+				assert("foo does not equal bar", e.info.foo === "bar");
+				c.detachAfter("test", handler2);
+			};
+
+			c.after("test", function (e) {
+				assert("foo does not equal bar", e.info.foo === "bar");
+			});
+
+			c.after("test", handler2);
+
+			c.after("test", function (e) {
+				assert("foo does not equal bar", e.info.foo === "bar");
+			});
+
+			c.fire("test", { foo: "bar" });
+		},
+
 		"test base.before": function () {
 			expectAsserts(1);
 			

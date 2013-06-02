@@ -446,6 +446,8 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                 else {
                     this.fire("sort", { options: options }, sorter);
                 }
+
+                return this;
             },
 
             /**
@@ -462,7 +464,7 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                     throw new Error("A comparator function must be defined to sort a collection.");
                 }
 
-                this.sortBy(this.comparator, options);
+                return this.sortBy(this.comparator, options);
             }
         }),
         /*

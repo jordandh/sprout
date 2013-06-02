@@ -252,14 +252,14 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
             return matchRoutes.call(this, path, this.routes);
         },
 
-        navigate: function (path)
+        navigate: function (path, title)
         {
             if (!_.startsWith(path, this.rootUrl)) {
                 path = _.joinPaths('/', this.rootUrl, path);
             }
 
             if (history.enabled) {
-                history.pushState(null, null, path);
+                history.pushState(null, title || document.title, path);
                 return true;
             }
             else {

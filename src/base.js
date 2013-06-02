@@ -148,7 +148,8 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
          */
         fire = function (type, e, event)
         {
-            _.each(event[type], function (eventInfo) {
+            // Clone the array of events handler objects in case some event handlers are removed during the fire event
+            _.each(_.clone(event[type]), function (eventInfo) {
                 try {
                     eventInfo.handler.call(eventInfo.context, e);
                 }

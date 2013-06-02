@@ -132,6 +132,20 @@ define(["underscore", "underscore.string"], function (_, _s) {
         },
 
         /**
+         * Returns the possessive form of a string.
+         * @param {String} str The string to make possessive.
+         * @return {String} Returns the possessive form of a string.
+         */
+        possessive: function (str)
+        {
+            if (str) {
+                return str + (str[str.length - 1] === 's' ? "'" : "'s");
+            }
+
+            return str;
+        },
+
+        /**
          * Returns the prototype chain of an object. The first item in the array is the object and subsequent values are the prototypes up the chain.
          * @param {Object} obj An object to get the prototype chain of.
          * @return {Array} Returns the prototype chain of the object.
@@ -196,7 +210,7 @@ define(["underscore", "underscore.string"], function (_, _s) {
                     });
                 }
             }
-            
+
             return obj;
         },
 
@@ -210,14 +224,14 @@ define(["underscore", "underscore.string"], function (_, _s) {
         {
             return function (items, options) {
                 options = options || {};
-                
+
                 if (items) {
                     items = _.isArray(items) ? items : [items];
                 }
                 else {
                     items = [];
                 }
-                
+
                 if (options.silent) {
                     modify.call(this, items, options);
                 }
