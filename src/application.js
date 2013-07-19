@@ -29,7 +29,8 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
 
         require([component.path], function (module) {
             try {
-                var route = component.route;
+                var route = component.route,
+                    startMessage = component.start_message;
 
                 component.module = module.create();
 
@@ -39,6 +40,7 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                         route = [route];
                     }
 
+                    // If the component should be started up from a matching route
                     if (_.isArray(route)) {
                         component.routeNames = [];
 
@@ -63,6 +65,16 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                             });
                         });
                     }
+                    // Else if the component should be started up from a message being published
+                    else if (_.isString(startMessage)) {
+                        pubsub.subscribe(startMessage, function () {
+                            // Start up the component
+                            if (!component.appConfig.started) {
+                                component.start();
+                            }
+                        });
+                    }
+                    // Else start the component now
                     else {
                         component.start();
                     }

@@ -378,6 +378,150 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 			assertSame("lastname value is incorrect", "Troy", will.get("lastname"));
 			assertSame("fullname value is incorrect", "William Troy", will.get("fullname"));
 		},
+
+		"test base.attributes uses with deep dependency where last dependency in chain changed": function () {
+			expectAsserts(2);
+
+			var error = null;
+
+			var Zoo = Base.extend({
+				attributes: {
+					name: {
+						value: 'Rodentia'
+					},
+
+					rat: {
+						value: Animal.create({
+							name: 'Dax',
+							type: 'Rat'
+						})
+					},
+
+					ratName: {
+						get: function () {
+							return this.get('name') + "'s rat " + this.get('rat.name')
+						},
+						uses: ['name', 'rat.name']
+					}
+				}
+			});
+
+			var zoo = Zoo.create();
+
+			assertSame('ratName is incorrect after creation', "Rodentia's rat Dax", zoo.get('ratName'));
+
+			zoo.after('ratNameChange', function () {
+				try {
+					assertSame('ratName is incorrect after creation', "Rodentia's rat Zelda", zoo.get('ratName'));
+				}
+				catch (ex) {
+					error = ex;
+				}
+			});
+
+			zoo.get('rat').set('name', 'Zelda');
+
+			if (error !== null) {
+				throw error;
+			}
+		},
+
+		"test base.attributes uses with deep dependency where first dependency in chain changed": function () {
+			expectAsserts(2);
+
+			var error = null;
+
+			var Zoo = Base.extend({
+				attributes: {
+					name: {
+						value: 'Rodentia'
+					},
+
+					rat: {
+						value: Animal.create({
+							name: 'Dax',
+							type: 'Rat'
+						})
+					},
+
+					ratName: {
+						get: function () {
+							return this.get('name') + "'s rat " + this.get('rat.name')
+						},
+						uses: ['name', 'rat.name']
+					}
+				}
+			});
+
+			var zoo = Zoo.create();
+
+			assertSame('ratName is incorrect after creation', "Rodentia's rat Dax", zoo.get('ratName'));
+
+			zoo.after('ratNameChange', function () {
+				try {
+					assertSame('ratName is incorrect after creation', "Rodentia's rat Zelda", zoo.get('ratName'));
+				}
+				catch (ex) {
+					error = ex;
+				}
+			});
+
+			zoo.set('rat', Animal.create({
+				name: 'Zelda',
+				type: 'Rat'
+			}));
+
+			if (error !== null) {
+				throw error;
+			}
+		},
+
+		"test base.attributes uses with deep dependency where first dependency is null": function () {
+			expectAsserts(2);
+
+			var error = null;
+
+			var Zoo = Base.extend({
+				attributes: {
+					name: {
+						value: 'Rodentia'
+					},
+
+					rat: {
+						value: Animal.create({
+							name: 'Dax',
+							type: 'Rat'
+						})
+					},
+
+					ratName: {
+						get: function () {
+							return this.get('name') + "'s rat " + (this.get('rat.name') ? this.get('rat.name') : 'is missing');
+						},
+						uses: ['name', 'rat.name']
+					}
+				}
+			});
+
+			var zoo = Zoo.create();
+
+			assertSame('ratName is incorrect after creation', "Rodentia's rat Dax", zoo.get('ratName'));
+
+			zoo.after('ratNameChange', function () {
+				try {
+					assertSame('ratName is incorrect after creation', "Rodentia's rat is missing", zoo.get('ratName'));
+				}
+				catch (ex) {
+					error = ex;
+				}
+			});
+
+			zoo.set('rat', null);
+
+			if (error !== null) {
+				throw error;
+			}
+		},
 		
 		"test base.attributes handler with <attribute name>Changed function": function () {
 			expectAsserts(5);

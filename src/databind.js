@@ -258,8 +258,10 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
                 delete metaData.listener;
                 delete metaData.model;
             }
-            
-            detachBinder(binder, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1), binderInfo);
+
+            if (viewModel) {
+                detachBinder(binder, viewModel.get(attributeNameChain[1]), attributeNameChain.slice(1), binderInfo);
+            }
         }
     }
 

@@ -53,7 +53,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
         addChainedListener = function (name, nameChain, handler, context)
         {
             var value = this.get(name),
-                listener, event, eventInfo;
+                event, eventInfo;
 
             // Setup the event state
             event = this.bindEvents[name] || { after: [] };
@@ -262,7 +262,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
         {
             var attribute = this.getAttribute(name) || {},
                 valueChanged = false,
-                oldValue, event1, event2, e;
+                oldValue;
 
             options = options || {};
             _.defaults(options, {
@@ -278,7 +278,6 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
 
             if (oldValue !== value) {
                 if (!options.silent) {
-                    //valueChanged = fireAttributeChangeEvents.call(this, attribute, name, oldValue, value);
                     valueChanged = this.fireAttributeChangeEvents(attribute, name, oldValue, value);
                 }
                 else {
@@ -301,7 +300,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
         /*
          * afterDependencyChanged
          */
-        afterDependencyChanged = function (attribute, name, e)
+        afterDependencyChanged = function (attribute, name)
         {
             //fireAttributeChangeEvents.call(this, attribute, name, null, attribute.get.call(this));
             this.fireAttributeChangeEvents(attribute, name, null, attribute.get.call(this));
@@ -629,7 +628,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
             get: function (name)
             {
                 var names = _.isString(name) ? name.split(".") : null,
-                    attribute, value, values;
+                    value, values;
 
                 if (names && names.length > 1) {
                     name = names.shift();
@@ -733,7 +732,14 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
 
                 if (_.isArray(uses)) {
                     _.each(uses, function (dependency) {
-                        this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
+                        var names = dependency.split(".");
+
+                        if (names.length > 1) {
+                            this.bind(dependency, _.bind(afterDependencyChanged, this, attribute, name));
+                        }
+                        else {
+                            this.after(dependency + "Change", _.bind(afterDependencyChanged, this, attribute, name));
+                        }
                     }, this);
                 }
 

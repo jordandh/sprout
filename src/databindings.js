@@ -450,7 +450,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                     metaData.template = info.commentTemplate;
                 }
                 else {
-                    metaData.template = _.trim($(element).html());
+                    metaData.template = metaData.template || _.trim($(element).html());
                     $(element).empty();
                 }
             },
@@ -525,7 +525,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                     metaData.template = info.commentTemplate;
                 }
                 else {
-                    metaData.template = $(element).html();
+                    metaData.template = metaData.template || $(element).html();
                     $(element).empty();
                 }
             },

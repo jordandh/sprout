@@ -1,6 +1,6 @@
 define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
     "use strict";
-    
+
     /**
      * Handler for sync errors.
      * @private
@@ -11,6 +11,15 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
     function onSyncFailed (xhr, status, error)
     {
         this.fire("error", { xhr: xhr, status: _.trim(status), error: _.trim(error) });
+    }
+
+    /**
+     * Handler for a delete via a sync. Sets the deleted attribute on the model to true.
+     * @private
+     */
+    function onDeleted ()
+    {
+        this.set("deleted", true);
     }
 
     /**
@@ -163,21 +172,21 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
             // TODO: may want to do this instead (which would make this a deep copy):
             // return Object.getPrototypeOf(this).create(this.toJSON());
             // This is not the fastest way to do it since it turns everything into JSON just to turn it back into new models.
-            
+
             //var clone = this.super.create();
             //var clone = Object.getPrototypeOf(this).create();
             var clone = _.getPrototypeOf(this).create();
-            
+
             _.each(this.get(), function (value, name) {
                 // Do not copy all attributes to clone
                 if (name !== "cid" && name !== "destroyed" && name !== "plugins") {
                     clone.set(name, value);
                 }
             });
-            
+
             return clone;
         },
-        
+
         /**
          * Returns whether or not this model has been saved to its persistence layer (whether or not this model has an id).
          * @return {Boolean} Returns whether or not this model has been saved to its persistence layer.
@@ -186,7 +195,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
         {
             return this.get("id") === null || _.isUndefined(this.get("id"));
         },
-        
+
         /**
          * Returns the url for this model's resource. The url is constructed using this.rootUrl and the model's id.
          * If the model is new then the url is simply this.rootUrl. If the model is not new then the url is this.rootUrl/<model id>.
@@ -198,10 +207,10 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
             if (this.isNew()) {
                 return this.rootUrl;
             }
-            
+
             return this.rootUrl + (this.rootUrl.charAt(this.rootUrl.length - 1) === "/" ? "" : "/") + encodeURIComponent(this.get("id"));
         },
-        
+
         /**
          * Retrieves a model's attributes from the its resource. The model must have an id for this to retrieve a model from its resource.
          * @param {Object} options Equivalent to the option parameter for jQuery's ajax function.
@@ -213,7 +222,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
         {
             return (this.sync || data.sync)("read", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
         },
-        
+
         /**
          * Saves a model's attributes to its resource. If the model is new then the model is updated on its resource.
          * If the model is not new then the model is created on its resource.
@@ -267,7 +276,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
 
             //return (this.sync || data.sync)(this.isNew() ? "create" : "update", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
         },
-        
+
         /**
          * Deletes a model from the its resource. If this model is in a collection then it will be removed from the collection when deleted from the resource.
          * @param {Object} options Equivalent to the option parameter for jQuery's ajax function.
@@ -277,9 +286,9 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
          */
         erase: function (options)
         {
-            return (this.sync || data.sync)("delete", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
+            return (this.sync || data.sync)("delete", this, options).done(_.bind(onDeleted, this)).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
         }
     });
-    
+
     return model;
 });

@@ -122,8 +122,10 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
                     col;
 
                 if (schema) {
+                    type = type.toLowerCase();
+
                     _.find(schema, function (colSchema, colName) {
-                        if (type === colSchema.type) {
+                        if (type === colSchema.type.toLowerCase()) {
                             col = this.get(colName);
                             return true;
                         }
@@ -143,7 +145,7 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
                 var schema = this.get("schema"),
                     col = collection.create(),
                     colSchema, colModel;
-                
+
                 this.set(name, col);
 
                 if (schema) {
@@ -180,13 +182,15 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
                     var col = this.get(tableName);
 
                     _.each(models, function (modelData) {
-                        // Update an existing model otherwise add as a new model
-                        var mod = col.getById(modelData.id);
-                        if (mod) {
-                            mod.parse(modelData);
-                        }
-                        else {
-                            col.add(modelData);
+                        if (modelData) {
+                            // Update an existing model otherwise add as a new model
+                            var mod = col.getById(modelData.id);
+                            if (mod) {
+                                mod.parse(modelData);
+                            }
+                            else {
+                                col.add(modelData);
+                            }
                         }
                     }, this);
                 }, this);
@@ -230,7 +234,7 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
                 options = options || {};
                 options.type = verb;
                 options.dataType = "json";
-                
+
                 if (!options.url) {
                     options.url = viewModel.url();
                 }
