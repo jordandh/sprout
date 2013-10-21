@@ -2,20 +2,20 @@ define(['sprout/util', 'sprout/purl'], function (_, purl) {
 	'use strict';
 
 	var namedParam = /:\w+/g,
-        splatParam = /\*\w+/g,
-        escapeRegExp = /[-[\]{}()+?.,\\^$|#\s]/g,
-        pathStripper = /^[#\/]/;
+		splatParam = /\*\w+/g,
+		escapeRegExp = /[-[\]{}()+?.,\\^$|#\s]/g,
+		pathStripper = /^[#\/]/;
 
 	function toPathRegExp (path)
-    {
-        return new RegExp('^' + path.replace(escapeRegExp, '\\$&').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)') + '$');
-    }
+	{
+		return new RegExp('^' + path.replace(escapeRegExp, '\\$&').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)') + '$');
+	}
 
 	/**
-     * @class url
-     * Provides functionality for manipulating urls including the querystring, hash, and navigation.
-     * Extends the jQuery-URL-Parser library (also known as purl) with new functionality.
-     */
+	 * @class url
+	 * Provides functionality for manipulating urls including the querystring, hash, and navigation.
+	 * Extends the jQuery-URL-Parser library (also known as purl) with new functionality.
+	 */
 	return function () {
 		var url = purl.apply(this, arguments),
 			purlParam = url.param;
@@ -124,6 +124,47 @@ define(['sprout/util', 'sprout/purl'], function (_, purl) {
 		 */
 		url.match = function (pattern) {
 			return (_.isRegExp(pattern) ? pattern : toPathRegExp(pattern)).test(this.attr('path').replace(pathStripper, ''));
+		};
+
+		url.absolute = function () {
+			var source = this.attr('source');
+
+
+			/* Only accept commonly trusted protocols:
+			 * Only data-image URLs are accepted, Exotic flavours (escaped slash,
+			 * html-entitied characters) are not supported to keep the function fast
+			 */
+			if(/^(https?|file|ftps?|mailto|javascript|data:image\/[^;]{2,9};):/i.test(source)) {
+				return source; // Url is already absolute
+			}
+
+			var base_url = location.href.match(/^(.+)\/?(?:#.+)?$/)[0] + '/';
+
+			if (source.substring(0, 2) === '//') {
+				return location.protocol + source;
+			}
+			else if (source.charAt(0) === '/') {
+				return location.protocol + '//' + location.host + source;
+			}
+			else if (source.substring(0,2) === './') {
+				source = '.' + source;
+			}
+			else if (/^\s*$/.test(source)) {
+				return ''; //Empty = Return nothing
+			}
+			else {
+				source = '../' + source;
+			}
+
+			source = base_url + source;
+
+			while(/\/\.\.\//.test(source = source.replace(/[^\/]+\/+\.\.\//g,"")));
+
+			/* Escape certain characters to prevent XSS */
+			// source = source.replace(/\.$/,"").replace(/\/\./g,"").replace(/"/g,"%22")
+			// 		.replace(/'/g,"%27").replace(/</g,"%3C").replace(/>/g,"%3E");
+
+			return source;
 		};
 
 		return url;

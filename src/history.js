@@ -574,7 +574,7 @@ if (!window.JSON) {
 		console = window.console||undefined, // Prevent a JSLint complain
 		document = window.document, // Make sure we are using the correct document
 		navigator = window.navigator, // Make sure we are using the correct navigator
-		sessionStorage = window.sessionStorage||false, // sessionStorage
+		sessionStorage, // sessionStorage
 		setTimeout = window.setTimeout,
 		clearTimeout = window.clearTimeout,
 		setInterval = window.setInterval,
@@ -583,6 +583,14 @@ if (!window.JSON) {
 		alert = window.alert,
 		History = window.History = window.History||{}, // Public History Object
 		history = window.history; // Old History Object
+
+    try {
+        sessionStorage = window.sessionStorage||false;
+        sessionStorage.setItem('_TEST_', '1');
+        sessionStorage.removeItem('_TEST_');
+    } catch(e) {
+        sessionStorage = false;
+    }
 
 	// MooTools Compatibility
 	JSON.stringify = JSON.stringify||JSON.encode;

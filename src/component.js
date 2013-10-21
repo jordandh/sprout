@@ -1,18 +1,33 @@
 define(['sprout/util', 'sprout/base', 'sprout/pubsub'], function (_, base, pubsub) {
     'use strict';
 
+    function getLocalStorage ()
+    {
+        try {
+            return localStorage;
+        }
+        catch (ex) { /* empty */ }
+    }
+
     function loadSettings ()
     {
-        return _.extend({}, JSON.parse(localStorage[this.settings] || null), JSON.parse(localStorage[this.settings + '-' + this.id] || null));
+        var localStorage = getLocalStorage.call(this);
+
+        if (localStorage) {
+            return _.extend({}, JSON.parse(localStorage[this.settings] || null), JSON.parse(localStorage[this.settings + '-' + this.get('id')] || null));
+        }
+
+        return null;
     }
 
     function afterAttributeChanged (e)
     {
-        var attribute = this.getAttribute(e.info.name),
+        var localStorage = getLocalStorage.call(this),
+            attribute = this.getAttribute(e.info.name),
             data = {},
             storageName;
 
-        if (attribute && attribute.storage) {
+        if (localStorage && attribute && attribute.storage) {
             // If the attribute that was just set is a global storage value
             if (attribute.storage === 'global') {
                 // Then grab all the global storage values to store
@@ -59,14 +74,9 @@ define(['sprout/util', 'sprout/base', 'sprout/pubsub'], function (_, base, pubsu
                 info: {
                     action: action,
                     componentName: this.name,
-                    functionName: error.functionName,
-                    component: this
+                    functionName: error.functionName
                 }
             };
-
-            if (err.info.component) {
-                delete err.info.component.app;
-            }
 
             pubsub.publish('error', err, this);
         }
@@ -77,7 +87,7 @@ define(['sprout/util', 'sprout/base', 'sprout/pubsub'], function (_, base, pubsu
     {
         return function () {
             try {
-                func.apply(this, arguments);
+                return func.apply(this, arguments);
             }
             catch (ex) {
                 reportError.call(this, _.extend(ex, {
@@ -169,25 +179,6 @@ define(['sprout/util', 'sprout/base', 'sprout/pubsub'], function (_, base, pubsu
         {
             // TODO: this puts the component into a failed state. An Application object can detect that the component is in a failed state and do something about it. (e.g. restart it or report an error)
             reportError.call(this, error, 'component failed');
-
-            // try {
-            //     var err = {
-            //         exception: error,
-            //         info: {
-            //             action: "component failed",
-            //             component: this
-            //         }
-            //     };
-
-            //     if (err.info.component) {
-            //         delete err.info.component.app;
-            //     }
-
-            //     // TODO: this puts the component into a failed state. An Application object can detect that the component is in a failed state and do something about it. (e.g. restart it or report an error)
-            //     pubsub.publish("error", err, this);
-            // }
-            // catch (ex) {
-            // }
         }
     });
 });
