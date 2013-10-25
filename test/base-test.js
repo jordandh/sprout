@@ -9,6 +9,10 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 	});
 	
 	return {
+		setUp: function () {
+			localStorage.clear();
+		},
+
 		"test base.constructor": function () {
 			var c = Base.create();
 			assert("c is destroyed", !c.get("destroyed"));
@@ -585,6 +589,262 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 			c.destroy();
 
 			assertObject("attribute value is not on prototype after destroy", Animal.attributes.name.value);
+		},
+
+		"test base.getLocalStorageAttributeKey": function () {
+			var Animal = Base.extend({
+				attributes: {
+					type: {
+						value: "animal"
+					},
+					id: {
+						value: 1
+					},
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create();
+
+			assertSame("age is incorrect value.", a.getLocalStorageAttributeKey("age"), "animal-1-attribute-age");
+
+			a.destroy();
+		},
+
+		"test base attribute.localStorage": function () {
+			var Animal = Base.extend({
+				attributes: {
+					type: {
+						value: "animal"
+					},
+					id: {
+						value: 1
+					},
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create();
+
+			var key = a.getLocalStorageAttributeKey("age");
+
+			assertUndefined("the age attribute already has a value in localStorage", localStorage[key]);
+
+			a.set('age', 12);
+
+			assertSame("the age value in localStorage is incorrect", 12, JSON.parse(localStorage[key]));
+
+			a.destroy();
+		},
+
+		"test base attribute.localStorage idChanged": function () {
+			var Animal = Base.extend({
+				attributes: {
+					type: {
+						value: "animal"
+					},
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create();
+
+			a.set('id', 2);
+
+			var key = a.getLocalStorageAttributeKey("age");
+
+			assertUndefined("the age attribute already has a value in localStorage", localStorage[key]);
+
+			a.set('age', 12);
+
+			assertSame("the age value in localStorage is incorrect", 12, JSON.parse(localStorage[key]));
+
+			a.destroy();
+		},
+
+		"test base attribute.localStorage id set on create": function () {
+			var Animal = Base.extend({
+				attributes: {
+					type: {
+						value: "animal"
+					},
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create({
+				id: 3
+			});
+
+			var key = a.getLocalStorageAttributeKey("age");
+
+			assertUndefined("the age attribute already has a value in localStorage", localStorage[key]);
+
+			a.set('age', 12);
+
+			assertSame("the age value in localStorage is incorrect", 12, JSON.parse(localStorage[key]));
+
+			a.destroy();
+		},
+
+		"test base attribute.localStorage typeChanged": function () {
+			var Animal = Base.extend({
+				attributes: {
+					id: {
+						value: 4
+					},
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create();
+
+			a.set('type', 'animal');
+
+			var key = a.getLocalStorageAttributeKey("age");
+
+			assertUndefined("the age attribute already has a value in localStorage", localStorage[key]);
+
+			a.set('age', 12);
+
+			assertSame("the age value in localStorage is incorrect", 12, JSON.parse(localStorage[key]));
+
+			a.destroy();
+		},
+
+		"test base attribute.localStorage type set on create": function () {
+			var Animal = Base.extend({
+				attributes: {
+					id: {
+						value: 4
+					},
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create({
+				type: 'animal'
+			});
+
+			var key = a.getLocalStorageAttributeKey("age");
+
+			assertUndefined("the age attribute already has a value in localStorage", localStorage[key]);
+
+			a.set('age', 12);
+
+			assertSame("the age value in localStorage is incorrect", 12, JSON.parse(localStorage[key]));
+
+			a.destroy();
+		},
+
+		"test base attribute.localStorage type and id changed": function () {
+			var Animal = Base.extend({
+				attributes: {
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create();
+
+			a.set('type', 'animal');
+			a.set('id', 5);
+
+			var key = a.getLocalStorageAttributeKey("age");
+
+			assertUndefined("the age attribute already has a value in localStorage", localStorage[key]);
+
+			a.set('age', 12);
+
+			assertSame("the age value in localStorage is incorrect", 12, JSON.parse(localStorage[key]));
+
+			a.destroy();
+		},
+
+		"test base attribute.localStorage type and id set on create": function () {
+			var Animal = Base.extend({
+				attributes: {
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create({
+				type: 'animal',
+				id: 5
+			});
+
+			var key = a.getLocalStorageAttributeKey("age");
+
+			assertUndefined("the age attribute already has a value in localStorage", localStorage[key]);
+
+			a.set('age', 12);
+
+			assertSame("the age value in localStorage is incorrect", 12, JSON.parse(localStorage[key]));
+
+			a.destroy();
+		},
+
+		"test base attribute.localStorage type, id, and localStorage attribute set on create": function () {
+			var Animal = Base.extend({
+				attributes: {
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create({
+				age: 13,
+				type: 'animal',
+				id: 5
+			});
+
+			var key = a.getLocalStorageAttributeKey("age");
+			var value = localStorage[key];
+			
+			assertString("the age value in localStorage is not a string", value);
+			assertSame("the age value in localStorage is incorrect", 13, JSON.parse(value));
+
+			a.destroy();
+		},
+
+		"test base attribute.localStorage localStorage attribute changed before type and id set": function () {
+			var Animal = Base.extend({
+				attributes: {
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create();
+
+			a.set('age', 12);
+			a.set('type', 'animal');
+			a.set('id', 5);
+
+			var key = a.getLocalStorageAttributeKey("age");
+			var value = localStorage[key];
+
+			assertString("the age value in localStorage is not a string", value);
+			assertSame("the age value in localStorage is incorrect", 12, JSON.parse(value));
+
+			a.destroy();
 		},
 		
 		"test base.get with no parameters": function ()

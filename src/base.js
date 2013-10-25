@@ -2,6 +2,90 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
     "use strict";
 
     var rgxNumber = /^\d+$/,
+        /*
+         * Local storage functions
+         */
+        getLocalStorage = function ()
+        {
+            try {
+                return localStorage;
+            }
+            catch (ex) { /* empty */ }
+        },
+        getLocalStorageAttributeValue = function (attribute)
+        {
+            var localStorage = getLocalStorage.call(this),
+                key, value;
+
+            if (localStorage) {
+                key = this.getLocalStorageAttributeKey(attribute);
+                if (_.isUndefined(key)) {
+                    return;
+                }
+                
+                value = localStorage[key];
+
+                return _.isUndefined(value) ? value : JSON.parse(value);
+            }
+        },
+        setLocalStorageAttributeValue = function (attribute, value)
+        {
+            var localStorage = getLocalStorage.call(this),
+                key;
+
+            if (localStorage) {
+                key = this.getLocalStorageAttributeKey(attribute);
+                if (_.isUndefined(key)) {
+                    return;
+                }
+
+                // Remove the item from localStorage if the value being set is undefined
+                if (_.isUndefined(value)) {
+                    localStorage.removeItem(key);
+                }
+                else {
+                    localStorage[key] = JSON.stringify(value);
+                }
+            }
+        },
+        syncLocalStorageAttributeValues = function ()
+        {
+            if (!_.isUndefined(this.get('id')) && !_.isUndefined(this.get('type'))) {
+                // Loop through all the attributes and read their value from localStorage
+                _.each(getAttributes.call(this), function (attribute) {
+                    var value;
+
+                    if (attribute.localStorage) {
+                        value = this.get(attribute.name);//getLocalStorageAttributeValue.call(this, attribute);
+
+                        // If localStorage does not have a value for this attribute then copy the attribute's value into localStorage
+                        if (_.isUndefined(value)) {
+                            this.set(attribute.name, getLocalStorageAttributeValue.call(this, attribute));
+                        }
+                        // Else localStorage does have a value for this attribute so copy it to the attribute
+                        else {
+                            setLocalStorageAttributeValue.call(this, attribute, value);
+                        }
+                    }
+                }, this);
+            }
+        },
+        afterAttributeValueChanged = function (e)
+        {
+            var attribute = this.getAttribute(e.info.name);
+
+            if (attribute && attribute.localStorage) {
+                setLocalStorageAttributeValue.call(this, attribute, e.info.newValue);
+            }
+        },
+        afterLocalStorageKeyAttributeChanged = function ()
+        {
+            syncLocalStorageAttributeValues.call(this);
+        },
+
+        /*
+         * invokeBindHandler
+         */
         invokeBindHandler = function (handler, context, oldValue, newValue)
         {
             try {
@@ -292,7 +376,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
          */
         setupAttributes = function (attributes)
         {
-            // Loop through all the attributes and setup any dependencies for computable attributes
+            // Loop through all the attributes and setup anything that needs to be done
             _.each(attributes, function (attribute, name) {
                 this.setupAttribute(name, attribute);
             }, this);
@@ -469,6 +553,10 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
 
                 // Loop through all the attributes and setup any dependencies for computable attributes
                 setupAttributes.call(this, getAttributes.call(this));
+
+                this.after('idChange', afterLocalStorageKeyAttributeChanged, this);
+                this.after('typeChange', afterLocalStorageKeyAttributeChanged, this);
+                this.after('change', afterAttributeValueChanged, this);
             },
 
             /**
@@ -725,6 +813,9 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                 var uses = attribute.uses,
                     timer = attribute.timer;
 
+                // Add the name to the attribute
+                attribute.name = name;
+
                 // Setup the uses property
                 if (_.isString(uses)) {
                     uses = [uses];
@@ -743,18 +834,45 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
                     }, this);
                 }
 
-                // Set up the timer property
+                // Setup the timer property
                 if (_.isNumber(timer)) {
                     this.attributeTimers = this.attributeTimers || [];
                     this.attributeTimers.push(setInterval(_.bind(afterDependencyChanged, this, attribute, name), timer));
                 }
+
+                // Setup the localStorage property
+                if (attribute.localStorage) {
+                    // localStorage requires an id and type but those might not have values yet so check them first
+                    if (this.get('id') && this.get('type')) {
+                        this.set(name, getLocalStorageAttributeValue.call(this, attribute));
+                    }
+                }
+            },
+
+            /*
+             * Gets the localStorage key for an attribute.
+             * @private
+             * @param {Object|String} attribute The attribute name of the attribute to get the localStorage key of.
+             * @return {String} Returns the localStorage key for the attribute.
+             */
+            getLocalStorageAttributeKey: function (attribute)
+            {
+                if (_.isUndefined(this.get('type')) || _.isUndefined(this.get('id'))) {
+                    return;
+                }
+
+                if (_.isString(attribute)) {
+                    attribute = this.getAttribute(attribute);
+                }
+
+                return this.get('type') + '-' + this.get('id') + '-attribute-' + attribute.name;
             },
 
             /*
              * Causes a change event to fire for an attribute. Changes the value of the attribute if the event's default action is not prevented.
              * @private
              * @param {Object} attribute The attribute's configuration object.
-             * @param {String} name THe name of the attribute.
+             * @param {String} name The name of the attribute.
              * @param {Object} oldValue The old value of the attribute.
              * @param {Object} newValue The new value of the attribute.
              */
