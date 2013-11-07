@@ -2844,5 +2844,29 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
 
             assertSame("content was rendered when it should not have been", 0, children.length);
         },
+
+
+
+        "test databindings.matchMedia does render content": function () {
+            console.log("Testing databindings.matchMedia with (min-width: 480px)");
+            var template = "<div data-bind='media: (min-width: 480px)'>If Test</div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "If Test", $("div", this.element).html());
+        },
+
+        "test databindings.matchMedia does not render content": function () {
+            console.log("Testing databindings.matchMedia with (max-width: 480px)");
+            var template = "<div data-bind='media: (max-width: 480px)'>If Test</div>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assertSame("element has incorrect content", "", $("div", this.element).html());
+        }
     };
 });

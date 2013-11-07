@@ -244,6 +244,41 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
             }
         }
     }
+
+    function afterMediaQueryMatchChanged (element, info, metaData, mql)
+    {
+        var node = $(element);
+
+        // Remove content
+        if (info.isComment) {
+            // Remove the siblings
+            removeCommentContent(element, info.endCommentElement);
+        }
+        else {
+            // Remove the children
+            node.contents().each(function () {
+                databindings.databind.removeBindings(this);
+            });
+            node.empty();
+        }
+
+        // If the element's content should be rendered
+        if (info["!"] ? !mql.matches : mql.matches) {
+            // Render the content
+            if (info.isComment) {
+                // Render the siblings
+                $("<div></div>").html(metaData.template).contents().insertAfter(node).each(function () {
+                    databindings.databind.applyBindings(info.context.root, this);
+                });
+            }
+            else {
+                // Render the new children
+                node.html(metaData.template).contents().each(function () {
+                    databindings.databind.applyBindings(info.context.root, this);
+                });
+            }
+        }
+    }
     
     /**
      * @class databindings
@@ -568,6 +603,47 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                             databindings.databind.applyBindings(info.context.root, this);
                         });
                     }
+                }
+            }
+        },
+
+        /**
+         * @class media
+         * The media binder binds whether or not a dom element's children are rendered based on a media query
+         * @singleton
+         * @namespace databindings
+         */
+        media: {
+            bindChildren: false,
+
+            start: function (element, mediaQuery, info, metaData)
+            {
+                if (info.isComment) {
+                    metaData.template = info.commentTemplate;
+                }
+                else {
+                    metaData.template = metaData.template || $(element).html();
+                    $(element).empty();
+                }
+
+                metaData.mql = window.matchMedia(mediaQuery);
+                metaData.mqlListener = _.bind(afterMediaQueryMatchChanged, null, element, info, metaData);
+                metaData.mql.addListener(metaData.mqlListener);
+
+                afterMediaQueryMatchChanged(element, info, metaData, metaData.mql);
+            },
+
+            stop: function (element, metaData)
+            {
+                delete metaData.template;
+
+                if (metaData.mql) {
+                    if (metaData.mqlListener) {
+                        metaData.mql.removeListener(metaData.mqlListener);
+                        delete metaData.mqlListener;
+                    }
+
+                    delete metaData.mql;
                 }
             }
         }

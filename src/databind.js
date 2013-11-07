@@ -138,6 +138,26 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
         }
     }
 
+    function attachMediaQueryBinder (binder, viewModel, mediaQuery, binderInfo)
+    {
+        var metaData = getMetaData(binderInfo.element, binder, binderInfo.key, [mediaQuery], true);
+            // listener = _.bind(updateMediaQueryBinder, null, binder, viewModel, mediaQuery, binderInfo);
+
+        // metaData.eventName = attributeNameChain[1] + "Change";
+        // metaData.listener = listener;
+        metaData.model = viewModel;
+
+        startMediaQueryBinder(binder, viewModel, mediaQuery, binderInfo);
+        // updateMediaQueryBinder(binder, viewModel, mediaQuery, binderInfo);
+    }
+
+    function startMediaQueryBinder (binder, viewModel, mediaQuery, binderInfo)
+    {
+        if (_.isFunction(binder.start)) {
+            binder.start(binderInfo.element, mediaQuery, binderInfo, getMetaData(binderInfo.element, binder, binderInfo.key, [mediaQuery], true));
+        }
+    }
+
     /**
      * Attaches event listeners to the model that a binding uses.
      * @private
@@ -509,6 +529,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             bindingInfo.commentTemplate = isStartCommentNode ? commentContainer.html() : null;
             bindingInfo.endCommentElement = isStartCommentNode ? endCommentElement : null;
 
+            // If the binding key starts with a '.' then this is a className binding
             if (_.startsWith(bindingInfo.key, ".")) {
                 binder = databindings["className"];
                 bindingInfo.key = bindingInfo.key.substring(1);
@@ -517,6 +538,7 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
                 binder = databindings[bindingInfo.key];
             }
 
+            // Default to attribute binding
             if (!_.isObject(binder)) {
                 binder = databindings["attr"];
             }
@@ -525,7 +547,13 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
                 bindChildren &= binder.bindChildren;
             }
 
-            attachBinder(binder, viewModel, [null].concat(_.trim(binding.value).split(".")), bindingInfo);
+            // If this is a media query binding
+            if (bindingInfo.key === "media") {
+                attachMediaQueryBinder(binder, viewModel, _.trim(binding.value), bindingInfo);
+            }
+            else {
+                attachBinder(binder, viewModel, [null].concat(_.trim(binding.value).split(".")), bindingInfo);
+            }
         });
 
         // Bind children
