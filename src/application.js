@@ -30,7 +30,8 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
         require([component.path], function (module) {
             try {
                 var route = component.route,
-                    startMessage = component.start_message;
+                    startMessage = component.start_message,
+                    mediaQuery = component.media;
 
                 component.module = module.create();
 
@@ -137,6 +138,39 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
         }
     }
 
+    function onMediaQueryMatchChanged (component, mql) {
+        var action = "";
+
+        try {
+            if (mql.matches) {
+                action = "starting";
+                component.module.start();
+                component.appConfig.started = true;
+            }
+            else {
+                action = "stopping"
+                component.module.stop();
+                component.appConfig.started = false;
+            }
+        }
+        catch (ex) {
+            var error = {
+                exception: ex,
+                info: {
+                    action: action ? action + " component based on media query" : "checking component for media query",
+                    mediaQuery: component.media,
+                    component: component
+                }
+            };
+            
+            if (error.info.component) {
+                delete error.info.component.app;
+            }
+
+            pubsub.publish("error", error, this);
+        }
+    }
+
     function startComponent ()
     {
         var component = this;
@@ -162,8 +196,27 @@ define(["sprout/util", "sprout/base", "sprout/pubsub", "sprout/router"], functio
                     }
                 };
 
-                this.module.start();
-                this.appConfig.started = true;
+                // If the component should be started based on a media query
+                if (_.isString(this.media)) {
+                    this.mql = window.matchMedia(this.media);
+
+                    if (this.mql.matches) {
+                        this.module.start();
+                        this.appConfig.started = true;
+                    }
+
+                    this.mql.addListener(_.bind(onMediaQueryMatchChanged, null, this));
+                }
+                // Else start the component now
+                else {
+                    this.module.start();
+                    this.appConfig.started = true;
+                }
+
+
+
+                // this.module.start();
+                // this.appConfig.started = true;
             }
             catch (ex) {
                 var error = {
