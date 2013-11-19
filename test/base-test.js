@@ -1,4 +1,4 @@
-TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
+TestCase("base", ["sprout/util", "sprout/base", "sprout/env"], function (_, Base, env) {
 	var Animal = Base.extend({
 		attributes: {
 			name: {
@@ -614,6 +614,10 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 		},
 
 		"test base attribute.localStorage": function () {
+			if (!env.localstorage) {
+				return;
+			}
+
 			var Animal = Base.extend({
 				attributes: {
 					type: {
@@ -642,6 +646,10 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 		},
 
 		"test base attribute.localStorage idChanged": function () {
+			if (!env.localstorage) {
+				return;
+			}
+
 			var Animal = Base.extend({
 				attributes: {
 					type: {
@@ -669,6 +677,10 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 		},
 
 		"test base attribute.localStorage id set on create": function () {
+			if (!env.localstorage) {
+				return;
+			}
+
 			var Animal = Base.extend({
 				attributes: {
 					type: {
@@ -696,6 +708,10 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 		},
 
 		"test base attribute.localStorage typeChanged": function () {
+			if (!env.localstorage) {
+				return;
+			}
+
 			var Animal = Base.extend({
 				attributes: {
 					id: {
@@ -723,6 +739,10 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 		},
 
 		"test base attribute.localStorage type set on create": function () {
+			if (!env.localstorage) {
+				return;
+			}
+
 			var Animal = Base.extend({
 				attributes: {
 					id: {
@@ -750,6 +770,10 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 		},
 
 		"test base attribute.localStorage type and id changed": function () {
+			if (!env.localstorage) {
+				return;
+			}
+
 			var Animal = Base.extend({
 				attributes: {
 					age: {
@@ -775,6 +799,10 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 		},
 
 		"test base attribute.localStorage type and id set on create": function () {
+			if (!env.localstorage) {
+				return;
+			}
+
 			var Animal = Base.extend({
 				attributes: {
 					age: {
@@ -800,6 +828,10 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 		},
 
 		"test base attribute.localStorage type, id, and localStorage attribute set on create": function () {
+			if (!env.localstorage) {
+				return;
+			}
+
 			var Animal = Base.extend({
 				attributes: {
 					age: {
@@ -824,6 +856,10 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 		},
 
 		"test base attribute.localStorage localStorage attribute changed before type and id set": function () {
+			if (!env.localstorage) {
+				return;
+			}
+
 			var Animal = Base.extend({
 				attributes: {
 					age: {
@@ -843,6 +879,34 @@ TestCase("base", ["sprout/util", "sprout/base"], function (_, Base) {
 
 			assertString("the age value in localStorage is not a string", value);
 			assertSame("the age value in localStorage is incorrect", 12, JSON.parse(value));
+
+			a.destroy();
+		},
+
+		"test base.attribute.localStorage with private browsing enabled": function () {
+			if (env.localstorage) {
+				return;
+			}
+
+			var Animal = Base.extend({
+				attributes: {
+					type: {
+						value: "animal"
+					},
+					id: {
+						value: 1
+					},
+					age: {
+						localStorage: true
+					}
+				}
+			});
+
+			var a = Animal.create();
+
+			// Just set/get the attribute to make sure it does not throw an exception (failing silently instead)
+			a.set('age', 12);
+			a.get('age');
 
 			a.destroy();
 		},

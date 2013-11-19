@@ -1,10 +1,10 @@
-define(['sprout/util', 'sprout/base', 'sprout/pubsub'], function (_, base, pubsub) {
+define(['sprout/util', 'sprout/base', 'sprout/pubsub', 'sprout/env'], function (_, base, pubsub, env) {
     'use strict';
 
     function getLocalStorage ()
     {
         try {
-            return localStorage;
+            return env.localstorage ? localStorage : null;
         }
         catch (ex) { /* empty */ }
     }

@@ -1,4 +1,4 @@
-define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
+define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env) {
     "use strict";
 
     var rgxNumber = /^\d+$/,
@@ -8,7 +8,7 @@ define(["sprout/util", "sprout/pubsub"], function (_, pubsub) {
         getLocalStorage = function ()
         {
             try {
-                return localStorage;
+                return env.localstorage ? localStorage : null;
             }
             catch (ex) { /* empty */ }
         },
