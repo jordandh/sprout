@@ -49,7 +49,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
         var itemElements = $("<div></div>").html(template).contents(),
             cid = model.get("cid");
 
-        viewModel.fire('foreach-render', { nodes: itemElements, model: model, at: at }, function () {
+        viewModel.fire('foreach-render', { nodes: itemElements, model: model, at: at }, function (e) {
             // If this is a comment element then render items as siblings
             if (info.isComment) {
                 if (_.isNumber(at)) {
@@ -76,6 +76,17 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                 }
                 else {
                     itemElements.appendTo(element);
+                }
+            }
+
+            // If the at value was not defined
+            if (!_.isNumber(at)) {
+                // Then update the at value with the index that the item was rendered at
+                if (info.isComment) {
+                    e.info.at = itemElements.index() - $(element).index();
+                }
+                else {
+                    e.info.at = itemElements.index();
                 }
             }
 
