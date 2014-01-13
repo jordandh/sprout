@@ -143,6 +143,14 @@ define(['sprout/util', 'sprout/base', 'sprout/pubsub', 'sprout/env'], function (
         },
 
         /**
+         * Called on a spawned component if the component has already been started but was trigged to start again.
+         * Child component objects should override this method to define its activate logic.
+         */
+        activate: function ()
+        {
+        },
+
+        /**
          * Publishes a message using the pubsub module.
          * @param {String} message The name of the message being published.
          * @param {Object} info An object that contains information about the message.
