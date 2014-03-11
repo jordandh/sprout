@@ -936,12 +936,43 @@ TestCase("base", ["sprout/util", "sprout/base", "sprout/env"], function (_, Base
 			var values = cat.get();
 			
 			assertObject("values is not an object.", values);
-			assertSame("values object has incorrect number of members", 5, _.keys(values).length)
+			assertSame("values object has incorrect number of members", 5, _.keys(values).length);
 			assertSame("age is incorrect value.", 8, values.age);
 			assertSame("name is incorrect value.", "Spot", values.name);
 			assertSame("phrase is incorrect value.", "meow", values.phrase);
 			assertSame("destroyed is incorrect value.", false, values.destroyed);
 			assertObject("plugins is not an object.", values.plugins);
+		},
+
+		"test base.get with array parameter": function ()
+		{
+			var Animal = Base.extend({
+				attributes: {
+					name: {
+						value: ""
+					}
+				}
+			});
+			
+			var Cat = Animal.extend({
+				attributes: {
+					phrase: {
+						value: "meow"
+					}
+				}
+			});
+			
+			var cat = Cat.create();
+			cat.set("name", "Spot");
+			cat.set("age", 8);
+			cat.set("color", "tan");
+			
+			var values = cat.get(["name", "age"]);
+			
+			assertObject("values is not an object.", values);
+			assertSame("values object has incorrect number of members", 2, _.keys(values).length);
+			assertSame("age is incorrect value.", 8, values.age);
+			assertSame("name is incorrect value.", "Spot", values.name);
 		},
 		
 		"test base.get": function () {

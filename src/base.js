@@ -739,6 +739,15 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
                     // Add the values unique to this instance and return the result
                     return _.extend(values, this.values);
                 }
+                else if (_.isArray(name)) {
+                    values = {};
+
+                    _.each(name, function (attributeName) {
+                        values[attributeName] = this.get(attributeName);
+                    }, this);
+
+                    return values;
+                }
                 else {
                     if (_.isNumber(name) || rgxNumber.test(name)) {
                         if (_.isFunction(this.at)) {
