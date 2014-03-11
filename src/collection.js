@@ -471,7 +471,7 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
          * Underscore functions to mixin to the collection object
          */
         _methods = ["forEach", "each", "map", "reduce", "reduceRight", "find", "detect", "filter", "select", "reject", "every", "all", "some", "any", "include", "contains", "invoke",
-                   "max", "min", "sortedIndex", "toArray", "size", "first", "initial", "rest", "last", "without", "indexOf", "shuffle", "lastIndexOf", "isEmpty", "groupBy"];
+                   "max", "min", "sortedIndex", "toArray", "size", "first", "initial", "rest", "last", "without", "indexOf", "shuffle", "lastIndexOf", "isEmpty", "groupBy", "uniq", "unique"];
     
     // Mixin underscore functions
     _.each(_methods, function (methodName) {

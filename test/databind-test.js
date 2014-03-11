@@ -1516,7 +1516,7 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             this.authorsViewModel.after('foreach-render', function (e) {
                 try {
                     assertObject('event item model has incorrect value', e.info.model);
-                    assertUndefined('event item at has incorrect value', e.info.at);
+                    assertNumber('event item at has incorrect value', e.info.at);
                     assertObject('event item nodes has incorrect value', e.info.nodes);
                 }
                 catch (ex) {
@@ -2520,7 +2520,7 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             this.authorsViewModel.after('foreach-render', function (e) {
                 try {
                     assertObject('event item model has incorrect value', e.info.model);
-                    assertUndefined('event item at has incorrect value', e.info.at);
+                    assertNumber('event item at has incorrect value', e.info.at);
                     assertObject('event item nodes has incorrect value', e.info.nodes);
                 }
                 catch (ex) {

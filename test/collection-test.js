@@ -34,7 +34,7 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		{
 			var methods = ["forEach", "each", "map", "reduce", "reduceRight", "find", "detect", "filter", "select", "reject", "every", "all", "some", "any", "include", "contains",
 						   "invoke", "max", "min", "sortBy", "sortedIndex", "toArray", "size", "first", "initial", "rest", "last", "without", "indexOf", "shuffle", "lastIndexOf",
-						   "isEmpty", "groupBy"];
+						   "isEmpty", "groupBy", "uniq", "unique"];
 			
 			expectAsserts(methods.length);
 			
