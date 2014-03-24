@@ -743,7 +743,7 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
                     values = {};
 
                     _.each(name, function (attributeName) {
-                        values[attributeName] = this.get(attributeName);
+                        values[attributeName] = getValue.call(this, attributeName);
                     }, this);
 
                     return values;
