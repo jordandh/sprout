@@ -1,4 +1,4 @@
-define(["sprout/pubsub", "sprout/util", "sprout/dom"], function (pubsub, _, $) {
+define(["sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], function (pubsub, _, $, env) {
     "use strict";
 
     (function () {
@@ -124,6 +124,120 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom"], function (pubsub, _, $) {
 
     }());
 
+    /*
+     * localStorage error store
+     * Keeps an error from being reported more than once a day.
+     */
+    var localStorageErrorStore = {
+        /*
+         * Private helper functions
+         */
+        LocalStorageKey: 'sprout-errors',
+
+        getErrorKey: function (error)
+        {
+            var key, ex;
+
+            if (_.isArray(error.exceptions) && error.exceptions.length > 0) {
+                ex = error.exceptions[0];
+                key = ex.toString();
+            }
+
+            return key || undefined;
+        },
+
+        getErrorStore: function ()
+        {
+            // Grab the error data store from local storage
+            var errorStore = localStorage[localStorageErrorStore.LocalStorageKey];
+
+            // If there is a data store then parse it
+            if (errorStore) {
+                return JSON.parse(errorStore);
+            }
+            
+            return {};
+        },
+
+        setErrorStore: function (errorStore)
+        {
+            localStorage[localStorageErrorStore.LocalStorageKey] = JSON.stringify(errorStore);
+        },
+
+        pruneErrorStore: function ()
+        {
+            var errorStore = localStorageErrorStore.getErrorStore(),
+                errors;
+
+            if (_.size(errorStore) > localStorageErrorStore.MaxErrorsInStore) {
+                // Sort the errors by lastReportedAt and grab the set to keep (MaxErrorsInStore size set)
+                errors = _.chain(errorStore).sortBy(function (errorInfo) {
+                    return errorInfo.lastReportedAt;
+                }).last(localStorageErrorStore.MaxErrorsInStore).value();
+
+                // Start with a fresh error store
+                errorStore = {};
+
+                // Put the remaining errors back into the store
+                _.each(errors, function (errorInfo) {
+                    errorStore[errorInfo.key] = errorInfo;
+                });
+
+                localStorageErrorStore.setErrorStore(errorStore);
+            }
+        },
+
+        /*
+         * Public interface
+         */
+        MaxErrorsInStore: 20,
+
+        shouldReportError: function (error)
+        {
+            var errorKey = localStorageErrorStore.getErrorKey(error),
+                errorStore, errorInfo, aDayAgo, lastReportedAt;
+
+            // If this error does not have a key or local storage is not supported
+            if (!errorKey || !env.localstorage) {
+                return false;
+            }
+
+            // Grab the error data store
+            errorStore = localStorageErrorStore.getErrorStore();
+
+            // Grab the info for this error
+            errorInfo = errorStore[errorKey];
+
+            // If this error was in the data store
+            if (errorInfo) {
+                lastReportedAt = new Date(errorInfo.lastReportedAt);
+                aDayAgo = new Date();
+                aDayAgo.setDate(aDayAgo.getDate() - 1);
+
+                // If this error was already reported today
+                if (lastReportedAt > aDayAgo) {
+                    return false;
+                }
+            }
+
+            return true;
+        },
+
+        markErrorAsReported: function (error)
+        {
+            var errorKey = localStorageErrorStore.getErrorKey(error),
+                errorStore = localStorageErrorStore.getErrorStore();
+
+            errorStore[errorKey] = {
+                key: errorKey,
+                lastReportedAt: new Date().getTime()
+            };
+
+            localStorageErrorStore.setErrorStore(errorStore);
+            localStorageErrorStore.pruneErrorStore();
+        }
+    };
+
     var errorModule = {
         requestOptions: {
             url: "/errors",
@@ -141,127 +255,10 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom"], function (pubsub, _, $) {
             return JSON.prune(packageError(error), {
                 //inheritedProperties: true
             });
-        }
+        },
+
+        errorStore: localStorageErrorStore
     };
-
-//     /*
-//      * Crockford's decycle
-//      */
-//     function decycle (object) {
-// // Make a deep copy of an object or array, assuring that there is at most
-// // one instance of each object or array in the resulting structure. The
-// // duplicate references (which might be forming cycles) are replaced with
-// // an object of the form
-// //      {$ref: PATH}
-// // where the PATH is a JSONPath string that locates the first occurance.
-// // So,
-// //      var a = [];
-// //      a[0] = a;
-// //      return JSON.stringify(JSON.decycle(a));
-// // produces the string '[{"$ref":"$"}]'.
-
-// // JSONPath is used to locate the unique object. $ indicates the top level of
-// // the object or array. [NUMBER] or [STRING] indicates a child member or
-// // property.
-
-//         var objects = [],   // Keep a reference to each unique object or array
-//             paths = [];     // Keep the path to each unique object or array
-
-//         return (function derez(value, path) {
-
-// // The derez recurses through the object, producing the deep copy.
-
-//             var i,          // The loop counter
-//                 name,       // Property name
-//                 nu;         // The new object or array
-
-// // typeof null === 'object', so go on if this value is really an object but not
-// // one of the weird builtin objects.
-
-//             if (typeof value === 'object' && value !== null &&
-//                     !(value instanceof Boolean) &&
-//                     !(value instanceof Date)    &&
-//                     !(value instanceof Number)  &&
-//                     !(value instanceof RegExp)  &&
-//                     !(value instanceof String)) {
-
-// // If the value is an object or array, look to see if we have already
-// // encountered it. If so, return a $ref/path object. This is a hard way,
-// // linear search that will get slower as the number of unique objects grows.
-
-//                 for (i = 0; i < objects.length; i += 1) {
-//                     if (objects[i] === value) {
-//                         return {$ref: paths[i]};
-//                     }
-//                 }
-
-// // Otherwise, accumulate the unique value and its path.
-
-//                 objects.push(value);
-//                 paths.push(path);
-
-// // If it is an array, replicate the array.
-
-//                 if (Object.prototype.toString.apply(value) === '[object Array]') {
-//                     nu = [];
-//                     for (i = 0; i < value.length; i += 1) {
-//                         nu[i] = derez(value[i], path + '[' + i + ']');
-//                     }
-//                 } else {
-
-// // If it is an object, replicate the object.
-
-//                     nu = {};
-//                     for (name in value) {
-//                         if (Object.prototype.hasOwnProperty.call(value, name)) {
-//                             nu[name] = derez(value[name],
-//                                 path + '[' + JSON.stringify(name) + ']');
-//                         }
-//                     }
-//                 }
-//                 return nu;
-//             }
-//             return value;
-//         }(object, '$'));
-//     }
-
-    // function getSerialize (fn) {
-    //   var seen = [];
-    //   return function (key, value) {
-    //     var ret = value;
-    //     if (typeof value === 'object' && value) {
-    //       if (seen.indexOf(value) !== -1)
-    //         ret = '[Circular]';
-    //       else
-    //         seen.push(value);
-    //     }
-    //     if (fn) ret = fn(key, ret);
-    //     return ret;
-    //   };
-    // }
-
-    // function jsonReplacer (key, value)
-    // {
-    //     var obj = value;
-
-    //     // If this is a dom element then only stringify parts of it
-    //     if (value && value.nodeType) {
-    //         obj = {
-    //             nodeType: value.nodeType,
-    //             tagName: value.tagName,
-    //             id: value.id,
-    //             name: value.name,
-    //             value: value.value,
-    //             className: value.className
-    //         };
-
-    //         _.each(value.attributes, function (attribute) {
-    //             obj[attribute.name] = attribute.value;
-    //         });
-    //     }
-
-    //     return obj;
-    // }
 
     function packageError (error)
     {
@@ -332,17 +329,18 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom"], function (pubsub, _, $) {
         err.navigator.language = navigator.language;
         err.window.location = window.location.toString();
 
-        //return pruneErrorForJSON(err);
         return err;
     }
 
     function submitError (error)
     {
         try {
-            if (error) {
+            if (error && errorModule.errorStore.shouldReportError(error)) {
                 $.ajax($.extend({}, errorModule.requestOptions, {
                     data: errorModule.stringify(error)
                 }));
+
+                errorModule.errorStore.markErrorAsReported(error);
             }
         }
         catch (ex) { /* empty */ }
