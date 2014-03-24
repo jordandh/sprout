@@ -1,0 +1,23 @@
+{
+  "name": "sprout",
+  "version": "1.0.0",
+  "homepage": "https://github.com/jordandh/sprout",
+  "authors": [
+    "Jordan Harrison <jordandh@gmail.com>"
+  ],
+  "description": "Sprout is a utility, component architecture, and mv* library for javascript.",
+  "moduleType": [
+    "amd"
+  ],
+  "keywords": [
+    "javascript"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
