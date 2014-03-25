@@ -106,6 +106,32 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
         rootUrl: "",
 
         /**
+         * The attribute name used for comparing is_<name> attributes. type is the default attribute name. For example: mod.get('is_user') would return true if the type attribute's value is equal to 'user'
+         * @property
+         * @type String
+         */
+        isAttribute: "type",
+
+        /**
+         * This method is called when model.get is called on an attribute that has no value. It only returns a value for attribute names that start with is_.
+         * It compares the value of the attribute in the remainder of the attribute name string to model.isAttribute.
+         * For example: is_user will cause a comparison of model.isAttribute === 'user'
+         * By default isAttribute is equal to 'type' making it easy to check if a model is of a certain type.
+         * For example: model.get('is_user') would return true if the type attribute's value is equal to 'user'
+         * @return {Boolean} Returns true if the model.isAttribute value is equal to the name without the leading is_.
+         */
+        miss: function (name)
+        {
+            if (_.startsWith(name, 'is_')) {
+                name = name.split('_');
+                name.shift();
+                name = name.join('_');
+
+                return this.get(this.isAttribute) === name;
+            }
+        },
+
+        /**
          * Returns a string representation of the model's attributes.
          * @return {String} Returns a string representation of the model's attributes.
          */
