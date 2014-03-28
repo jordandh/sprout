@@ -624,14 +624,37 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
          */
         var mapHelper = {
             bindCollection: function (name, attribute, options) {
-                var collectionName = options.source,
+                var self = this,
+                    collectionName = options.source,
                     state = {
                         name: name,
+                        uses: options.uses,
                         transform: options.transform,
                         addListener: null,
                         removeListener: null,
-                        resetListener: null
+                        resetListener: null,
+                        transformAll: function () {
+                            // self.fireAttributeChangeEvents(attribute, name, null, self.get(name));
+
+                            var destCollection = self.get(name),
+                                sourceCollection = self.get(collectionName);
+
+                            if (destCollection && sourceCollection) {
+                                destCollection.reset(sourceCollection.map(function (item) {
+                                    return state.transform.call(self, item);
+                                }));
+                            }
+                        }
                     };
+
+                // Setup the uses property
+                if (_.isString(state.uses)) {
+                    state.uses = [state.uses];
+                }
+
+                _.each(state.uses, function (dependency) {
+                    this.bind(dependency, state.transformAll);
+                }, this);
 
                 // Listen to the collection changing
                 this.after(collectionName + 'Change', function (e) {

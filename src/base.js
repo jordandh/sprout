@@ -877,6 +877,13 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
                 return this.get('type') + '-' + this.get('id') + '-attribute-' + attribute.name;
             },
 
+            updateAttributeValue: function (name)
+            {
+                var attribute = this.getAttribute(name);
+
+                this.fireAttributeChangeEvents(attribute, name, null, attribute.get.call(this));
+            },
+
             /*
              * Causes a change event to fire for an attribute. Changes the value of the attribute if the event's default action is not prevented.
              * @private
