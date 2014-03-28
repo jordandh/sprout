@@ -1412,6 +1412,385 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			assertSame("the age total does not match after changing the list", 5, sd.get("ageTotal"));
 
 			sd.destroy();
+		},
+
+		/*
+		 * collection attribute.map
+		 */
+		"test collection.attribute.map": function ()
+		{
+			// Make a model with a map attribute
+			var park = model.extend({
+				attributes: {
+					owned_animals: {
+						map: {
+							source: 'animals',
+							transform: function (animal) {
+								return model.create({
+									animal: animal,
+									owned: animal.get('name') === 'Spot'
+								});
+							}
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: collection.create([{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				])
+			});
+
+			var owned_animals = sd.get('owned_animals');
+
+			assert("owned_animals is not a collection", collection.isPrototypeOf(owned_animals));
+			assertSame("owned_animals has the incorrect number of items", 2, owned_animals.get('count'));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.map after removing an item": function ()
+		{
+			expectAsserts(4);
+
+			// Make a model with a map attribute
+			var park = model.extend({
+				attributes: {
+					owned_animals: {
+						map: {
+							source: 'animals',
+							transform: function (animal) {
+								return model.create({
+									animal: animal,
+									owned: animal.get('name') === 'Spot'
+								});
+							}
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: collection.create([{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				])
+			});
+
+			var animals = sd.get('animals');
+			var owned_animals = sd.get('owned_animals');
+
+			owned_animals.after('remove', function (e) {
+				assertSame("the removed item is not at the correct index", 0, e.info.options.at[0]);
+				assertSame("the removed item is incorrect", 'A', e.info.items[0].get('id'));
+			});
+
+			animals.remove(animals.at(0));
+
+			assertSame("animals has the incorrect number of items", 1, animals.get('count'));
+			assertSame("owned_animals has the incorrect number of items", 1, owned_animals.get('count'));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.map after adding an item": function ()
+		{
+			expectAsserts(7);
+
+			// Make a model with a map attribute
+			var park = model.extend({
+				attributes: {
+					owned_animals: {
+						map: {
+							source: 'animals',
+							transform: function (animal) {
+								return model.create({
+									animal: animal,
+									owned: animal.get('name') === 'Spot'
+								});
+							}
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: collection.create([{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				])
+			});
+
+			var animals = sd.get('animals');
+			var owned_animals = sd.get('owned_animals');
+			var count = 0;
+			var error = null;
+
+			owned_animals.after('add', function (e) {
+				try {
+					if (count === 0) {
+						assertSame("the added item is incorrect", 'C', e.info.items[0].get('animal.id'));
+					}
+					else {
+						assertSame("the added item is not at the correct index", 1, e.info.options.at);
+						assertSame("the added item is incorrect", 'D', e.info.items[0].get('animal.id'));
+					}
+
+					count += 1;
+				}
+				catch (ex) {
+					error = ex;
+				}
+			});
+
+			animals.add({
+				id: "C",
+				name: "Speckle",
+				age: 3
+			});
+
+			assertSame("animals has the incorrect number of items", 3, animals.get('count'));
+			assertSame("owned_animals has the incorrect number of items", 3, owned_animals.get('count'));
+
+			animals.add({
+				id: "D",
+				name: "Patches",
+				age: 4
+			}, {
+				at: 1
+			});
+
+			assertSame("animals has the incorrect number of items", 4, animals.get('count'));
+			assertSame("owned_animals has the incorrect number of items", 4, owned_animals.get('count'));
+
+			sd.destroy();
+
+			if (error) {
+				throw error;
+			}
+		},
+
+		"test collection.attribute.map after resetting list to empty": function ()
+		{
+			expectAsserts(5);
+
+			// Make a model with a map attribute
+			var park = model.extend({
+				attributes: {
+					owned_animals: {
+						map: {
+							source: 'animals',
+							transform: function (animal) {
+								return model.create({
+									animal: animal,
+									owned: animal.get('name') === 'Spot'
+								});
+							}
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: collection.create([{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				])
+			});
+
+			var animals = sd.get('animals');
+			var owned_animals = sd.get('owned_animals');
+			var error = null;
+
+			owned_animals.after('reset', function (e) {
+				try {
+					assert("just making sure this is called", true);
+				}
+				catch (ex) {
+					error = ex;
+				}
+			});
+
+			assertSame("animals has the incorrect number of items", 2, animals.get('count'));
+			assertSame("owned_animals has the incorrect number of items", 2, owned_animals.get('count'));
+
+			animals.reset();
+
+			assertSame("animals has the incorrect number of items", 0, animals.get('count'));
+			assertSame("owned_animals has the incorrect number of items", 0, owned_animals.get('count'));
+
+			sd.destroy();
+
+			if (error) {
+				throw error;
+			}
+		},
+
+		"test collection.attribute.map after resetting list with other items": function ()
+		{
+			expectAsserts(5);
+
+			// Make a model with a map attribute
+			var park = model.extend({
+				attributes: {
+					owned_animals: {
+						map: {
+							source: 'animals',
+							transform: function (animal) {
+								return model.create({
+									animal: animal,
+									owned: animal.get('name') === 'Spot'
+								});
+							}
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: collection.create([{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				])
+			});
+
+			var animals = sd.get('animals');
+			var owned_animals = sd.get('owned_animals');
+			var error = null;
+
+			owned_animals.after('reset', function (e) {
+				try {
+					assertSame("incorrect item was added on reset", "C", e.info.items[0].get('animal.id'));
+				}
+				catch (ex) {
+					error = ex;
+				}
+			});
+
+			assertSame("animals has the incorrect number of items", 2, animals.get('count'));
+			assertSame("owned_animals has the incorrect number of items", 2, owned_animals.get('count'));
+
+			animals.reset({
+				id: "C",
+				name: "Speckle",
+				age: 3
+			});
+
+			assertSame("animals has the incorrect number of items", 1, animals.get('count'));
+			assertSame("owned_animals has the incorrect number of items", 1, owned_animals.get('count'));
+
+			sd.destroy();
+
+			if (error) {
+				throw error;
+			}
+		},
+
+		"test collection.attribute.map after changing the collection": function ()
+		{
+			expectAsserts(5);
+
+			// Make a model with a map attribute
+			var park = model.extend({
+				attributes: {
+					owned_animals: {
+						map: {
+							source: 'animals',
+							transform: function (animal) {
+								return model.create({
+									animal: animal,
+									owned: animal.get('name') === 'Spot'
+								});
+							}
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: collection.create([{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				])
+			});
+
+			var animals = sd.get('animals');
+			var owned_animals = sd.get('owned_animals');
+			var error = null;
+
+			sd.after('owned_animalsChange', function (e) {
+				try {
+					assertNotSame("incorrect item was added on reset", owned_animals, e.info.newValue);
+				}
+				catch (ex) {
+					error = ex;
+				}
+			});
+
+			assertSame("animals has the incorrect number of items", 2, animals.get('count'));
+			assertSame("owned_animals has the incorrect number of items", 2, owned_animals.get('count'));
+
+			sd.set('animals', collection.create([{
+				id: "C",
+				name: "Speckle",
+				age: 3
+			}]));
+
+			animals = sd.get('animals');
+			owned_animals = sd.get('owned_animals');
+
+			assertSame("animals has the incorrect number of items", 1, animals.get('count'));
+			assertSame("owned_animals has the incorrect number of items", 1, owned_animals.get('count'));
+
+			sd.destroy();
+
+			if (error) {
+				throw error;
+			}
 		}
 	};
 });

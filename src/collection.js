@@ -312,8 +312,18 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              * @options
              * {Boolean} silent false If true then no event is fired for removing the items. This is false by default.
              */
-            remove: _.createListModifier("remove", function (items)
+            remove: _.createListModifier("remove", function (items, options)
             {
+                // Grab the indices of the items being removed (before they are removed)
+                options.at = [];
+                _.each(items, function (item) {
+                    var index = this.indexOf(item);
+                    if (index !== -1) {
+                        options.at.push(index);
+                    }
+                }, this);
+
+                // Remove each item
                 _.each(items, function (item) {
                     var index = this.indexOf(item);
                     if (index !== -1) {
@@ -553,41 +563,165 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
             state.fireChange();
         }
 
-        function bindCollection (name, attribute, collectionName, dependencies)
-        {
-            var self = this,
-                state = {
-                    addListener: null,
-                    removeListener: null,
-                    onResetListener: null,
-                    afterResetListener: null,
-                    dependencies: dependencies,
-                    fireChange: function () {
-                        self.fireAttributeChangeEvents(attribute, name, null, attribute.get.call(self));
-                    }
-                };
+        // function bindCollection (name, attribute, collectionName, dependencies)
+        // {
+        //     var self = this,
+        //         state = {
+        //             addListener: null,
+        //             removeListener: null,
+        //             onResetListener: null,
+        //             afterResetListener: null,
+        //             dependencies: dependencies,
+        //             fireChange: function () {
+        //                 self.fireAttributeChangeEvents(attribute, name, null, attribute.get.call(self));
+        //             }
+        //         };
 
-            this.after(collectionName + 'Change', function (e) {
-                detachCollection(e.info.oldValue, state);
-                attachCollection(e.info.newValue, state);
+        //     this.after(collectionName + 'Change', function (e) {
+        //         detachCollection(e.info.oldValue, state);
+        //         attachCollection(e.info.newValue, state);
 
-                // The collection itself changed so fire the change event
-                state.fireChange();
-            }, this);
+        //         // The collection itself changed so fire the change event
+        //         state.fireChange();
+        //     }, this);
 
-            // Attach the collection for the first time
-            attachCollection(this.get(collectionName), state);
-        }
+        //     // Attach the collection for the first time
+        //     attachCollection(this.get(collectionName), state);
+        // }
+
+        /*
+         * reduce functions
+         */
+        var reduceHelper = {
+            bindCollection: function (name, attribute, collectionName, dependencies) {
+                var self = this,
+                    state = {
+                        addListener: null,
+                        removeListener: null,
+                        onResetListener: null,
+                        afterResetListener: null,
+                        dependencies: dependencies,
+                        fireChange: function () {
+                            self.fireAttributeChangeEvents(attribute, name, null, attribute.get.call(self));
+                        }
+                    };
+
+                this.after(collectionName + 'Change', function (e) {
+                    detachCollection(e.info.oldValue, state);
+                    attachCollection(e.info.newValue, state);
+
+                    // The collection itself changed so fire the change event
+                    state.fireChange();
+                }, this);
+
+                // Attach the collection for the first time
+                attachCollection(this.get(collectionName), state);
+            }
+        };
+
+        /*
+         * map functions
+         */
+        var mapHelper = {
+            bindCollection: function (name, attribute, options) {
+                var collectionName = options.source,
+                    state = {
+                        name: name,
+                        transform: options.transform,
+                        addListener: null,
+                        removeListener: null,
+                        resetListener: null
+                    };
+
+                // Listen to the collection changing
+                this.after(collectionName + 'Change', function (e) {
+                    mapHelper.detachCollection.call(this, e.info.oldValue, state);
+                    mapHelper.attachCollection.call(this, e.info.newValue, state);
+                }, this);
+
+                // Attach the collection for the first time
+                mapHelper.attachCollection.call(this, this.get(collectionName), state);
+            },
+
+            attachCollection: function (col, state)
+            {
+                if (col) {
+                    state.addListener = _.bind(mapHelper.afterItemIsAdded, this, state);
+                    col.after('add', state.addListener);
+                    state.removeListener = _.bind(mapHelper.afterItemIsRemoved, this, state);
+                    col.after('remove', state.removeListener);
+                    state.resetListener = _.bind(mapHelper.afterReset, this, state);
+                    col.after('reset', state.resetListener);
+
+                    // Map the items from the source collection to the destination collection
+                    this.set(state.name, collection.create(col.map(function (item) {
+                        return state.transform.call(this, item);
+                    }, this)));
+                }
+                else {
+                    this.set(state.name, null);
+                }
+            },
+
+            detachCollection: function (col, state)
+            {
+                if (col) {
+                    col.detachAfter('add', state.addListener);
+                    col.detachAfter('remove', state.removeListener);
+                    col.detachAfter('reset', state.resetListener);
+                }
+            },
+
+            afterItemIsAdded: function (state, e)
+            {
+                // Add the transformed items to the destination collection
+                this.get(state.name).add(_.map(e.info.items, function (item) {
+                    return state.transform.call(this, item);
+                }), e.info.options);
+            },
+
+            afterItemIsRemoved: function (state, e)
+            {
+                var destCollection = this.get(state.name);
+
+                // Remove the items from the destination collection
+                destCollection.remove(_.map(e.info.options.at, function (index) {
+                    return destCollection.at(index);
+                }), e.info.options);
+            },
+
+            afterReset: function (state, e)
+            {
+                // Reset the destination collection with the transformed items
+                this.get(state.name).reset(_.map(e.info.items, function (item) {
+                    return state.transform.call(this, item);
+                }), e.info.options);
+            }
+        };
 
         base.setupAttribute = function (name, attribute) {
+            var reduce = attribute.reduce,
+                map = attribute.map;
+
+            // If this attribute has a map property
+            if (_.isObject(map)) {
+                // Then set it to auto destroy the value as it changes
+                attribute.destroy = true;
+            }
+
+            // Call the original setupAttribute method
             setupAttribute.apply(this, arguments);
 
-            var reduce = attribute.reduce;
-
+            // If this attribute has a reduce property
             if (_.isObject(reduce)) {
                 _.each(reduce, function (dependencies, collectionName) {
-                    bindCollection.call(this, name, attribute, collectionName, _.isString(dependencies) ? [dependencies] : dependencies);
+                    reduceHelper.bindCollection.call(this, name, attribute, collectionName, _.isString(dependencies) ? [dependencies] : dependencies);
                 }, this);
+            }
+
+            // If this attribute has a map property
+            if (_.isObject(map)) {
+                mapHelper.bindCollection.call(this, name, attribute, map);
             }
         };
     });
