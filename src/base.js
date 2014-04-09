@@ -345,6 +345,7 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
         setAttribute = function (name, value, options)
         {
             var attribute = this.getAttribute(name) || {},
+                valueIsDifferent = false,
                 valueChanged = false,
                 oldValue;
 
@@ -360,7 +361,14 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
 
             oldValue = getValue.call(this, name);
 
-            if (oldValue !== value) {
+            if (_.isFunction(attribute.equal)) {
+                valueIsDifferent = !attribute.equal(oldValue, value);
+            }
+            else {
+                valueIsDifferent = oldValue !== value;
+            }
+
+            if (valueIsDifferent) {
                 if (!options.silent) {
                     valueChanged = this.fireAttributeChangeEvents(attribute, name, oldValue, value);
                 }

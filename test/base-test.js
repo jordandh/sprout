@@ -910,6 +910,56 @@ TestCase("base", ["sprout/util", "sprout/base", "sprout/env"], function (_, Base
 
 			a.destroy();
 		},
+
+		"test base.attribute.equal can detect difference in value": function () {
+			expectAsserts(2);
+
+			var Animal = Base.extend({
+				attributes: {
+					children: {
+						equal: function (oldValue, newValue) {
+							return _.isEqual(oldValue, newValue);
+						}
+					}
+				}
+			});
+
+			var a = Animal.create();
+
+			var count = 0;
+
+			a.after('childrenChange', function () {
+				assert('this was called', true);
+			});
+
+			a.set('children', ['a', 'b']);
+			a.set('children', ['a']);
+		},
+
+		"test base.attribute.equal can detect equality in value": function () {
+			expectAsserts(1);
+
+			var Animal = Base.extend({
+				attributes: {
+					children: {
+						equal: function (oldValue, newValue) {
+							return _.isEqual(oldValue, newValue);
+						}
+					}
+				}
+			});
+
+			var a = Animal.create();
+
+			var count = 0;
+
+			a.after('childrenChange', function () {
+				assert('this was called', true);
+			});
+
+			a.set('children', ['a', 'b']);
+			a.set('children', ['a', 'b']);
+		},
 		
 		"test base.get with no parameters": function ()
 		{
