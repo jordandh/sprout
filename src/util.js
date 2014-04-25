@@ -111,7 +111,7 @@ define(["underscore", "underscore.string", "sprout/matchMedia"], function (_, _s
             path = arguments[0];
 
             for (var i = 1; i < length; i += 1) {
-                piece = arguments[i];
+                piece = arguments[i] + ""; // Turn the piece into a string
 
                 if (piece !== "") {
                     path = path.replace(/[\/\\]$/, "") + delimiter + piece.replace(/^[\/\\]/, "");
