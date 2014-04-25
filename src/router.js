@@ -53,6 +53,28 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
         }
     }
 
+    function matchRoute (routePath)
+    {
+        var path = getRelativePath();
+
+        // Match the rootUrl portion of the routePath
+        path = path.replace(pathStripper, "").replace(trailingStripper, "");
+        if (_.startsWith(path, this.rootUrl)) {
+            path = path.substring(this.rootUrl.length).replace(pathStripper, "");
+        }
+
+        // Make the routePath a regexp
+        routePath = _.isRegExp(routePath) ? routePath : toPathRegExp(routePath);
+
+        // Match route to the path
+        if (routePath.test(path)) {
+            return {
+                path: routePath,
+                parameters: routePath.exec(path).slice(1)
+            };
+        }
+    }
+
     function matchRoutes (path, routes)
     {
         var matches = [];
@@ -250,6 +272,11 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
         match: function (path)
         {
             return matchRoutes.call(this, path, this.routes);
+        },
+
+        matchRoute: function (routePath)
+        {
+            return matchRoute.call(this, routePath);
         },
 
         navigate: function (path, title)
