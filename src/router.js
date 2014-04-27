@@ -279,9 +279,11 @@ define(["sprout/util", "sprout/base", "sprout/dom", "sprout/history", "sprout/pu
             return matchRoute.call(this, routePath);
         },
 
-        navigate: function (path, title)
+        navigate: function (path, title, options)
         {
-            if (!_.startsWith(path, this.rootUrl)) {
+            options = options || {};
+
+            if (!options.ignoreRootUrl && !_.startsWith(path, this.rootUrl)) {
                 path = _.joinPaths('/', this.rootUrl, path);
             }
 
