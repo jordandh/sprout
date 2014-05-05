@@ -924,17 +924,19 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
                     if (!e.preventDefault) {
                         valueChanged = changeAttribute.call(this, attribute, name, oldValue, e.info.newValue);
 
-                        // On handlers
-                        e.name = eventName;
-                        fireAttributeChange.call(this, "on", e, event1);
-                        e.name = "change";
-                        fireAttributeChange.call(this, "on", e, event2);
+                        if (valueChanged) {
+                            // On handlers
+                            e.name = eventName;
+                            fireAttributeChange.call(this, "on", e, event1);
+                            e.name = "change";
+                            fireAttributeChange.call(this, "on", e, event2);
 
-                        // After handlers
-                        e.name = eventName;
-                        fireAttributeChange.call(this, "after", e, event1);
-                        e.name = "change";
-                        fireAttributeChange.call(this, "after", e, event2);
+                            // After handlers
+                            e.name = eventName;
+                            fireAttributeChange.call(this, "after", e, event1);
+                            e.name = "change";
+                            fireAttributeChange.call(this, "after", e, event2);
+                        }
                     }
                 }
                 else {
@@ -964,6 +966,8 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
              */
             fire: function (name, info, defaultAction, preventedAction, async)
             {
+                name = name.toLowerCase();
+
                 var event = this.events[name],
                     e = {
                         name: name,
