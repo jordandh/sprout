@@ -568,7 +568,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
             start: function (element, value, info, metaData)
             {
                 if (info.isComment) {
-                    metaData.template = info.commentTemplate;
+                    metaData.template = metaData.template || info.commentTemplate;
                 }
                 else {
                     metaData.template = metaData.template || $(element).html();
