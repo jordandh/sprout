@@ -146,6 +146,20 @@ define(["underscore", "underscore.string", "sprout/matchMedia"], function (_, _s
         },
 
         /**
+         * Counts the words in an HTML string not including the html entities.
+         * @param {String} str The HTML string to count the words in.
+         * @return {Number} Returns the number of words in the string or 0 if a string was not given.
+         */
+        countWordsInHTML: function (str)
+        {
+            if (_.isString(str)) {
+                return _.chain(str).stripTags().words().value().length;
+            }
+ 
+            return 0;
+        },
+
+        /**
          * Returns the prototype chain of an object. The first item in the array is the object and subsequent values are the prototypes up the chain.
          * @param {Object} obj An object to get the prototype chain of.
          * @return {Array} Returns the prototype chain of the object.
