@@ -8,7 +8,7 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
         getLocalStorage = function ()
         {
             try {
-                return env.localstorage ? localStorage : null;
+                return env.localStorageEnabled() ? localStorage : null;
             }
             catch (ex) { /* empty */ }
         },

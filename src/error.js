@@ -198,7 +198,7 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], function (p
                 errorStore, errorInfo, aDayAgo, lastReportedAt;
 
             // If this error does not have a key or local storage is not supported
-            if (!errorKey || !env.localstorage) {
+            if (!errorKey || !env.localStorageEnabled()) {
                 return false;
             }
 
@@ -346,14 +346,24 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], function (p
         catch (ex) { /* empty */ }
     }
 
+    function createGlobalError (message, fileName, lineNumber)
+    {
+        return {
+            message: message,
+            fileName: fileName,
+            lineNumber: lineNumber,
+            toString: function () {
+                return this.message;
+            }
+        };
+    }
+
     window.onerror = function (message, fileName, lineNumber) {
         submitError({
             type: "global",
-            exceptions: [{
-                message: message,
-                fileName: fileName,
-                lineNumber: lineNumber
-            }]
+            exceptions: [
+                createGlobalError(message, fileName, lineNumber)
+            ]
         });
     };
 
