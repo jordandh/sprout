@@ -1,5 +1,56 @@
 define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom"], function (_, base, model, data, $) {
     "use strict";
+
+    /**
+     * Helper function to create list functions that modify the list's items. Takes care of putting together the items and options parameters and fires an event unless silenced.
+     * @param {String} name The name of the event to fire for the modification.
+     * @param {Function} modify The function to call that modifies the collection.
+     * @return {Function} Returns a function that prepares parameters, fires an event, and calls the modify function.
+     */
+    function createListModifier (name, modify)
+    {
+        return function (items, options) {
+            options = options || {};
+
+            if (items) {
+                items = _.isArray(items) ? items : [items];
+            }
+            else {
+                items = [];
+            }
+
+            if (options.silent) {
+                modify.call(this, items, options);
+            }
+            else {
+                this.fire(name, { items: items, options: options }, function (e) {
+                    modify.call(this, e.info.items, e.info.options);
+                });
+            }
+        };
+    }
+
+    /**
+     * Helper function to create list functions that modify the list's items. Takes care of putting together the items and options parameters and fires an event unless silenced.
+     * @param {String} name The name of the event to fire for the modification.
+     * @param {Function} modify The function to call that modifies the collection.
+     * @return {Function} Returns a function that prepares parameters, fires an event, and calls the modify function.
+     */
+    function createListModifierWithNoItems (name, modify)
+    {
+        return function (options) {
+            options = options || {};
+
+            if (options.silent) {
+                modify.call(this, options);
+            }
+            else {
+                this.fire(name, { options: options }, function (e) {
+                    modify.call(this, e.info.options);
+                });
+            }
+        };
+    }
     
     /**
      * Handler for sync errors.
@@ -264,7 +315,7 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              * {Boolean} silent false If true then no event is fired for adding the items. This is false by default.
              * {Number} at undefined The index to insert the items at in the collection. By default items are added to the end of the collection.
              */
-            add: _.createListModifier("add", function (items, options)
+            add: createListModifier("add", function (items, options)
             {
                 // Turn any json data into models and listen to sync events
                 _.each(items, function (item, index) {
@@ -312,7 +363,7 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              * @options
              * {Boolean} silent false If true then no event is fired for removing the items. This is false by default.
              */
-            remove: _.createListModifier("remove", function (items, options)
+            remove: createListModifier("remove", function (items, options)
             {
                 // Grab the indices of the items being removed (before they are removed)
                 options.at = [];
@@ -337,20 +388,42 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
             }),
 
             /**
-             * Replace an item in the collection. Fires a replace event.
+             * Replace an item in the collection. Fires a remove event followed by an add event.
              * @param {model} A single model or model's json data to add to the collection.
              * @param {Object} options
              * @options
-             * {Boolean} silent false If true then no event is fired for resetting the items. This is false by default.
+             * {Boolean} silent false If true then no event is fired for replacing the item. This is false by default.
              * {Number} at undefined The index of the item to replace in the collection.
              */
-            replace: _.createListModifier("replace", function (items, options)
+            replace: createListModifier("replace", function (items, options)
             {
                 if (_.isNumber(options.at)) {
                     this.remove(this.at(options.at), _.clone(options));
                 }
 
                 this.add(items, options);
+            }),
+
+            /**
+             * Move an item from location to another in the collection. Fires a remove event followed by an add event.
+             * @param {Object} options
+             * @options
+             * {Boolean} silent false If true then no event is fired for moving the item. This is false by default.
+             * {Number} from undefined The index of the item to move in the collection.
+             * {Number} to undefined The index to move the item to in the collection.
+             */
+            move: createListModifierWithNoItems("move", function (options)
+            {
+                var mod;
+
+                if (_.isNumber(options.from)) {
+                    mod = this.at(options.from);
+                    this.remove(mod);
+                }
+
+                if (_.isNumber(options.to)) {
+                    this.add(mod, { at: options.to });
+                }
             }),
             
             /**
@@ -360,7 +433,7 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              * @options
              * {Boolean} silent false If true then no event is fired for resetting the items. This is false by default.
              */
-            reset: _.createListModifier("reset", function (items)
+            reset: createListModifier("reset", function (items)
             {
                 // Detach event handlers
                 this.each(function (item) {

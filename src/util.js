@@ -226,35 +226,6 @@ define(["underscore", "underscore.string", "sprout/matchMedia"], function (_, _s
             }
 
             return obj;
-        },
-
-        /**
-         * Helper function to create list functions that modify the list's items. Takes care of putting together the items and options parameters and fires an event unless silenced.
-         * @param {String} name The name of the event to fire for the modification.
-         * @param {Function} modify The function to call that modifies the collection.
-         * @return {Function} Returns a function that prepares parameters, fires an event, and calls the modify function.
-         */
-        createListModifier: function (name, modify)
-        {
-            return function (items, options) {
-                options = options || {};
-
-                if (items) {
-                    items = _.isArray(items) ? items : [items];
-                }
-                else {
-                    items = [];
-                }
-
-                if (options.silent) {
-                    modify.call(this, items, options);
-                }
-                else {
-                    this.fire(name, { items: items, options: options }, function (e) {
-                        modify.call(this, e.info.items, e.info.options);
-                    });
-                }
-            };
         }
     });
 

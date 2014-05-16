@@ -245,6 +245,46 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			assertSame("item.name value is incorrect after replace.", "Doug", col.get("1.name"));
 			assertSame("item.age value is incorrect after replace.", 3, col.get("1.age"));
 		},
+
+		"test collection.move": function ()
+		{
+			var col = animals.create();
+			
+			// Add some items
+			col.add([{
+				name: "Stripe",
+				age: 23
+			}, {
+				name: "Spot",
+				age: 8
+			}, {
+				name: "Zebra",
+				age: 4
+			}]);
+
+			assertSame("item[0].name value is incorrect.", "Stripe", col.get("0.name"));
+			assertSame("item[0].age value is incorrect.", 23, col.get("0.age"));
+			assertSame("item[1].name value is incorrect.", "Spot", col.get("1.name"));
+			assertSame("item[1].age value is incorrect.", 8, col.get("1.age"));
+			assertSame("item[2].name value is incorrect.", "Zebra", col.get("2.name"));
+			assertSame("item[2].age value is incorrect.", 4, col.get("2.age"));
+
+			// Move an item
+			var zebra = col.at(2);
+
+			col.move({
+				from: 2,
+				to: 0
+			});
+
+			assertSame("item moved is not at correct index.", zebra, col.at(0));
+			assertSame("item[0].name value is incorrect after move.", "Zebra", col.get("0.name"));
+			assertSame("item[0].age value is incorrect after move.", 4, col.get("0.age"));
+			assertSame("item[1].name value is incorrect after move.", "Stripe", col.get("1.name"));
+			assertSame("item[1].age value is incorrect after move.", 23, col.get("1.age"));
+			assertSame("item[2].name value is incorrect after move.", "Spot", col.get("2.name"));
+			assertSame("item[2].age value is incorrect after move.", 8, col.get("2.age"));
+		},
 		
 		"test collection.reset": function ()
 		{
