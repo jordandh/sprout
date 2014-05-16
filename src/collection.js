@@ -580,7 +580,61 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
         };
     });
 
-    // Add collection dependency to base attributes
+    /*
+     * Add the bindToCollection method to base
+     */
+    base.bindToCollection = function (name, options) {
+        options = options || {};
+
+        var context = options.context || this,
+            addListener, removeListener, resetListener;
+
+        // Starts listening to changes in the collection
+        function attachCollection (col)
+        {
+            if (col) {
+                if (_.isFunction(options.add)) {
+                    addListener = _.bind(options.add, context, options);
+                    col.after('add', addListener);
+                }
+                if (_.isFunction(options.remove)) {
+                    removeListener = _.bind(options.remove, context, options);
+                    col.after('remove', removeListener);
+                }
+                if (_.isFunction(options.reset)) {
+                    resetListener = _.bind(options.reset, context, options);
+                    col.after('reset', resetListener);
+                }
+            }
+        }
+
+        // Stops listening to changes in the collection
+        function detachCollection (col)
+        {
+            if (col) {
+                col.detachAfter('add', addListener);
+                col.detachAfter('remove', removeListener);
+                col.detachAfter('reset', resetListener);
+            }
+        }
+
+        // Listen to the collection changing
+        this.after(name + 'Change', function (e) {
+            detachCollection(e.info.oldValue);
+            attachCollection(e.info.newValue);
+        });
+
+        if (_.isFunction(options.change)) {
+            this.after(name + 'Change', _.bind(options.change, context, options));
+        }
+
+        // Attach the collection for the first time
+        attachCollection(this.get(name));
+    };
+
+    /*
+     * Add support for collection specific attribute properties (reduce, map, list)
+     */
     _.override(base.setupAttribute, function (setupAttribute) {
         function attachItems (items, state)
         {
@@ -653,32 +707,6 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
             state.fireChange();
         }
 
-        // function bindCollection (name, attribute, collectionName, dependencies)
-        // {
-        //     var self = this,
-        //         state = {
-        //             addListener: null,
-        //             removeListener: null,
-        //             onResetListener: null,
-        //             afterResetListener: null,
-        //             dependencies: dependencies,
-        //             fireChange: function () {
-        //                 self.fireAttributeChangeEvents(attribute, name, null, attribute.get.call(self));
-        //             }
-        //         };
-
-        //     this.after(collectionName + 'Change', function (e) {
-        //         detachCollection(e.info.oldValue, state);
-        //         attachCollection(e.info.newValue, state);
-
-        //         // The collection itself changed so fire the change event
-        //         state.fireChange();
-        //     }, this);
-
-        //     // Attach the collection for the first time
-        //     attachCollection(this.get(collectionName), state);
-        // }
-
         /*
          * reduce functions
          */
@@ -710,108 +738,125 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
         };
 
         /*
-         * map functions
+         * map helper
          */
         var mapHelper = {
-            bindCollection: function (name, attribute, options) {
-                var self = this,
-                    collectionName = options.source,
-                    state = {
-                        name: name,
-                        uses: options.uses,
-                        transform: options.transform,
-                        addListener: null,
-                        removeListener: null,
-                        resetListener: null,
-                        transformAll: function () {
-                            // self.fireAttributeChangeEvents(attribute, name, null, self.get(name));
+            start: function (name, attribute, options) {
+                var updating = false;
 
-                            var destCollection = self.get(name),
-                                sourceCollection = self.get(collectionName);
+                // Prevents one of the updater functions from being called if an update is in progress. Also insures that the updating state is correct if an exception is thrown during an update.
+                function guardUpdate (updater)
+                {
+                    return function (bindOptions, e) {
+                        if (updating) {
+                            return;
+                        }
 
-                            if (destCollection && sourceCollection) {
-                                destCollection.reset(sourceCollection.map(function (item) {
-                                    return state.transform.call(self, item);
-                                }));
-                            }
+                        try {
+                            updating = true;
+                            updater.call(this, bindOptions, e);
+                        }
+                        finally {
+                            updating = false;
                         }
                     };
+                }
+                
+                function transformAll ()
+                {
+                    var destCol = this.get(name),
+                        srcCol = this.get(options.source);
+
+                    if (destCol && srcCol) {
+                        destCol.reset(srcCol.map(function (item) {
+                            return options.transform.call(this, item);
+                        }));
+                    }
+                }
 
                 // Setup the uses property
-                if (_.isString(state.uses)) {
-                    state.uses = [state.uses];
+                if (_.isString(options.uses)) {
+                    options.uses = [options.uses];
                 }
 
-                _.each(state.uses, function (dependency) {
-                    this.bind(dependency, state.transformAll);
+                _.each(options.uses, function (dependency) {
+                    this.bind(dependency, transformAll, this);
                 }, this);
 
-                // Listen to the collection changing
-                this.after(collectionName + 'Change', function (e) {
-                    mapHelper.detachCollection.call(this, e.info.oldValue, state);
-                    mapHelper.attachCollection.call(this, e.info.newValue, state);
-                }, this);
+                // Bind to the destination collection
+                this.bindToCollection(name, {
+                    add: guardUpdate(function (bindOptions, e) {
+                        var srcCol = this.get(options.source);
 
-                // Attach the collection for the first time
-                mapHelper.attachCollection.call(this, this.get(collectionName), state);
-            },
+                        // Add the items to the source collection
+                        if (srcCol) {
+                            srcCol.add(_.map(e.info.items, function (item) {
+                                return options.untransform.call(this, item);
+                            }, this), e.info.options);
+                        }
+                    }),
+                    remove: guardUpdate(function (bindOptions, e) {
+                        var srcCol = this.get(options.source);
 
-            attachCollection: function (col, state)
-            {
-                if (col) {
-                    state.addListener = _.bind(mapHelper.afterItemIsAdded, this, state);
-                    col.after('add', state.addListener);
-                    state.removeListener = _.bind(mapHelper.afterItemIsRemoved, this, state);
-                    col.after('remove', state.removeListener);
-                    state.resetListener = _.bind(mapHelper.afterReset, this, state);
-                    col.after('reset', state.resetListener);
+                        // Remove the items from the source collection
+                        if (srcCol) {
+                            srcCol.remove(_.map(e.info.options.at, function (index) {
+                                return srcCol.at(index);
+                            }, this), e.info.options);
+                        }
+                    }),
+                    reset: guardUpdate(function (bindOptions, e) {
+                        var srcCol = this.get(options.source);
 
-                    // Map the items from the source collection to the destination collection
-                    this.set(state.name, collection.create(col.map(function (item) {
-                        return state.transform.call(this, item);
-                    }, this)));
-                }
-                else {
-                    this.set(state.name, null);
-                }
-            },
+                        // Reset the source collection
+                        if (srcCol) {
+                            srcCol.reset(_.map(e.info.items, function (item) {
+                                return options.untransform.call(this, item);
+                            }, this), e.info.options);
+                        }
+                    })
+                });
 
-            detachCollection: function (col, state)
-            {
-                if (col) {
-                    col.detachAfter('add', state.addListener);
-                    col.detachAfter('remove', state.removeListener);
-                    col.detachAfter('reset', state.resetListener);
-                }
-            },
+                // Bind to the source collection
+                this.bindToCollection(options.source, {
+                    change: function (bindOptions, e) {
+                        if (e.info.newValue) {
+                            // Map the items from the source collection to the destination collection
+                            this.set(name, collection.create(e.info.newValue.map(function (item) {
+                                return options.transform.call(this, item);
+                            }, this)));
+                        }
+                        else {
+                            this.set(name, null);
+                        }
+                    },
+                    add: guardUpdate(function (bindOptions, e) {
+                        // Add the transformed items to the destination collection
+                        this.get(name).add(_.map(e.info.items, function (item) {
+                            return options.transform.call(this, item);
+                        }, this), e.info.options);
+                    }),
+                    remove: guardUpdate(function (bindOptions, e) {
+                        var destCol = this.get(name);
 
-            afterItemIsAdded: function (state, e)
-            {
-                // Add the transformed items to the destination collection
-                this.get(state.name).add(_.map(e.info.items, function (item) {
-                    return state.transform.call(this, item);
-                }), e.info.options);
-            },
-
-            afterItemIsRemoved: function (state, e)
-            {
-                var destCollection = this.get(state.name);
-
-                // Remove the items from the destination collection
-                destCollection.remove(_.map(e.info.options.at, function (index) {
-                    return destCollection.at(index);
-                }), e.info.options);
-            },
-
-            afterReset: function (state, e)
-            {
-                // Reset the destination collection with the transformed items
-                this.get(state.name).reset(_.map(e.info.items, function (item) {
-                    return state.transform.call(this, item);
-                }), e.info.options);
+                        // Remove the items from the destination collection
+                        destCol.remove(_.map(e.info.options.at, function (index) {
+                            return destCol.at(index);
+                        }, this), e.info.options);
+                    }),
+                    reset: guardUpdate(function (bindOptions, e) {
+                        // Reset the destination collection with the transformed items
+                        this.get(name).reset(_.map(e.info.items, function (item) {
+                            return options.transform.call(this, item);
+                        }, this), e.info.options);
+                    })
+                });
             }
         };
 
+        /*
+         * list helper
+         */
         var listHelper = {
             start: function (name, attribute, options)
             {
@@ -882,7 +927,7 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
 
             // If this attribute has a map property
             if (_.isObject(map)) {
-                mapHelper.bindCollection.call(this, name, attribute, map);
+                mapHelper.start.call(this, name, attribute, map);
             }
 
             // If this attribute has a list property
