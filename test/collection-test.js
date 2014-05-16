@@ -206,6 +206,45 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			assertSame("dog item.name value is incorrect.", "Stripe", col.get("1.name"));
 			assertSame("dog item.age value is incorrect.", 10, col.get("1.age"));
 		},
+
+		"test collection.replace": function ()
+		{
+			var col = animals.create();
+			
+			// Add some items
+			col.add({
+				name: "Stripe",
+				age: 23
+			});
+
+			var mod = animal.create({
+				name: "Spot",
+				age: 8
+			});
+			col.add(mod);
+
+			col.add({
+				name: "Zebra",
+				age: 4
+			});
+
+			var item = col.at(1);
+			assertSame("item from collection is not same as item added to collection.", mod, item);
+			assertSame("item.name value is incorrect.", "Spot", col.get("1.name"));
+			assertSame("item.age value is incorrect.", 8, col.get("1.age"));
+
+			// Replace the item
+			mod = animal.create({
+				name: "Doug",
+				age: 3
+			});
+			col.replace(mod, { at: 1 });
+
+			item = col.at(1);
+			assertSame("item from collection is not same as item added to collection after replace.", mod, item);
+			assertSame("item.name value is incorrect after replace.", "Doug", col.get("1.name"));
+			assertSame("item.age value is incorrect after replace.", 3, col.get("1.age"));
+		},
 		
 		"test collection.reset": function ()
 		{
@@ -1791,6 +1830,222 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			if (error) {
 				throw error;
 			}
+		},
+
+		/*
+		 * collection attribute.list
+		 */
+		"test collection.attribute.list": function ()
+		{
+			// Make a model with a list attribute
+			var park = model.extend({
+				attributes: {
+					animals: {
+						list: {
+							source: 'animal_ids',
+							repo: collection.create()
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animal_ids: [1, 2, 3]
+			});
+
+			var pets = sd.get('animals');
+
+			assert("pets is not a collection", collection.isPrototypeOf(pets));
+			assertSame("pets has the incorrect number of items", 3, pets.get('count'));
+			assertSame("pets[0] has the incorrect id", 1, pets.at(0).get('id'));
+			assertSame("pets[1] has the incorrect id", 2, pets.at(1).get('id'));
+			assertSame("pets[2] has the incorrect id", 3, pets.at(2).get('id'));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.list with custom collection": function ()
+		{
+			// Make a model with a list attribute
+			var park = model.extend({
+				attributes: {
+					animals: {
+						list: {
+							source: 'animal_ids',
+							repo: collection.create(),
+							collection: animals
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animal_ids: [1, 2, 3]
+			});
+
+			var pets = sd.get('animals');
+
+			assert("pets is not an animals collection", animals.isPrototypeOf(pets));
+			assertSame("pets has the incorrect number of items", 3, pets.get('count'));
+			assertSame("pets[0] has the incorrect id", 1, pets.at(0).get('id'));
+			assertSame("pets[1] has the incorrect id", 2, pets.at(1).get('id'));
+			assertSame("pets[2] has the incorrect id", 3, pets.at(2).get('id'));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.list with repo function": function ()
+		{
+			var repoCollection = collection.create();
+
+			// Make a model with a list attribute
+			var park = model.extend({
+				attributes: {
+					animals: {
+						list: {
+							source: 'animal_ids',
+							repo: function () {
+								return repoCollection;
+							}
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animal_ids: [1, 2, 3]
+			});
+
+			var pets = sd.get('animals');
+
+			assert("pets is not a collection", collection.isPrototypeOf(pets));
+			assertSame("pets has the incorrect number of items", 3, pets.get('count'));
+			assertSame("pets[0] has the incorrect id", 1, pets.at(0).get('id'));
+			assertSame("pets[1] has the incorrect id", 2, pets.at(1).get('id'));
+			assertSame("pets[2] has the incorrect id", 3, pets.at(2).get('id'));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.list with subsequent set with more items": function ()
+		{
+			// Make a model with a list attribute
+			var park = model.extend({
+				attributes: {
+					animals: {
+						list: {
+							source: 'animal_ids',
+							repo: collection.create()
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animal_ids: [1, 2, 3]
+			});
+
+			var pets = sd.get('animals');
+
+			assert("pets is not a collection", collection.isPrototypeOf(pets));
+			assertSame("pets has the incorrect number of items", 3, pets.get('count'));
+			assertSame("pets[0] has the incorrect id", 1, pets.at(0).get('id'));
+			assertSame("pets[1] has the incorrect id", 2, pets.at(1).get('id'));
+			assertSame("pets[2] has the incorrect id", 3, pets.at(2).get('id'));
+
+			// Set the animal_ids again
+			sd.set('animal_ids', [1, 2, 3, 4]);
+
+			assert("pets is not a collection after set", collection.isPrototypeOf(pets));
+			assertSame("pets has the incorrect number of items after set", 4, pets.get('count'));
+			assertSame("pets[0] has the incorrect id after set", 1, pets.at(0).get('id'));
+			assertSame("pets[1] has the incorrect id after set", 2, pets.at(1).get('id'));
+			assertSame("pets[2] has the incorrect id after set", 3, pets.at(2).get('id'));
+			assertSame("pets[3] has the incorrect id after set", 4, pets.at(3).get('id'));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.list with subsequent set with fewer items": function ()
+		{
+			// Make a model with a list attribute
+			var park = model.extend({
+				attributes: {
+					animals: {
+						list: {
+							source: 'animal_ids',
+							repo: collection.create()
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animal_ids: [1, 2, 3]
+			});
+
+			var pets = sd.get('animals');
+
+			assert("pets is not a collection", collection.isPrototypeOf(pets));
+			assertSame("pets has the incorrect number of items", 3, pets.get('count'));
+			assertSame("pets[0] has the incorrect id", 1, pets.at(0).get('id'));
+			assertSame("pets[1] has the incorrect id", 2, pets.at(1).get('id'));
+			assertSame("pets[2] has the incorrect id", 3, pets.at(2).get('id'));
+
+			// Set the animal_ids again
+			sd.set('animal_ids', [1]);
+
+			assert("pets is not a collection after set", collection.isPrototypeOf(pets));
+			assertSame("pets has the incorrect number of items after set", 3, pets.get('count'));
+			assertSame("pets[0] has the incorrect id after set", 1, pets.at(0).get('id'));
+			assertSame("pets[1] has the incorrect id after set", 2, pets.at(1).get('id'));
+			assertSame("pets[2] has the incorrect id after set", 3, pets.at(2).get('id'));
+
+			sd.destroy();
+		},
+
+		"test collection.attribute.list with subsequent set changing items": function ()
+		{
+			// Make a model with a list attribute
+			var park = model.extend({
+				attributes: {
+					animals: {
+						list: {
+							source: 'animal_ids',
+							repo: collection.create()
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animal_ids: [1, 2, 3]
+			});
+
+			var pets = sd.get('animals');
+
+			assert("pets is not a collection", collection.isPrototypeOf(pets));
+			assertSame("pets has the incorrect number of items", 3, pets.get('count'));
+			assertSame("pets[0] has the incorrect id", 1, pets.at(0).get('id'));
+			assertSame("pets[1] has the incorrect id", 2, pets.at(1).get('id'));
+			assertSame("pets[2] has the incorrect id", 3, pets.at(2).get('id'));
+
+			// Set the animal_ids again
+			sd.set('animal_ids', [4]);
+
+			assert("pets is not a collection after set", collection.isPrototypeOf(pets));
+			assertSame("pets has the incorrect number of items after set", 3, pets.get('count'));
+			assertSame("pets[0] has the incorrect id after set", 4, pets.at(0).get('id'));
+			assertSame("pets[1] has the incorrect id after set", 2, pets.at(1).get('id'));
+			assertSame("pets[2] has the incorrect id after set", 3, pets.at(2).get('id'));
+
+			sd.destroy();
 		}
 	};
 });

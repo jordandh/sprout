@@ -335,6 +335,23 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
 
                 this.set("count", this.items.length, { force: true });
             }),
+
+            /**
+             * Replace an item in the collection. Fires a replace event.
+             * @param {model} A single model or model's json data to add to the collection.
+             * @param {Object} options
+             * @options
+             * {Boolean} silent false If true then no event is fired for resetting the items. This is false by default.
+             * {Number} at undefined The index of the item to replace in the collection.
+             */
+            replace: _.createListModifier("replace", function (items, options)
+            {
+                if (_.isNumber(options.at)) {
+                    this.remove(this.at(options.at), _.clone(options));
+                }
+
+                this.add(items, options);
+            }),
             
             /**
              * Replaces all the items in the collection. If nothing is passed in then all the items in the collection are removed. Fires a reset event.
@@ -722,9 +739,57 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
             }
         };
 
+        var listHelper = {
+            start: function (name, attribute, options)
+            {
+                var state = {
+                    name: name,
+                    repo: options.repo,
+                    source: options.source,
+                    collectionType: options.collection || collection
+                };
+
+                // Listen to the source changing
+                this.after(options.source + 'Change', _.bind(listHelper.syncWithSource, this, state));
+
+                // Sync for the first time
+                listHelper.syncWithSource.call(this, state);
+            },
+
+            syncWithSource: function (state)
+            {
+                var ids = this.get(state.source),
+                    col = this.get(state.name),
+                    repo = _.isFunction(state.repo) ? state.repo.call(this) : state.repo;
+
+                if (_.isArray(ids) && ids.length > 0) {
+                    // Create the collection if it does not exist
+                    if (!col) {
+                        col = state.collectionType.create();
+                    }
+
+                    // Go through each id and sync it with the collection
+                    _.each(ids, function (id, index) {
+                        var mod = col.at(index);
+
+                        // If the model is not in this collection at this index
+                        if (!mod || mod.get('id') !== index) {
+                            // Then set the model at this index
+                            col.replace(repo.getById(id, true), { at: index });
+                        }
+                    });
+
+                    // Set this after updating the collection. Do this to improve the performance the first time through here.
+                    // By doing this anything that is bound to the collection will not get each update as it happens but instead just get a new collection at once.
+                    this.set(state.name, col);
+                }
+            }
+        };
+
         base.setupAttribute = function (name, attribute) {
             var reduce = attribute.reduce,
-                map = attribute.map;
+                map = attribute.map,
+                list = attribute.list;
 
             // If this attribute has a map property
             if (_.isObject(map)) {
@@ -745,6 +810,11 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
             // If this attribute has a map property
             if (_.isObject(map)) {
                 mapHelper.bindCollection.call(this, name, attribute, map);
+            }
+
+            // If this attribute has a list property
+            if (_.isObject(list)) {
+                listHelper.start.call(this, name, attribute, list);
             }
         };
     });
