@@ -46,7 +46,8 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
             }
             else {
                 this.fire(name, { options: options }, function (e) {
-                    modify.call(this, e.info.options);
+                    // The modify function can return the items it modified. Set info.items equal to it.
+                    e.info.items = modify.call(this, e.info.options);
                 });
             }
         };
@@ -435,12 +436,19 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
 
                 if (_.isNumber(options.from)) {
                     mod = this.at(options.from);
-                    this.remove(mod);
+                    this.remove(mod, {
+                        move: true
+                    });
                 }
 
                 if (_.isNumber(options.to)) {
-                    this.add(mod, { at: options.to });
+                    this.add(mod, {
+                        move: true,
+                        at: options.to
+                    });
                 }
+
+                return [mod];
             }),
             
             /**
