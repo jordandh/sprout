@@ -1580,6 +1580,97 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             }
         },
 
+        "test databindings.foreach on sparse collection": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            var vm = viewmodel.create({
+                authors: collection.create()
+            });
+
+            // Add some items sparsely
+            vm.get('authors').add({
+                id: 5,
+                fullName: 'William'
+            }, {
+                at: 5
+            });
+            vm.get('authors').add({
+                id: 10,
+                fullName: 'Deanna'
+            }, {
+                at: 10
+            });
+            vm.get('authors').add({
+                id: 15,
+                fullName: 'Beverly'
+            }, {
+                at: 15
+            });
+
+            databind.applyBindings(vm, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly", cells.eq(2).text());
+        },
+
+        "test databindings.foreach item removed from sparse collection": function () {
+            var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: fullName'></td></tr></tbody></table>";
+
+            this.node.html(template);
+
+            var vm = viewmodel.create({
+                authors: collection.create()
+            });
+
+            // Add some items sparsely
+            vm.get('authors').add({
+                id: 5,
+                fullName: 'William'
+            }, {
+                at: 5
+            });
+            vm.get('authors').add({
+                id: 10,
+                fullName: 'Deanna'
+            }, {
+                at: 10
+            });
+            vm.get('authors').add({
+                id: 15,
+                fullName: 'Beverly'
+            }, {
+                at: 15
+            });
+
+            databind.applyBindings(vm, this.element);
+
+            var table = $("table", this.element);
+
+            assertSame("data bound foreach item count is incorrect", 3, table.prop("rows").length);
+
+            var cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Deanna", cells.eq(1).text());
+            assertSame("cell 2 value is incorrect", "Beverly", cells.eq(2).text());
+
+            vm.get('authors').remove(vm.get('authors').at(10));
+            assertSame("data bound foreach item count is incorrect", 2, table.prop("rows").length);
+            cells = $("td", this.element);
+
+            assertSame("cell 0 value is incorrect", "William", cells.eq(0).text());
+            assertSame("cell 1 value is incorrect", "Beverly", cells.eq(1).text());
+        },
+
         "test databindings.$parent": function () {
             var template = "<table><tbody data-bind='foreach: authors'><tr><td data-bind='text: $parent.title'></td><td data-bind='text: fullName'></td></tr></tbody></table>";
 
