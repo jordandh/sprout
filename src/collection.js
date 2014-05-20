@@ -233,6 +233,14 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              * @type Function
              */
             comparator: null,
+
+            /**
+             * Whether or not the collection is a sparse array. Most collections should not be sparse.
+             * Primarily used for correctly calculating the collection's count.
+             * @property
+             * @type Boolean
+             */
+            sparse: false,
             
             /**
              * Returns an array of the collection's items for JSON stringification. The results of this function can be used as the argument for collection.parse.
@@ -346,13 +354,22 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                 else {
                     // Add the items to the collection at the specifed index or at the end
                     if (_.isNumber(options.at)) {
-                        this.items.splice.apply(this.items, [options.at, 0].concat(items));
+                        // If inserting the items beyond the end of the array
+                        if (options.at > this.items.length) {
+                            // Then assign them explicitly in order to make the array sparse
+                            for (var i = 0, length = items.length; i < length; i += 1) {
+                                this.items[options.at + i] = items[i];
+                            }
+                        }
+                        else {
+                            this.items.splice.apply(this.items, [options.at, 0].concat(items));
+                        }
                     }
                     else {
                         this.items.push.apply(this.items, items);
                     }
 
-                    this.set("count", this.items.length, { force: true });
+                    this.set("count", this.sparse ? _.sparseSize(this.items) : this.items.length, { force: true });
                 }
             }),
             
@@ -384,7 +401,7 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                     }
                 }, this);
 
-                this.set("count", this.items.length, { force: true });
+                this.set("count", this.sparse ? _.sparseSize(this.items) : this.items.length, { force: true });
             }),
 
             /**

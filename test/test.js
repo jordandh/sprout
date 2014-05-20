@@ -86,9 +86,45 @@
         "assets/sprout/test/data-test.js",
         "assets/sprout/test/model-test.js",
         "assets/sprout/test/collection-test.js",
+        "assets/sprout/test/list-test.js",
         "assets/sprout/test/database-test.js",
         "assets/sprout/test/viewmodel-test.js",
         "assets/sprout/test/pubsub-test.js",
         "assets/sprout/test/databind-test.js"
     ]);
+
+    /*
+     * Config for codekit server
+     */
+    // require.config({
+    //     baseUrl: '',
+    //     paths: {
+    //         'sprout': 'src',
+    //         'jquery': 'bower_components/jquery/dist/jquery',
+    //         'modernizr': 'bower_components/modernizr/modernizr',
+    //         'underscore': 'bower_components/underscore/underscore',
+    //         'underscore.string': 'bower_components/underscore.string/lib/underscore.string'
+    //     },
+    //     shim: {
+    //         'modernizr': { exports: 'Modernizr' }
+    //     }
+    // });
+
+    // require([
+    //     "test/error-test.js",
+    //     "test/util-test.js",
+    //     "test/dom-test.js",
+    //     "test/base-test.js",
+    //     "test/plugin-test.js",
+    //     "test/url-test.js",
+    //     "test/router-test.js",
+    //     "test/data-test.js",
+    //     "test/model-test.js",
+    //     "test/collection-test.js",
+    //     "test/list-test.js",
+    //     "test/database-test.js",
+    //     "test/viewmodel-test.js",
+    //     "test/pubsub-test.js",
+    //     "test/databind-test.js"
+    // ]);
 }());

@@ -160,6 +160,16 @@ define(["underscore", "underscore.string", "sprout/matchMedia"], function (_, _s
         },
 
         /**
+         * Returns the number of set elements in an array.
+         * @param {Array} arr The sparse array to get the count of.
+         * @return {Number} Returns the number of set elements in an array.
+         */
+        sparseSize: function (arr)
+        {
+            return _.keys(arr).length;
+        },
+
+        /**
          * Returns the prototype chain of an object. The first item in the array is the object and subsequent values are the prototypes up the chain.
          * @param {Object} obj An object to get the prototype chain of.
          * @return {Array} Returns the prototype chain of the object.

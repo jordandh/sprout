@@ -28,6 +28,10 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 		rootUrl: "foobars",
 		model: foobar
 	});
+
+	var sparseCollection = collection.extend({
+		sparse: true
+	});
 	
 	return {
 		"test collection has underscore methods": function ()
@@ -2471,6 +2475,144 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
             firstPets.add({ name: 'Scratchy' });
             firstPets.remove(pets.at(0));
             firstPets.reset();
-		}
+		},
+
+		/*
+		 * sparse collections
+		 */
+		"test sparse collection.count": function ()
+		{
+			var col = sparseCollection.create();
+
+			assertSame('collection.count has incorrect value before adding items', 0, col.get('count'));
+
+			// Add some items to the end of the array
+			col.add([{ id: 0 }, { id: 1 }, { id: 2 }]);
+
+			assertSame('collection.count has incorrect value after adding items', 3, col.get('count'));
+
+			// Add an item beyond the end of the array
+			col.add({ id: 6 }, { at: 6 });
+
+			assertSame('collection.count has incorrect value after adding an item beyond the end of the collection', 4, col.get('count'));
+
+			// Add mutliple items beyond the end of the array
+			col.add([{ id: 10 }, { id: 11 }, { id: 12 }], { at: 10 });
+
+			assertSame('collection.count has incorrect value after adding multiple items beyond the end of the collection', 7, col.get('count'));
+		},
+
+		"test sparse collection.add": function ()
+		{
+			var col = sparseCollection.create();
+
+			// Add some items to the end of the array
+			col.add([{ id: 0 }, { id: 1 }, { id: 2 }]);
+
+			assertSame('collection[0] has incorrect value after adding items', 0, col.get('0.id'));
+			assertSame('collection[1] has incorrect value after adding items', 1, col.get('1.id'));
+			assertSame('collection[2] has incorrect value after adding items', 2, col.get('2.id'));
+
+			// Add an item beyond the end of the array
+			col.add({ id: 6 }, { at: 6 });
+
+			assertSame('collection[0] has incorrect value after adding an item beyond the end of the collection', 0, col.get('0.id'));
+			assertSame('collection[1] has incorrect value after adding an item beyond the end of the collection', 1, col.get('1.id'));
+			assertSame('collection[2] has incorrect value after adding an item beyond the end of the collection', 2, col.get('2.id'));
+			assertUndefined('collection[3] has incorrect value after adding an item beyond the end of the collection', col.get('3.id'));
+			assertUndefined('collection[4] has incorrect value after adding an item beyond the end of the collection', col.get('4.id'));
+			assertUndefined('collection[5] has incorrect value after adding an item beyond the end of the collection', col.get('5.id'));
+			assertSame('collection[6] has incorrect value after adding an item beyond the end of the collection', 6, col.get('6.id'));
+
+			// Add mutliple items beyond the end of the array
+			col.add([{ id: 10 }, { id: 11 }, { id: 12 }], { at: 10 });
+
+			assertSame('collection[0] has incorrect value after adding an item beyond the end of the collection', 0, col.get('0.id'));
+			assertSame('collection[1] has incorrect value after adding an item beyond the end of the collection', 1, col.get('1.id'));
+			assertSame('collection[2] has incorrect value after adding an item beyond the end of the collection', 2, col.get('2.id'));
+			assertUndefined('collection[3] has incorrect value after adding an item beyond the end of the collection', col.get('3.id'));
+			assertUndefined('collection[4] has incorrect value after adding an item beyond the end of the collection', col.get('4.id'));
+			assertUndefined('collection[5] has incorrect value after adding an item beyond the end of the collection', col.get('5.id'));
+			assertSame('collection[6] has incorrect value after adding an item beyond the end of the collection', 6, col.get('6.id'));
+			assertUndefined('collection[7] has incorrect value after adding multiple items beyond the end of the collection', col.get('7.id'));
+			assertUndefined('collection[8] has incorrect value after adding multiple items beyond the end of the collection', col.get('8.id'));
+			assertUndefined('collection[9] has incorrect value after adding multiple items beyond the end of the collection', col.get('9.id'));
+			assertSame('collection[10] has incorrect value after adding multiple items beyond the end of the collection', 10, col.get('10.id'));
+			assertSame('collection[11] has incorrect value after adding multiple items beyond the end of the collection', 11, col.get('11.id'));
+			assertSame('collection[12] has incorrect value after adding multiple items beyond the end of the collection', 12, col.get('12.id'));
+		},
+
+		"test sparse collection.remove": function ()
+		{
+			var col = sparseCollection.create();
+
+			var eleven = model.create({ id: 11 });
+
+			// Add some items to the collection
+			col.add([{ id: 0 }]);
+			col.add([{ id: 10 }, eleven, { id: 12 }], { at: 10 });
+
+			assertSame('collection[0] has incorrect value before remove', 0, col.get('0.id'));
+			assertSame('collection[10] has incorrect value before remove', 10, col.get('10.id'));
+			assertSame('collection[11] has incorrect value before remove', 11, col.get('11.id'));
+			assertSame('collection[12] has incorrect value before remove', 12, col.get('12.id'));
+
+			// Remove an item from the collection
+			col.remove(eleven);
+
+			assertSame('collection[0] has incorrect value after remove', 0, col.get('0.id'));
+			assertSame('collection[10] has incorrect value after remove', 10, col.get('10.id'));
+			assertSame('collection[11] has incorrect value after remove', 12, col.get('11.id'));
+		},
+
+		"test sparse collection.replace": function ()
+		{
+			var col = sparseCollection.create();
+
+			var eleven = model.create({ id: 11 });
+
+			// Add some items to the collection
+			col.add([{ id: 0 }]);
+			col.add([{ id: 10 }, eleven, { id: 12 }], { at: 10 });
+
+			assertSame('collection[0] has incorrect value before replace', 0, col.get('0.id'));
+			assertSame('collection[10] has incorrect value before replace', 10, col.get('10.id'));
+			assertSame('collection[11] has incorrect value before replace', 11, col.get('11.id'));
+			assertSame('collection[12] has incorrect value before replace', 12, col.get('12.id'));
+
+			// Remove an item from the collection
+			col.replace({ id: 'new11' }, { at: 11 });
+
+			assertSame('collection[0] has incorrect value after replace', 0, col.get('0.id'));
+			assertSame('collection[10] has incorrect value after replace', 10, col.get('10.id'));
+			assertSame('collection[11] has incorrect value after replace', 'new11', col.get('11.id'));
+			assertSame('collection[12] has incorrect value after replace', 12, col.get('12.id'));
+		},
+
+		"test sparse collection.reset": function ()
+		{
+			var col = sparseCollection.create();
+
+			var eleven = model.create({ id: 11 });
+
+			// Add some items to the collection
+			col.add([{ id: 0 }]);
+			col.add([{ id: 10 }, eleven, { id: 12 }], { at: 10 });
+
+			assertSame('collection.count has incorrect value before reset', 4, col.get('count'));
+			assertSame('collection[0] has incorrect value before reset', 0, col.get('0.id'));
+			assertSame('collection[10] has incorrect value before reset', 10, col.get('10.id'));
+			assertSame('collection[11] has incorrect value before reset', 11, col.get('11.id'));
+			assertSame('collection[12] has incorrect value before reset', 12, col.get('12.id'));
+
+			// Remove an item from the collection
+			col.reset();
+
+			assertSame('collection.count has incorrect value after reset', 0, col.get('count'));
+			assertUndefined('collection[0] has incorrect value after reset', col.get('0.id'));
+			assertUndefined('collection[10] has incorrect value after reset', col.get('10.id'));
+			assertUndefined('collection[11] has incorrect value after reset', col.get('11.id'));
+			assertUndefined('collection[12] has incorrect value after reset', col.get('12.id'));
+		},
 	};
 });

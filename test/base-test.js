@@ -1718,7 +1718,7 @@ TestCase("base", ["sprout/util", "sprout/base", "sprout/env"], function (_, Base
 				},
 
 				attributes: {
-					gender: ""
+					gender: { value: "" }
 				},
 				speak: function () {
 					return this.text + " " + this.get("gender");
