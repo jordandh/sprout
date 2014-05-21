@@ -490,13 +490,28 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
             },
 
             /**
+             * Returns whether or not this model has been saved to its persistence layer (whether or not this model has an id).
+             * @return {Boolean} Returns whether or not this model has been saved to its persistence layer.
+             */
+            isNew: function ()
+            {
+                return this.get("id") === null || _.isUndefined(this.get("id"));
+            },
+
+            /**
              * Returns the url for this collection's resource. The url simply returns this.rootUrl.
              * Override this function if it does not point to the collection's resource.
              * @return {String} Returns the url for this model's resource.
              */
             url: function ()
             {
-                return this.rootUrl;
+                // return this.rootUrl;
+
+                if (this.isNew()) {
+                    return this.rootUrl;
+                }
+
+                return this.rootUrl + (this.rootUrl.charAt(this.rootUrl.length - 1) === "/" ? "" : "/") + encodeURIComponent(this.get("id"));
             },
             
             /**

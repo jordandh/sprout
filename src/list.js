@@ -54,6 +54,13 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
             db: {
                 value: '',
                 validator: _.isString
+            },
+
+            hasMoreItems: {
+                get: function () {
+                    return this.get('count') < this.get('totalItemCount');
+                },
+                uses: ['count', 'totalItemCount']
             }
         },
 
@@ -106,6 +113,8 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
          */
         parse: function (json)
         {
+            this.set(json);
+
             // Grab the repo for the items in this list
             var repo = this.db.get(this.repoName);
             
