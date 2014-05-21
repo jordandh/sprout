@@ -556,6 +556,11 @@ define(["sprout/util", "sprout/dom", "sprout/databindings"], function (_, $, dat
             }
         });
 
+        // Do not bind this element's children if it is marked to be skipped
+        if (element.hasAttribute && element.hasAttribute('data-bind-skip')) {
+            bindChildren = false;
+        }
+
         // Bind children
         if (bindChildren) {
             //for (var i = 0, length = childNodes.length; i < length; i += 1) {
