@@ -116,14 +116,19 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
             this.set(json);
 
             // Grab the repo for the items in this list
-            var repo = this.db.get(this.repoName);
-            
-            // Add the new items to the list
-            this.add(_.map(json[this.itemIdsName], function (id) {
-                return repo.getById(id);
-            }), {
-                at: json.offset
-            });
+            var repo = this.db.get(this.repoName),
+                at = json.offset;
+
+            _.each(json[this.itemIdsName], function (id) {
+                var item = repo.getById(id);
+
+                this.replace(item, {
+                    at: at,
+                    sync: false
+                });
+
+                at += 1;
+            }, this);
         },
 
         /**
@@ -170,7 +175,7 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
         afterAdd: function (e)
         {
             // Do not sync this change if it is part of a move (it will be handled as a move action instead)
-            if (!e.info.options.move) {
+            if (e.info.options.sync !== false && !e.info.options.move) {
                 this.changes.push({
                     action: 'add',
                     items: _.map(e.info.items, function (item) {
@@ -188,7 +193,7 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
         afterRemove: function (e)
         {
             // Do not sync this change if it is part of a move (it will be handled as a move action instead)
-            if (!e.info.options.move) {
+            if (e.info.options.sync !== false && !e.info.options.move) {
                 this.changes.push({
                     action: 'remove',
                     items: _.map(e.info.items, function (item) {
@@ -205,16 +210,18 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
 
         afterMove: function (e)
         {
-            this.changes.push({
-                action: 'move',
-                items: _.map(e.info.items, function (item) {
-                    return item.get('id');
-                }),
-                at: e.info.options.to
-            });
+            if (e.info.options.sync !== false) {
+                this.changes.push({
+                    action: 'move',
+                    items: _.map(e.info.items, function (item) {
+                        return item.get('id');
+                    }),
+                    at: e.info.options.to
+                });
 
-            if (this.autoSyncChanges) {
-                this.syncChanges();
+                if (this.autoSyncChanges) {
+                    this.syncChanges();
+                }
             }
         }
     });
