@@ -2,27 +2,6 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
     "use strict";
 
     /**
-     * Handler for sync errors.
-     * @private
-     * @param {Object} xhr The jQuery xhr object for the sync.
-     * @param {String} status The status text for the error ("timeout", "error", "abort", or "parsererror").
-     * @param {String} error The error thrown. When an HTTP error occurs, errorThrown receives the textual portion of the HTTP status, such as "Not Found" or "Internal Server Error."
-     */
-    function onSyncFailed (xhr, status, error)
-    {
-        this.fire("error", { xhr: xhr, status: _.trim(status), error: _.trim(error) });
-    }
-
-    /**
-     * Handler for a delete via a sync. Sets the deleted attribute on the model to true.
-     * @private
-     */
-    function onDeleted ()
-    {
-        this.set("deleted", true);
-    }
-
-    /**
      * @class model
      * Represents a data model that is backed by a resource (usually a server resource). A model can communicate with its resource in four ways: fetching, creating, saving, and deleting.
      * It locates the resource by using the url function to build a path. This url is used to fetch, create, update, and delete the model.
@@ -246,7 +225,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
          */
         fetch: function (options)
         {
-            return (this.sync || data.sync)("read", this, options).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
+            return (this.sync || data.sync)("read", this, options).done(_.bind(this.parse, this)).fail(_.bind(this.onSyncFailed, this));
         },
 
         /**
@@ -286,7 +265,7 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
                 }
             }
 
-            promise = (this.sync || data.sync)(this.isNew() ? "create" : "update", this, options).fail(_.bind(onSyncFailed, this));
+            promise = (this.sync || data.sync)(this.isNew() ? "create" : "update", this, options).fail(_.bind(this.onSyncFailed, this));
             promise.done(_.bind(function (json) {
                 // If the attributes should be set after the server returns with a success
                 if (options.wait && attributes && options.mix) {
@@ -312,7 +291,28 @@ define(["sprout/util", "sprout/base", "sprout/data"], function (_, base, data) {
          */
         erase: function (options)
         {
-            return (this.sync || data.sync)("delete", this, options).done(_.bind(onDeleted, this)).done(_.bind(this.parse, this)).fail(_.bind(onSyncFailed, this));
+            return (this.sync || data.sync)("delete", this, options).done(_.bind(this.onDeleted, this)).done(_.bind(this.parse, this)).fail(_.bind(this.onSyncFailed, this));
+        },
+
+        /**
+         * Handler for sync errors.
+         * @private
+         * @param {Object} xhr The jQuery xhr object for the sync.
+         * @param {String} status The status text for the error ("timeout", "error", "abort", or "parsererror").
+         * @param {String} error The error thrown. When an HTTP error occurs, errorThrown receives the textual portion of the HTTP status, such as "Not Found" or "Internal Server Error."
+         */
+        onSyncFailed: function (xhr, status, error)
+        {
+            this.fire("error", { xhr: xhr, status: _.trim(status), error: _.trim(error) });
+        },
+
+        /**
+         * Handler for a delete via a sync. Sets the deleted attribute on the model to true.
+         * @private
+         */
+        onDeleted: function ()
+        {
+            this.set("deleted", true);
         }
     });
 
