@@ -432,23 +432,33 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              */
             move: createListModifierWithNoItems("move", function (options)
             {
-                var mod;
+                var from = options.from,
+                    to = options.to,
+                    mod;
 
-                if (_.isNumber(options.from)) {
-                    mod = this.at(options.from);
+                // If the from and to indices are not numbers or are the same then do nothing
+                if (!_.isNumber(from) || !_.isNumber(to) || from === to) {
+                    return [];
+                }
+
+                // Grab the item being removed
+                mod = this.at(from);
+
+                // If there is an actual item
+                if (mod) {
                     this.remove(mod, {
                         move: true
                     });
-                }
 
-                if (_.isNumber(options.to)) {
                     this.add(mod, {
                         move: true,
-                        at: options.to
+                        at: to
                     });
+
+                    return [mod];
                 }
 
-                return [mod];
+                return [];
             }),
             
             /**
