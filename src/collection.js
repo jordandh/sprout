@@ -792,7 +792,8 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
          */
         var mapHelper = {
             start: function (name, attribute, options) {
-                var updating = false;
+                var updating = false,
+                    collectionType = options.collection || collection;
 
                 // Prevents one of the updater functions from being called if an update is in progress. Also insures that the updating state is correct if an exception is thrown during an update.
                 function guardUpdate (updater)
@@ -872,7 +873,7 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                     change: function (bindOptions, e) {
                         if (e.info.newValue) {
                             // Map the items from the source collection to the destination collection
-                            this.set(name, collection.create(e.info.newValue.map(function (item) {
+                            this.set(name, collectionType.create(e.info.newValue.map(function (item) {
                                 return options.transform.call(this, item);
                             }, this)));
                         }

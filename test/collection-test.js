@@ -1588,6 +1588,50 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			sd.destroy();
 		},
 
+		"test collection.attribute.map with custom collection": function ()
+		{
+			var animals = collection.extend();
+
+			// Make a model with a map attribute
+			var park = model.extend({
+				attributes: {
+					owned_animals: {
+						map: {
+							source: 'animals',
+							transform: function (animal) {
+								return model.create({
+									animal: animal,
+									owned: animal.get('name') === 'Spot'
+								});
+							},
+							collection: animals
+						}
+					}
+				}
+			});
+
+			// Instantiate a park model to use
+			var sd = park.create({
+				animals: collection.create([{
+						id: "A",
+						name: "Spot",
+						age: 8
+					}, {
+						id: "B",
+						name: "Stripe",
+						age: 10
+					}
+				])
+			});
+
+			var owned_animals = sd.get('owned_animals');
+
+			assert("owned_animals is not an animals collection", animals.isPrototypeOf(owned_animals));
+			assertSame("owned_animals has the incorrect number of items", 2, owned_animals.get('count'));
+
+			sd.destroy();
+		},
+
 		"test collection.attribute.map after removing an item": function ()
 		{
 			expectAsserts(4);
