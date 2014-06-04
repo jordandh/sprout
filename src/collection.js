@@ -77,6 +77,21 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
         }
     }
 
+    function updateIndices (at)
+    {
+        var item;
+
+        if (this.index) {
+            // Update all the items starting from the lowest index added
+            for (var i = at, length = this.items.length; i < length; i += 1) {
+                item = this.items[i];
+                if (item) {
+                    item.set(this.index, i);
+                }
+            }
+        }
+    }
+
     /**
      * @class collection
      * Represents a list of models that is backed by a resource (usually a server resource). A collection can only communicate with its resource by fetching a list of data models.
@@ -227,6 +242,15 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
             model: model,
 
             /**
+             * If specified then each item in the collection has an attribute set equal to the item's index in the collection.
+             * The attribute set on the item is this index value.
+             * If not specified then the index is not set on the items.
+             * @property
+             * @type String
+             */
+            index: null,
+
+            /**
              * The function used to sort the collection. By default there is no comparator function.
              * If this function is defined then items that are added are inserted in sorted order.
              * This function takes one item as a parameter and must return a value by which the model should be ordered relative to others.
@@ -326,6 +350,8 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              */
             add: createListModifier("add", function (items, options)
             {
+                var at = [];
+
                 // Turn any json data into models and listen to sync events
                 _.each(items, function (item, index) {
                     var id;
@@ -349,12 +375,18 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                 // If there is a comparator function then insert each item into the sorted array maintaining sort order
                 if (_.isFunction(this.comparator)) {
                     _.each(items, function (item) {
-                        this.items.splice(_.sortedIndex(this.items, item, this.comparator), 0, item);
+                        var index = _.sortedIndex(this.items, item, this.comparator);
+
+                        at.push(index);
+
+                        this.items.splice(index, 0, item);
                     }, this);
                 }
                 else {
                     // Add the items to the collection at the specifed index or at the end
                     if (_.isNumber(options.at)) {
+                        at.push(options.at);
+
                         // If inserting the items beyond the end of the array
                         if (options.at > this.items.length) {
                             // Then assign them explicitly in order to make the array sparse
@@ -367,11 +399,16 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                         }
                     }
                     else {
+                        at.push(this.items.length);
                         this.items.push.apply(this.items, items);
                     }
-
-                    this.set("count", this.sparse ? _.sparseSize(this.items) : this.items.length, { force: true });
                 }
+
+                // Update the item indices
+                updateIndices.call(this, Math.min.apply(null, at));
+
+                // Update the count
+                this.set("count", this.sparse ? _.sparseSize(this.items) : this.items.length, { force: true });
             }),
             
             /**
@@ -402,6 +439,10 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                     }
                 }, this);
 
+                // Update the item indices
+                updateIndices.call(this, Math.min.apply(null, options.at));
+
+                // Update the count
                 this.set("count", this.sparse ? _.sparseSize(this.items) : this.items.length, { force: true });
             }),
 
@@ -587,7 +628,10 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                 options = options || {};
 
                 var sorter = function () {
+                    // Sort the items
                     this.items = _.sortBy(this.items, comparator, options.context || this);
+                    // Update the item indices
+                    updateIndices.call(this, 0);
                 };
 
                 if (options.silent) {

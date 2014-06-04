@@ -157,6 +157,7 @@ TestCase("list", ["sprout/util", "sprout/list", "sprout/model", "sprout/collecti
 
         "test list.syncChanges": function ()
         {
+            assert('This test is not working right now because changes are not actually synced to the server', false);
             expectAsserts(6);
 
             var lst = testList.create();

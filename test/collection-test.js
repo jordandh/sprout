@@ -32,6 +32,10 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 	var sparseCollection = collection.extend({
 		sparse: true
 	});
+
+	var indexCollection = collection.extend({
+		index: 'index'
+	});
 	
 	return {
 		"test collection has underscore methods": function ()
@@ -2698,5 +2702,168 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			assertUndefined('collection[11] has incorrect value after reset', col.get('11.id'));
 			assertUndefined('collection[12] has incorrect value after reset', col.get('12.id'));
 		},
+
+		/*
+		 * collection.index
+		 */
+		"test collection.index after create": function ()
+		{
+			var col = indexCollection.create([{
+				id: 0,
+				name: 'Data'
+			}, {
+				id: 1,
+				name: 'Riker'
+			}, {
+				id: 2,
+				name: 'Picard'
+			}]);
+
+			assertSame('col[0] has incorrect index value', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value', 1, col.get('1.index'));
+			assertSame('col[2] has incorrect index value', 2, col.get('2.index'));
+		},
+
+		"test collection.index after remove": function ()
+		{
+			var col = indexCollection.create([{
+				id: 0,
+				name: 'Data'
+			}, {
+				id: 1,
+				name: 'Riker'
+			}, {
+				id: 2,
+				name: 'Picard'
+			}]);
+
+			assertSame('col[0] has incorrect index value', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value', 1, col.get('1.index'));
+			assertSame('col[2] has incorrect index value', 2, col.get('2.index'));
+
+			col.remove(col.at(1));
+
+			assertSame('col[0] has incorrect index value after remove', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value after remove', 1, col.get('1.index'));
+		},
+
+		"test collection.index after add to end of collection": function ()
+		{
+			var col = indexCollection.create([{
+				id: 0,
+				name: 'Data'
+			}, {
+				id: 1,
+				name: 'Riker'
+			}, {
+				id: 2,
+				name: 'Picard'
+			}]);
+
+			assertSame('col[0] has incorrect index value', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value', 1, col.get('1.index'));
+			assertSame('col[2] has incorrect index value', 2, col.get('2.index'));
+
+			col.add({
+				id: 3,
+				name: 'Troi'
+			});
+
+			assertSame('col[0] has incorrect index value after add', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value after add', 1, col.get('1.index'));
+			assertSame('col[2] has incorrect index value after add', 2, col.get('2.index'));
+			assertSame('col[3] has incorrect index value after add', 3, col.get('3.index'));
+		},
+
+		"test collection.index after add to middle of collection": function ()
+		{
+			var col = indexCollection.create([{
+				id: 0,
+				name: 'Data'
+			}, {
+				id: 1,
+				name: 'Riker'
+			}, {
+				id: 2,
+				name: 'Picard'
+			}]);
+
+			assertSame('col[0] has incorrect index value', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value', 1, col.get('1.index'));
+			assertSame('col[2] has incorrect index value', 2, col.get('2.index'));
+
+			col.add({
+				id: 3,
+				name: 'Troi'
+			}, { at: 1 });
+
+			assertSame('col[0] has incorrect index value after add', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value after add', 1, col.get('1.index'));
+			assertSame('col[2] has incorrect index value after add', 2, col.get('2.index'));
+			assertSame('col[3] has incorrect index value after add', 3, col.get('3.index'));
+		},
+
+		"test collection.index after reset": function ()
+		{
+			var col = indexCollection.create([{
+				id: 0,
+				name: 'Data'
+			}, {
+				id: 1,
+				name: 'Riker'
+			}, {
+				id: 2,
+				name: 'Picard'
+			}]);
+
+			assertSame('col[0] has incorrect index value', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value', 1, col.get('1.index'));
+			assertSame('col[2] has incorrect index value', 2, col.get('2.index'));
+
+			col.reset([{
+				id: 2,
+				name: 'Picard'
+			}, {
+				id: 0,
+				name: 'Data'
+			}, {
+				id: 1,
+				name: 'Riker'
+			}]);
+
+			assertSame('col[0] has incorrect index value after reset', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value after reset', 1, col.get('1.index'));
+			assertSame('col[2] has incorrect index value after reset', 2, col.get('2.index'));
+		},
+
+		"test collection.index after sort": function ()
+		{
+			var col = indexCollection.create([{
+				id: 0,
+				name: 'Data'
+			}, {
+				id: 1,
+				name: 'Riker'
+			}, {
+				id: 2,
+				name: 'Picard'
+			}]);
+
+			assertSame('col[0] has incorrect index value', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value', 1, col.get('1.index'));
+			assertSame('col[2] has incorrect index value', 2, col.get('2.index'));
+
+			col.sortBy(function (item) {
+				return item.get('name');
+			});
+
+			assertSame('col[0] has incorrect name value after sort', 'Data', col.get('0.name'));
+			assertSame('col[1] has incorrect name value after sort', 'Picard', col.get('1.name'));
+			assertSame('col[2] has incorrect name value after sort', 'Riker', col.get('2.name'));
+
+			assertSame('col[0] has incorrect index value after sort', 0, col.get('0.index'));
+			assertSame('col[1] has incorrect index value after sort', 1, col.get('1.index'));
+			assertSame('col[2] has incorrect index value after sort', 2, col.get('2.index'));
+		}
 	};
 });
