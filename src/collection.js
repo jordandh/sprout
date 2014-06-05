@@ -681,7 +681,7 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
         options = options || {};
 
         var context = options.context || this,
-            addListener, removeListener, resetListener;
+            addListener, removeListener, resetListener, moveListener;
 
         // Starts listening to changes in the collection
         function attachCollection (col)
@@ -699,6 +699,10 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                     resetListener = _.bind(options.reset, context, options);
                     col.after('reset', resetListener);
                 }
+                if (_.isFunction(options.move)) {
+                    moveListener = _.bind(options.move, context, options);
+                    col.after('move', moveListener);
+                }
             }
         }
 
@@ -709,6 +713,11 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                 col.detachAfter('add', addListener);
                 col.detachAfter('remove', removeListener);
                 col.detachAfter('reset', resetListener);
+                col.detachAfter('move', moveListener);
+                addListener = null;
+                removeListener = null;
+                resetListener = null;
+                moveListener = null;
             }
         }
 
@@ -881,6 +890,10 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                 // Bind to the destination collection
                 this.bindToCollection(name, {
                     add: guardUpdate(function (bindOptions, e) {
+                        if (e.info.options.move) {
+                            return;
+                        }
+
                         var srcCol = this.get(options.source);
 
                         // Add the items to the source collection
@@ -891,6 +904,10 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                         }
                     }),
                     remove: guardUpdate(function (bindOptions, e) {
+                        if (e.info.options.move) {
+                            return;
+                        }
+
                         var srcCol = this.get(options.source);
 
                         // Remove the items from the source collection
@@ -909,6 +926,9 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                                 return options.untransform.call(this, item);
                             }, this), e.info.options);
                         }
+                    }),
+                    move: guardUpdate(function (bindOptions, e) {
+                        this.get(options.source).move(e.info.options);
                     })
                 });
 
@@ -926,12 +946,20 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                         }
                     },
                     add: guardUpdate(function (bindOptions, e) {
+                        if (e.info.options.move) {
+                            return;
+                        }
+
                         // Add the transformed items to the destination collection
                         this.get(name).add(_.map(e.info.items, function (item) {
                             return options.transform.call(this, item);
                         }, this), e.info.options);
                     }),
                     remove: guardUpdate(function (bindOptions, e) {
+                        if (e.info.options.move) {
+                            return;
+                        }
+
                         var destCol = this.get(name);
 
                         // Remove the items from the destination collection
@@ -944,6 +972,9 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                         this.get(name).reset(_.map(e.info.items, function (item) {
                             return options.transform.call(this, item);
                         }, this), e.info.options);
+                    }),
+                    move: guardUpdate(function (bindOptions, e) {
+                        this.get(name).move(e.info.options);
                     })
                 });
             }
