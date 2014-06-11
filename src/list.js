@@ -13,6 +13,19 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
         this.fire('error', { xhr: xhr, status: _.trim(status), error: _.trim(error) });
     }
 
+    /**
+     * Returns the attribute value or the matching text if the attribute does not exist.
+     * @private
+     * @param {String} match The matching text.
+     * @param {String} name The name of the attribute.
+     * @return {String} Returns the attribute's value if it exists, otherwise match.
+     */
+    function getUrlValue (match, name)
+    {
+        var value = this.get(name);
+        return _.isUndefined(value) ? match : value;
+    }
+
     return collection.extend({
         /**
          * Initializes the list.
@@ -129,6 +142,16 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
 
                 at += 1;
             }, this);
+        },
+
+        /**
+         * Returns the url for this list's resource.
+         * Override this function if this.rootUrl does not point to the viewmodel's resource.
+         * @return {String} Returns the url for this model's resource.
+         */
+        url: function ()
+        {
+            return collection.url.call(this).replace(/{([^{}]*)}/g, _.bind(getUrlValue, this));
         },
 
         /**
