@@ -868,12 +868,13 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                 
                 function transformAll ()
                 {
-                    var destCol = this.get(name),
+                    var self = this,
+                        destCol = this.get(name),
                         srcCol = this.get(options.source);
 
                     if (destCol && srcCol) {
                         destCol.reset(srcCol.map(function (item) {
-                            return options.transform.call(this, item);
+                            return options.transform.call(self, item);
                         }));
                     }
                 }
@@ -888,57 +889,61 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                 }, this);
 
                 // Bind to the destination collection
-                this.bindToCollection(name, {
-                    add: guardUpdate(function (bindOptions, e) {
-                        if (e.info.options.move) {
-                            return;
-                        }
+                if (options.untransform) {
+                    this.bindToCollection(name, {
+                        add: guardUpdate(function (bindOptions, e) {
+                            if (e.info.options.move) {
+                                return;
+                            }
 
-                        var srcCol = this.get(options.source);
+                            var srcCol = this.get(options.source);
 
-                        // Add the items to the source collection
-                        if (srcCol) {
-                            srcCol.add(_.map(e.info.items, function (item) {
-                                return options.untransform.call(this, item);
-                            }, this), e.info.options);
-                        }
-                    }),
-                    remove: guardUpdate(function (bindOptions, e) {
-                        if (e.info.options.move) {
-                            return;
-                        }
+                            // Add the items to the source collection
+                            if (srcCol) {
+                                srcCol.add(_.map(e.info.items, function (item) {
+                                    return options.untransform.call(this, item);
+                                }, this), e.info.options);
+                            }
+                        }),
+                        remove: guardUpdate(function (bindOptions, e) {
+                            if (e.info.options.move) {
+                                return;
+                            }
 
-                        var srcCol = this.get(options.source);
+                            var srcCol = this.get(options.source);
 
-                        // Remove the items from the source collection
-                        if (srcCol) {
-                            srcCol.remove(_.map(e.info.options.at, function (index) {
-                                return srcCol.at(index);
-                            }, this), e.info.options);
-                        }
-                    }),
-                    reset: guardUpdate(function (bindOptions, e) {
-                        var srcCol = this.get(options.source);
+                            // Remove the items from the source collection
+                            if (srcCol) {
+                                srcCol.remove(_.map(e.info.options.at, function (index) {
+                                    return srcCol.at(index);
+                                }, this), e.info.options);
+                            }
+                        }),
+                        reset: guardUpdate(function (bindOptions, e) {
+                            var srcCol = this.get(options.source);
 
-                        // Reset the source collection
-                        if (srcCol) {
-                            srcCol.reset(_.map(e.info.items, function (item) {
-                                return options.untransform.call(this, item);
-                            }, this), e.info.options);
-                        }
-                    }),
-                    move: guardUpdate(function (bindOptions, e) {
-                        this.get(options.source).move(e.info.options);
-                    })
-                });
+                            // Reset the source collection
+                            if (srcCol) {
+                                srcCol.reset(_.map(e.info.items, function (item) {
+                                    return options.untransform.call(this, item);
+                                }, this), e.info.options);
+                            }
+                        }),
+                        move: guardUpdate(function (bindOptions, e) {
+                            this.get(options.source).move(e.info.options);
+                        })
+                    });
+                }
 
                 // Bind to the source collection
                 this.bindToCollection(options.source, {
                     change: function (bindOptions, e) {
+                        var self = this;
+
                         if (e.info.newValue) {
                             // Map the items from the source collection to the destination collection
                             this.set(name, collectionType.create(e.info.newValue.map(function (item) {
-                                return options.transform.call(this, item);
+                                return options.transform.call(self, item);
                             }, this)));
                         }
                         else {

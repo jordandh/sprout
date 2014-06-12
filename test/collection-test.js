@@ -1986,6 +1986,9 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 									animal: animal,
 									owned: animal.get('name') === 'Spot'
 								});
+							},
+							untransform: function (owned_animal) {
+								return owned_animal.get('animal');
 							}
 						}
 					}
@@ -2131,6 +2134,9 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 									animal: animal,
 									owned: animal.get('name') === 'Spot'
 								});
+							},
+							untransform: function (owned_animal) {
+								return owned_animal.get('animal');
 							}
 						}
 					}
