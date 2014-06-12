@@ -99,6 +99,14 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
         itemIdsName: 'itemIds',
 
         /**
+         * Whethor or not changes (add, remove, move) are tracked.
+         * By default a list's changes are automatically tracked.
+         * @property
+         * @type Boolean
+         */
+        trackChanges: true,
+
+        /**
          * Whethor or not changes (add, remove, move) are automatically synced.
          * By default a list's changes are automatically synced.
          * @property
@@ -198,7 +206,7 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
         afterAdd: function (e)
         {
             // Do not sync this change if it is part of a move (it will be handled as a move action instead)
-            if (e.info.options.sync !== false && !e.info.options.move) {
+            if (this.trackChanges && e.info.options.sync !== false && !e.info.options.move) {
                 this.changes.push({
                     action: 'add',
                     items: _.map(e.info.items, function (item) {
@@ -216,7 +224,7 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
         afterRemove: function (e)
         {
             // Do not sync this change if it is part of a move (it will be handled as a move action instead)
-            if (e.info.options.sync !== false && !e.info.options.move) {
+            if (this.trackChanges && e.info.options.sync !== false && !e.info.options.move) {
                 this.changes.push({
                     action: 'remove',
                     items: _.map(e.info.items, function (item) {
@@ -233,7 +241,7 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
 
         afterMove: function (e)
         {
-            if (e.info.options.sync !== false) {
+            if (this.trackChanges && e.info.options.sync !== false) {
                 this.changes.push({
                     action: 'move',
                     items: _.map(e.info.items, function (item) {

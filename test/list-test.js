@@ -214,6 +214,31 @@ TestCase("list", ["sprout/util", "sprout/list", "sprout/model", "sprout/collecti
             lst.syncChanges();
 
             assertSame('changes.length is incorrect', 0, lst.changes.length);
+        },
+
+        "test list.trackChanges when disabled": function ()
+        {
+            var lst = testList.create();
+            lst.trackChanges = false;
+
+            // Make some changes
+            lst.add([{
+                id: 100,
+                species: 'Tiger'
+            }, {
+                id: 101,
+                species: 'Lion'
+            }]);
+
+            lst.move({
+                from: 1,
+                to: 0
+            });
+
+            lst.remove(lst.at(0));
+
+            // Check to make sure those changes were not 
+            assertSame('changes.length is incorrect', 0, lst.changes.length);
         }
     };
 });
