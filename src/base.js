@@ -1049,6 +1049,32 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
             },
 
             /**
+             * Attaches a callback to an event that is called before the event's default action occurs. The callback will only be called once.
+             * The callback function is passed an event object:
+             * <pre><code>
+             *  {
+             *      name: "<the name of the event>"
+             *      src: <the object that fired the event>
+             *      info: <an object containing information unique to the event>
+             *      preventDefault: false
+             *  }
+             * </code></pre>
+             * The event can no longer be cancelled at this point so the event object's preventDefault property is ignored.
+             * @param {String} name The name of the event to attach to.
+             * @param {Function} handler The callback function to call when the event occurs.
+             * @param {Object} context (Optional) The context to invoke the callback in.
+             */
+            once: function (name, handler, context)
+            {
+                var onceHandler = _.bind(function () {
+                    this.detachOn(name, onceHandler, context);
+                    handler.apply(context, arguments);
+                }, this);
+
+                addListener.call(this, "on", name, onceHandler, context);
+            },
+
+            /**
              * Attaches a callback to an event that is called after the event's default action occurs. The callback function is passed an event object:
              * <pre><code>
              *  {
