@@ -134,22 +134,26 @@ define(['sprout/util', 'sprout/collection', 'sprout/data', 'sprout/database'], f
          */
         parse: function (json)
         {
-            this.set(json);
+            this.fire('parse', { json: json }, function (e) {
+                var json = e.info.json;
 
-            // Grab the repo for the items in this list
-            var repo = this.db.get(this.repoName),
-                at = json.offset;
+                this.set(json);
 
-            _.each(json[this.itemIdsName], function (id) {
-                var item = repo.getById(id);
+                // Grab the repo for the items in this list
+                var repo = this.db.get(this.repoName),
+                    at = json.offset;
 
-                this.replace(item, {
-                    at: at,
-                    sync: false
-                });
+                _.each(json[this.itemIdsName], function (id) {
+                    var item = repo.getById(id);
 
-                at += 1;
-            }, this);
+                    this.replace(item, {
+                        at: at,
+                        sync: false
+                    });
+
+                    at += 1;
+                }, this);
+            });
         },
 
         /**
