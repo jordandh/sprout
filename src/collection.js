@@ -87,6 +87,10 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                 item = this.items[i];
                 if (item) {
                     item.set(this.index, i);
+
+                    if (this.itemCollection) {
+                        item.set(this.itemCollection, this);
+                    }
                 }
             }
         }
@@ -249,6 +253,15 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              * @type String
              */
             index: null,
+
+            /**
+             * If specified then each item in the collection has an attribute set equal to this collection.
+             * The attribute set on the item is this itemCollection value.
+             * If not specified then the collection is not set on the items.
+             * @property
+             * @type String
+             */
+            itemCollection: null,
 
             /**
              * The function used to sort the collection. By default there is no comparator function.
