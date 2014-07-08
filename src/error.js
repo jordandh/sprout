@@ -1,4 +1,4 @@
-define(["sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], function (pubsub, _, $, env) {
+define(["module", "sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], function (module, pubsub, _, $, env) {
     "use strict";
 
     (function () {
@@ -239,12 +239,18 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], function (p
     };
 
     var errorModule = {
-        requestOptions: {
+        options: _.extend({
+            reportGlobalErrors: true,
+            reportPubsubErrors: true,
+            reportRequireErrors: true
+        }, module.config().options),
+
+        requestOptions: _.extend({
             url: "/errors",
             type: "POST",
             dataType: "json",
             contentType: "application/json"
-        },
+        }, module.config().requestOptions),
 
         stringify: function (error) {
             //return JSON.stringify(decycle(packageError(error)), jsonReplacer);
@@ -269,6 +275,7 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], function (p
                 window: {},
                 exceptions: []
             },
+            $window = $(window),
             ex, exInfo;
 
         // Grab the exception information
@@ -328,6 +335,7 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], function (p
         err.navigator.userAgent = navigator.userAgent;
         err.navigator.language = navigator.language;
         err.window.location = window.location.toString();
+        err.window.viewport = $window.width() + 'x' + $window.height();
 
         return err;
     }
@@ -359,33 +367,39 @@ define(["sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], function (p
     }
 
     window.onerror = function (message, fileName, lineNumber) {
-        submitError({
-            type: "global",
-            exceptions: [
-                createGlobalError(message, fileName, lineNumber)
-            ]
-        });
+        if (errorModule.options.reportGlobalErrors) {
+            submitError({
+                type: "global",
+                exceptions: [
+                    createGlobalError(message, fileName, lineNumber)
+                ]
+            });
+        }
     };
 
     pubsub.subscribe("error", function (e) {
-        submitError({
-            type: "pubsub",
-            exceptions: e.info.exception ? [e.info.exception] : [],
-            info: e.info.info
-        });
+        if (errorModule.options.reportPubsubErrors) {
+            submitError({
+                type: "pubsub",
+                exceptions: e.info.exception ? [e.info.exception] : [],
+                info: e.info.info
+            });
+        }
     });
 
     requirejs.onError = function (error) {
-        submitError({
-            type: "requirejs",
-            exceptions: [error, error.originalError],
-            info: {
-                moduleName: error.moduleName,
-                moduleTree: error.moduleTree,
-                requireType: error.requireType,
-                requireModules: error.requireModules
-            }
-        });
+        if (errorModule.options.reportRequireErrors) {
+            submitError({
+                type: "requirejs",
+                exceptions: [error, error.originalError],
+                info: {
+                    moduleName: error.moduleName,
+                    moduleTree: error.moduleTree,
+                    requireType: error.requireType,
+                    requireModules: error.requireModules
+                }
+            });
+        }
     };
 
     return errorModule;
