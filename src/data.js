@@ -1,15 +1,15 @@
-define(['sprout/util', 'sprout/dom'], function (_, $) {
+define(['module', 'sprout/util', 'sprout/dom'], function (module, _, $) {
     'use strict';
     
     /*
      * An object map for converting sync method types to HTTP verbs.
      */
-	var methodToType = {
-		'read': 'GET',
-		'update': 'PUT',
-		'create': 'POST',
-		'delete': 'DELETE'
-	};
+	var methodToType = _.extend({
+        'read': 'GET',
+        'update': 'PUT',
+        'create': 'POST',
+        'delete': 'DELETE'
+    }, module.config().methodToType);
 
     /**
      * Handler for an unsuccessful transaction.
@@ -148,7 +148,7 @@ define(['sprout/util', 'sprout/dom'], function (_, $) {
 				}
 
 				promise.done(_.bind(onAjaxSuccess, null, e, fireAfter)).fail(_.bind(onAjaxError, null, e, fireAfter));
-			}, /* Prevented Action */ function (e) {
+			}, /* Prevented Action */ function () {
 				finishDeferred(deferred, 'reject', [null, 'abort', null], options.delay, startTime);
 			}, true);
 			

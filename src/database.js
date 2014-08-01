@@ -1,15 +1,15 @@
-define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], function (_, $, base, collection) {
+define(["module", "sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], function (module, _, $, base, collection) {
     "use strict";
 
     /*
      * An object map for converting sync method types to HTTP verbs.
      */
-    var methodToType = {
+    var methodToType = _.extend({
         'read': 'GET',
         'update': 'PUT',
         'create': 'POST',
         'delete': 'DELETE'
-    };
+    }, module.config().methodToType);
     
     /**
      * Resolves or rejects a derrered object with the given arguments and optionally delayed.
@@ -285,7 +285,7 @@ define(["sprout/util", "sprout/dom", "sprout/base", "sprout/collection"], functi
                     // Fire the sync event as an async event
                     viewModel.fire("sync", { options: options }, function (e, fireAfter) {
                         jqXHR = $.ajax(e.info.options).done(_.bind(onAjaxSuccess, db, e, deferred, deferredOptions, fireAfter)).fail(_.bind(onAjaxError, db, e, deferred, deferredOptions, fireAfter));
-                    }, /* Prevented Action */ function (e) {
+                    }, /* Prevented Action */ function () {
                         finishDeferred(deferred, 'reject', [null, "abort", null], deferredOptions);
                     }, true);
                 }
