@@ -113,6 +113,15 @@ define(['sprout/util', 'sprout/base', 'sprout/pubsub', 'sprout/env'], function (
             return base.extend.call(this, members);
         },
 
+        mixin: function (members)
+        {
+            _.each(_.functions(members), function (name) {
+                members[name] = exceptionWrap(members[name], name);
+            });
+
+            return base.mixin.call(this, members);
+        },
+
         /**
          * Starts up a component on a page. Child component objects should override this method to define its start up logic.
          * @param {Object} resources
