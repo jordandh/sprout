@@ -892,6 +892,22 @@ TestCase("databind", ["sprout/util", "sprout/dom", "sprout/databind", "sprout/mo
             assertUndefined("meta data checked listener was not detached from the element", $("input", this.element).data("events"));
         },
 
+        "test databindings.selected on select option with single value": function () {
+            var template = "<form><select name='select-test'><option value='William' data-bind='selected: firstName'></option><option value='Will' data-bind='selected: firstName'></option></select></form>";
+
+            this.node.html(template);
+
+            databind.applyBindings(this.author, this.element);
+
+            assert("data bound selected value on 1st option is incorrect", $("option", this.element).eq(0).prop("selected"));
+            assertFalse("data bound selected value on 2nd option is incorrect", $("option", this.element).eq(1).prop("selected"));
+
+            this.author.set("firstName", "Will");
+
+            assertFalse("data bound selected value on 1st option is incorrect after change", $("option", this.element).eq(0).prop("selected"));
+            assert("data bound selected value on 2nd option is incorrect after change", $("option", this.element).eq(1).prop("selected"));
+        },
+
         "test databindings.value on text box": function () {
             var template = "<input type='text' data-bind='value: firstName'></input>";
 

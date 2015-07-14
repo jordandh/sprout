@@ -256,6 +256,30 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
         }
     }
 
+    /**
+     * Handler for when the value binder's dom element's value changes.
+     * @private
+     * @param {Object} element The dom element the value binder is bound to.
+     * @param {Object} metaData The meta data for the value binding.
+     * @param {Object} info The extra information about the binding.
+     */
+    function afterSelectedChanged (element, metaData, info)
+    {
+        var elementValue = $(element).val(),
+            value = metaData.viewModel.get(metaData.attributeName);
+
+        if (_.isArray(value)) {
+            if (!_.contains(value, elementValue)) {
+                value.push(elementValue);
+            }
+        }
+        else {
+            if (!metaData.viewModel.set(metaData.attributeName, elementValue)) {
+                element.selected = (metaData.viewModel.get(metaData.attributeName) === elementValue);
+            }
+        }
+    }
+
     function afterMediaQueryMatchChanged (element, info, metaData, mql)
     {
         var node = $(element);
@@ -437,6 +461,53 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                 }
                 else if (element.type === "radio") {
                     element.checked = (value === $(element).val());
+                }
+            }
+        },
+
+        /**
+         * @class selected
+         * The selected binder binds a model's attribute value to the option's selected property for a select box. By default this binder uses two way binding.
+         * @singleton
+         * @namespace databindings
+         */
+        selected: {
+            start: function (element, value, info, metaData)
+            {
+                // If this is two-way binding
+                if (!info["-"]) {
+                    var listener = _.bind(afterSelectedChanged, null, element, metaData, info);
+                    metaData.selectedListener = listener;
+                    $(element).change(listener);
+                }
+            },
+
+            stop: function (element, metaData)
+            {
+                if (_.isFunction(metaData.selectedListener)) {
+                    $(element).unbind("change", metaData.selectedListener);
+                }
+
+                delete metaData.selectedListener;
+                delete metaData.viewModel;
+                delete metaData.attributeName;
+            },
+
+            update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
+            {
+                // If this is two-way binding
+                if (!info["-"]) {
+                    metaData.viewModel = viewModel;
+                    metaData.attributeName = attributeName;
+                }
+
+                var elementValue = $(element).val();
+
+                if (_.isArray(value)) {
+                    element.selected = _.contains(value, elementValue);
+                }
+                else {
+                    element.selected = (value === elementValue);
                 }
             }
         },
