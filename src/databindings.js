@@ -303,13 +303,13 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
             if (info.isComment) {
                 // Render the siblings
                 $("<div></div>").html(metaData.template).contents().insertAfter(node).each(function () {
-                    databindings.databind.applyBindings(info.context.root, this);
+                    databindings.databind.applyBindings(info.context.root, this, info.context);
                 });
             }
             else {
                 // Render the new children
                 node.html(metaData.template).contents().each(function () {
-                    databindings.databind.applyBindings(info.context.root, this);
+                    databindings.databind.applyBindings(info.context.root, this, info.context);
                 });
             }
         }
@@ -676,13 +676,13 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
                     if (info.isComment) {
                         // Render the siblings
                         $("<div></div>").html(metaData.template).contents().insertAfter(node).each(function () {
-                            databindings.databind.applyBindings(info.context.root, this);
+                            databindings.databind.applyBindings(info.context.root, this, info.context);
                         });
                     }
                     else {
                         // Render the new children
                         node.html(metaData.template).contents().each(function () {
-                            databindings.databind.applyBindings(info.context.root, this);
+                            databindings.databind.applyBindings(info.context.root, this, info.context);
                         });
                     }
                 }

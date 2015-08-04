@@ -394,8 +394,20 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
          */
         afterDependencyChanged = function (attribute, name)
         {
-            //fireAttributeChangeEvents.call(this, attribute, name, null, attribute.get.call(this));
-            this.fireAttributeChangeEvents(attribute, name, null, attribute.get.call(this));
+            var oldValue = this.values[name],
+                value = attribute.get.call(this),
+                valueIsDifferent = false;
+
+            if (_.isFunction(attribute.equal)) {
+                valueIsDifferent = !attribute.equal(oldValue, value);
+            }
+            else {
+                valueIsDifferent = oldValue !== value;
+            }
+
+            if (valueIsDifferent) {
+                this.fireAttributeChangeEvents(attribute, name, oldValue, value);
+            }
         },
         /**
          * @class base
