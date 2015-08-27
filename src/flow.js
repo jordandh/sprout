@@ -1,4 +1,6 @@
-define(["sprout/util", "sprout/base"], function (_, base) {
+define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
+	'use strict';
+
 	/**
      * Checks whether an instruction condition passes.
      * @private
@@ -17,8 +19,7 @@ define(["sprout/util", "sprout/base"], function (_, base) {
 		}
 		// Else if the condition is an array of conditions then use their states
 		else if (_.isArray(condition)) {
-			return !_.any(condition, function (promise) {
-				//return promise.state() === 'rejected';
+			return !_.any(condition, function () {
 				return passes(condition);
 			});
 		}
@@ -37,55 +38,62 @@ define(["sprout/util", "sprout/base"], function (_, base) {
      */
 	function runInstruction (instruction)
 	{
-		switch (instruction.type) {
-		case 'wait':
-			// Delay execution of the next instruction
-			this.timeout = setTimeout(_.bind(runNextInstruction, this), instruction.delay);
-			break;
-		case 'waitIf':
-			// If the delay should be applied then delay execution of the next instruction
-			if (passes(instruction.condition)) {
+		try {
+			switch (instruction.type) {
+			case 'wait':
+				// Delay execution of the next instruction
 				this.timeout = setTimeout(_.bind(runNextInstruction, this), instruction.delay);
-			}
-			// Else Execute the next instruction now
-			else {
+				break;
+			case 'waitIf':
+				// If the delay should be applied then delay execution of the next instruction
+				if (passes(instruction.condition)) {
+					this.timeout = setTimeout(_.bind(runNextInstruction, this), instruction.delay);
+				}
+				// Else Execute the next instruction now
+				else {
+					runNextInstruction.call(this);
+				}
+				break;
+			case 'run':
+				// Invoke the function
+				instruction.func.apply(instruction.context, instruction.args);
+
+				// Execute the next instruction
 				runNextInstruction.call(this);
-			}
-			break;
-		case 'run':
-			// Invoke the function
-			instruction.func.apply(instruction.context, instruction.args);
+				break;
+			case 'runIf':
+				// If any of the promises have been rejected at this point then do not invoke the function
+				//if (!_.any(instruction.promises, function (promise) { return promise.state() === 'rejected'; })) {
+				if (passes(instruction.condition)) {
+					instruction.func.apply(instruction.context, instruction.args);
+				}
 
-			// Execute the next instruction
-			runNextInstruction.call(this);
-			break;
-		case 'runIf':
-			// If any of the promises have been rejected at this point then do not invoke the function
-			//if (!_.any(instruction.promises, function (promise) { return promise.state() === 'rejected'; })) {
-			if (passes(instruction.condition)) {
-				instruction.func.apply(instruction.context, instruction.args);
-			}
+				// Execute the next instruction
+				runNextInstruction.call(this);
+				break;
+			case 'runIfNot':
+				// If any of the promises have been rejected at this point then invoke the function
+				//if (_.any(instruction.promises, function (promise) { return promise.state() === 'rejected'; })) {
+				if (!passes(instruction.condition)) {
+					instruction.func.apply(instruction.context, instruction.args);
+				}
 
-			// Execute the next instruction
-			runNextInstruction.call(this);
-			break;
-		case 'runIfNot':
-			// If any of the promises have been rejected at this point then invoke the function
-			//if (_.any(instruction.promises, function (promise) { return promise.state() === 'rejected'; })) {
-			if (!passes(instruction.condition)) {
-				instruction.func.apply(instruction.context, instruction.args);
+				// Execute the next instruction
+				runNextInstruction.call(this);
+				break;
+			case 'done':
+				this.deferred.resolve();
+				this.destroy();
+				break;
+			default:
+				// This is an unknown instruction so just move on to the next
+				runNextInstruction.call(this);
+				break;
 			}
-
-			// Execute the next instruction
-			runNextInstruction.call(this);
-			break;
-		case 'done':
-			this.destroy();
-			break;
-		default:
-			// This is an unknown instruction so just move on to the next
-			runNextInstruction.call(this);
-			break;
+		}
+		catch (ex) {
+			this.deferred.reject(ex);
+			this.clear();
 		}
 	}
 
@@ -95,13 +103,19 @@ define(["sprout/util", "sprout/base"], function (_, base) {
      */
 	function runNextInstruction ()
 	{
-		this.timeout = null;
+		try {
+			this.timeout = null;
 
-		if (this.instructions.length > 0) {
-			runInstruction.call(this, this.instructions.shift());
+			if (this.instructions.length > 0) {
+				runInstruction.call(this, this.instructions.shift());
+			}
+			else {
+				this.running = false;
+			}
 		}
-		else {
-			this.running = false;
+		catch (ex) {
+			this.deferred.reject(ex);
+			this.clear();
 		}
 	}
 
@@ -168,13 +182,17 @@ define(["sprout/util", "sprout/base"], function (_, base) {
          */
 		done: function ()
 		{
+			this.deferred = this.deferred || new $.Deferred();
+
 			this.instructions.push({
 				type: 'done'
 			});
 
 			startInstructions.call(this);
 
-			return this;
+			// return this;
+
+			return this.deferred.promise();
 		},
 
 		/**
