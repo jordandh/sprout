@@ -261,7 +261,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 			this.instructions.push({
 				type: 'run',
 				func: func,
-				context: context,
+				context: context || this.get('context'),
 				args: _.toArray(arguments).slice(2)
 			});
 
@@ -286,7 +286,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 				type: 'runIf',
 				condition: condition,
 				func: func,
-				context: context,
+				context: context || this.get('context'),
 				args: _.toArray(arguments).slice(3)
 			});
 
@@ -311,7 +311,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 				type: 'runIfNot',
 				condition: condition,
 				func: func,
-				context: context,
+				context: context || this.get('context'),
 				args: _.toArray(arguments).slice(3)
 			});
 
