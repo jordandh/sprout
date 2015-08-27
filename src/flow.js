@@ -72,7 +72,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 				runNextInstruction.call(this);
 				break;
 			case 'runIf':
-				// If any of the promises have been rejected at this point then do not invoke the function
+				// If the condition passes then invoke the function
 				if (passes(instruction.condition)) {
 					instruction.func.apply(instruction.context, instruction.args);
 				}
@@ -81,13 +81,31 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 				runNextInstruction.call(this);
 				break;
 			case 'runIfNot':
-				// If any of the promises have been rejected at this point then invoke the function
+				// If the condition does not pass then invoke the function
 				if (!passes(instruction.condition)) {
 					instruction.func.apply(instruction.context, instruction.args);
 				}
 
 				// Execute the next instruction
 				runNextInstruction.call(this);
+				break;
+			case 'requestAnimationFrame':
+				// Make a requestAnimationFrame call
+				this.animationFrame = requestAnimationFrame(_.bind(onRequestAnimationFrame, this, instruction));
+				break;
+			case 'requestAnimationFrameIf':
+				// If the condition passes then make a requestAnimationFrame call
+				if (passes(instruction.condition)) {
+					// Make a requestAnimationFrame call
+					this.animationFrame = requestAnimationFrame(_.bind(onRequestAnimationFrame, this, instruction));
+				}
+				break;
+			case 'requestAnimationFrameIfNot':
+				// If the condition does not pass then make a requestAnimationFrame call
+				if (!passes(instruction.condition)) {
+					// Make a requestAnimationFrame call
+					this.animationFrame = requestAnimationFrame(_.bind(onRequestAnimationFrame, this, instruction));
+				}
 				break;
 			case 'done':
 				this.deferred.resolve();
@@ -113,6 +131,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 	{
 		try {
 			this.timeout = null;
+			this.animationFrame = null;
 
 			if (this.instructions.length > 0) {
 				runInstruction.call(this, this.instructions.shift());
@@ -136,6 +155,25 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 		if (!this.running) {
 			this.running = true;
 			runNextInstruction.call(this);
+		}
+	}
+
+	/**
+     * Runs a requestAnimationFrame instruction and kicks off the next instruction.
+     * @private
+     */
+	function onRequestAnimationFrame (instruction)
+	{
+		try {
+			// Invoke the function
+			instruction.func.apply(instruction.context, instruction.args.concat(_.toArray(arguments).slice(1)));
+
+			// Execute the next instruction
+			runNextInstruction.call(this);
+		}
+		catch (ex) {
+			this.deferred.reject(ex);
+			this.clear();
 		}
 	}
 
@@ -171,6 +209,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 			this.instructions = [];
 			this.running = false;
 			this.timeout = null;
+			this.animationFrame = null;
 			this.deferred = new $.Deferred();
 		},
 
@@ -212,6 +251,10 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 
 			if (this.timeout !== null) {
 				clearTimeout(this.timeout);
+			}
+
+			if (this.animationFrame !== null) {
+				cancelAnimationFrame(this.animationFrame);
 			}
 
 			return this;
@@ -309,7 +352,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 		/**
          * A flow instruction. Add this instruction to a flow object to cause a function to be invoked.
          * @param {Function} func The function to run.
-         * @param {Object} context (Optional) The context to run the function in. Defaults to undefined.
+         * @param {Object} context (Optional) The context to run the function in. Defaults to this.get('context').
          * @param {...} args (Optional) Any remaining arguments are passed as arguments to the function.
          * @return {Object} Returns itself for chaining.
          */
@@ -333,7 +376,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
          * This means promises that are pending or resolved will invoke the function.
          * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before invoking the function.
          * @param {Function} func The function to run.
-         * @param {Object} context (Optional) The context to run the function in. Defaults to undefined.
+         * @param {Object} context (Optional) The context to run the function in. Defaults to this.get('context').
          * @param {...} args (Optional) Any remaining arguments are passed as arguments to the function.
          * @return {Object} Returns itself for chaining.
          */
@@ -358,7 +401,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
          * This means promises that are pending or resolved will not invoke the function.
          * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before invoking the function.
          * @param {Function} func The function to run.
-         * @param {Object} context (Optional) The context to run the function in. Defaults to undefined.
+         * @param {Object} context (Optional) The context to run the function in. Defaults to this.get('context').
          * @param {...} args (Optional) Any remaining arguments are passed as arguments to the function.
          * @return {Object} Returns itself for chaining.
          */
@@ -366,6 +409,80 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 		{
 			this.instructions.push({
 				type: 'runIfNot',
+				condition: condition,
+				func: func,
+				context: context || this.get('context'),
+				args: _.toArray(arguments).slice(3)
+			});
+
+			startInstructions.call(this);
+
+			return this;
+		},
+
+		/**
+         * A flow instruction. Add this instruction to a flow object to cause a function to be invoked within requestAnimationFrame.
+         * The arguments from requestAnimationFrame are passed to the instruction function after the custom args.
+         * @param {Function} func The function to run.
+         * @param {Object} context (Optional) The context to run the function in. Defaults to this.get('context').
+         * @param {...} args (Optional) Any remaining arguments are passed as arguments to the function.
+         * @return {Object} Returns itself for chaining.
+         */
+		requestAnimationFrame: function (func, context)
+		{
+			this.instructions.push({
+				type: 'requestAnimationFrame',
+				func: func,
+				context: context || this.get('context'),
+				args: _.toArray(arguments).slice(2)
+			});
+
+			startInstructions.call(this);
+
+			return this;
+		},
+
+		/**
+         * A flow instruction. Add this instruction to a flow object to cause a function to be invoked within requestAnimationFrame.
+         * The function is only invoked if the condition passes.
+         * This means promises that are pending or resolved will invoke the function.
+         * The arguments from requestAnimationFrame are passed to the instruction function after the custom args.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before invoking the function.
+         * @param {Function} func The function to run.
+         * @param {Object} context (Optional) The context to run the function in. Defaults to this.get('context').
+         * @param {...} args (Optional) Any remaining arguments are passed as arguments to the function.
+         * @return {Object} Returns itself for chaining.
+         */
+		requestAnimationFrameIf: function (condition, func, context)
+		{
+			this.instructions.push({
+				type: 'requestAnimationFrameIf',
+				condition: condition,
+				func: func,
+				context: context || this.get('context'),
+				args: _.toArray(arguments).slice(3)
+			});
+
+			startInstructions.call(this);
+
+			return this;
+		},
+
+		/**
+         * A flow instruction. Add this instruction to a flow object to cause a function to be invoked within requestAnimationFrame.
+         * The function is only invoked if the condition does not pass.
+         * This means promises that are pending or resolved will not invoke the function.
+         * The arguments from requestAnimationFrame are passed to the instruction function after the custom args.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before invoking the function.
+         * @param {Function} func The function to run.
+         * @param {Object} context (Optional) The context to run the function in. Defaults to this.get('context').
+         * @param {...} args (Optional) Any remaining arguments are passed as arguments to the function.
+         * @return {Object} Returns itself for chaining.
+         */
+		requestAnimationFrameIfNot: function (condition, func, context)
+		{
+			this.instructions.push({
+				type: 'requestAnimationFrameIfNot',
 				condition: condition,
 				func: func,
 				context: context || this.get('context'),
