@@ -14,19 +14,6 @@ define(["sprout/util", "sprout/base", "sprout/database"], function (_, base, dat
     }
 
     /**
-     * Returns the attribute value or the matching text if the attribute does not exist.
-     * @private
-     * @param {String} match The matching text.
-     * @param {String} name The name of the attribute.
-     * @return {String} Returns the attribute's value if it exists, otherwise match.
-     */
-    function getUrlValue (match, name)
-    {
-        var value = this.get(name);
-        return _.isUndefined(value) ? match : value;
-    }
-
-    /**
      * @class viewmodel
      * @extends base
      */
@@ -139,7 +126,19 @@ define(["sprout/util", "sprout/base", "sprout/database"], function (_, base, dat
          */
         url: function ()
         {
-            return this.rootUrl.replace(/{([^{}]*)}/g, _.bind(getUrlValue, this));
+            return this.rootUrl.replace(/{([^{}]*)}/g, _.bind(this.getUrlValue, this));
+        },
+
+        /**
+         * Returns the attribute value or the matching text if the attribute does not exist.
+         * @param {String} match The matching text.
+         * @param {String} name The name of the attribute.
+         * @return {String} Returns the attribute's value if it exists, otherwise match.
+         */
+        getUrlValue: function (match, name)
+        {
+            var value = this.get(name);
+            return _.isUndefined(value) ? match : value;
         },
 
         /**
