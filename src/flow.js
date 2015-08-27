@@ -54,6 +54,16 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 					runNextInstruction.call(this);
 				}
 				break;
+			case 'waitIfNot':
+				// If the delay should be applied then delay execution of the next instruction
+				if (!passes(instruction.condition)) {
+					this.timeout = setTimeout(_.bind(runNextInstruction, this), instruction.delay);
+				}
+				// Else Execute the next instruction now
+				else {
+					runNextInstruction.call(this);
+				}
+				break;
 			case 'run':
 				// Invoke the function
 				instruction.func.apply(instruction.context, instruction.args);
@@ -63,7 +73,6 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 				break;
 			case 'runIf':
 				// If any of the promises have been rejected at this point then do not invoke the function
-				//if (!_.any(instruction.promises, function (promise) { return promise.state() === 'rejected'; })) {
 				if (passes(instruction.condition)) {
 					instruction.func.apply(instruction.context, instruction.args);
 				}
@@ -73,7 +82,6 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 				break;
 			case 'runIfNot':
 				// If any of the promises have been rejected at this point then invoke the function
-				//if (_.any(instruction.promises, function (promise) { return promise.state() === 'rejected'; })) {
 				if (!passes(instruction.condition)) {
 					instruction.func.apply(instruction.context, instruction.args);
 				}
@@ -142,8 +150,8 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
      * </code></pre>
      * The above code creates a flow object and tells it to wait 150 ms before sliding an item. And then to wait another 350 ms after that before fading out some lists.
      * <br/><br/>
-     * One off flows can be created without having to worry about calling destory on the flow object once it is done executing its instructions.
-     * This is possible by calling the done method as the last instruction.
+     * One off flows can be created without having to worry about calling destroy on the flow object once it is done executing its instructions.
+     * This is possible by calling the done method as the last instruction. The done method also returns a promise which is resolved after the done instruction is run.
      * <pre><code>
      *     flow.create().wait(150).run(slide, this, item).wait(350).run(fadeOut, this, this.fadeLists).done();
      * </code></pre>
@@ -163,6 +171,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 			this.instructions = [];
 			this.running = false;
 			this.timeout = null;
+			this.deferred = new $.Deferred();
 		},
 
 		/**
@@ -172,6 +181,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 		{
 			this.clear();
 			this.instructions = null;
+			this.deferred = null;
 
 			base.destructor.call(this);
 		},
@@ -182,15 +192,11 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
          */
 		done: function ()
 		{
-			this.deferred = this.deferred || new $.Deferred();
-
 			this.instructions.push({
 				type: 'done'
 			});
 
 			startInstructions.call(this);
-
-			// return this;
 
 			return this.deferred.promise();
 		},
@@ -230,7 +236,7 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 
 		/**
          * A flow instruction. Add this instruction to delay execution of the following instructions by a specified number of milliseconds.
-         * The delay is only applied if the condition resolves to false. The condition can be a boolean, function (that returns truthy or falsy), or promises.
+         * The delay is only applied if the condition passes. The condition can be a boolean, function (that returns truthy or falsy), or promises.
          * If the promises have not been reject or any of the other condition types are truthy then the delay is applied.
          * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before applying the delay.
          * @param {Number} delay The number of milliseconds to delay execution of the following instructions.
@@ -247,6 +253,57 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 			startInstructions.call(this);
 
 			return this;
+		},
+
+		/**
+         * A flow instruction. Add this instruction to delay execution of the following instructions by a specified number of milliseconds.
+         * The delay is only applied if the condition does not pass. The condition can be a boolean, function (that returns truthy or falsy), or promises.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before applying the delay.
+         * @param {Number} delay The number of milliseconds to delay execution of the following instructions.
+         * @return {Object} Returns itself for chaining.
+         */
+		waitIfNot: function (condition, delay)
+		{
+			this.instructions.push({
+				type: 'waitIfNot',
+				condition: condition,
+				delay: delay
+			});
+
+			startInstructions.call(this);
+
+			return this;
+		},
+
+		/**
+         * A flow instruction. Add this instruction to delay execution of the following instruction to the next call stack.
+         * @return {Object} Returns itself for chaining.
+         */
+		defer: function ()
+		{
+			return this.wait(0);
+		},
+
+		/**
+         * A flow instruction. Add this instruction to delay execution of the following instruction to the next call stack.
+         * The delay is only applied if the condition passes. The condition can be a boolean, function (that returns truthy or falsy), or promises.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before applying the defer.
+         * @return {Object} Returns itself for chaining.
+         */
+		deferIf: function (condition)
+		{
+			return this.waitIf(condition, 0);
+		},
+
+		/**
+         * A flow instruction. Add this instruction to delay execution of the following instruction to the next call stack.
+         * The delay is only applied if the condition does not pass. The condition can be a boolean, function (that returns truthy or falsy), or promises.
+         * @param {Boolean|Function|Array|Object} condition A boolean, function, promise, or array of any of the former to check against before applying the defer.
+         * @return {Object} Returns itself for chaining.
+         */
+		deferIfNot: function (condition)
+		{
+			return this.waitIfNot(condition, 0);
 		},
 
 		/**
