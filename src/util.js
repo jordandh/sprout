@@ -1,4 +1,4 @@
-define(["underscore", "underscore.string", "sprout/matchMedia"], function (_, _s) {
+define(["underscore", "underscore.string", "sprout/matchMedia", "sprout/requestAnimationFrame"], function (_, _s) {
     "use strict";
 
     /*! matchMedia() polyfill - Test a CSS media type/query in JS. Authors & copyright (c) 2012: Scott Jehl, Paul Irish, Nicholas Zakas. Dual MIT/BSD license */
