@@ -99,12 +99,20 @@ define(['sprout/util', 'sprout/base', 'sprout/dom'], function (_, base, $) {
 					// Make a requestAnimationFrame call
 					this.animationFrame = requestAnimationFrame(_.bind(onRequestAnimationFrame, this, instruction));
 				}
+				else {
+					// Execute the next instruction
+					runNextInstruction.call(this);
+				}
 				break;
 			case 'requestAnimationFrameIfNot':
 				// If the condition does not pass then make a requestAnimationFrame call
 				if (!passes(instruction.condition)) {
 					// Make a requestAnimationFrame call
 					this.animationFrame = requestAnimationFrame(_.bind(onRequestAnimationFrame, this, instruction));
+				}
+				else {
+					// Execute the next instruction
+					runNextInstruction.call(this);
 				}
 				break;
 			case 'done':
