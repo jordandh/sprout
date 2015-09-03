@@ -241,8 +241,11 @@ define(["module", "sprout/util", "sprout/dom", "sprout/base", "sprout/collection
 
                 // When sending data to save or create send as JSON
                 if (method === 'create' || method === 'update') {
-                    options.contentType = 'application/json';
-                    options.data = JSON.stringify(options.data);
+                    options.contentType = options.json ? "json" : undefined;
+                    options.data = options.json ? JSON.stringify(options.data) : options.data;
+                    if (!options.json) {
+                        options.traditional = true;
+                    }
                 }
                 else if (method === 'read') {
                     cachedData = this.cache[options.url];
