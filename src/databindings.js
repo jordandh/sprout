@@ -354,9 +354,19 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
          * @namespace databindings
          */
         html: {
-            update: function (element, value)
+            update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
-                $(element).html(value);
+                var node = $(element);
+
+                // Remove the databindings
+                node.contents().each(function () {
+                    databindings.databind.removeBindings(this);
+                });
+
+                // Set the nwe html and apply databindings
+                node.html(value).contents().each(function () {
+                    databindings.databind.applyBindings(info.context.root, this, info.context);
+                });
             }
         },
 
@@ -654,8 +664,7 @@ define(["sprout/util", "sprout/dom"], function (_, $) {
 
             update: function (element, value, oldValue, viewModel, attributeName, info, metaData)
             {
-                var node = $(element),
-                    itemElements, sibling, nextSibling, isAnEndComment;
+                var node = $(element);
 
                 // Remove content
                 if (info.isComment) {
