@@ -87,6 +87,14 @@ define(['sprout/util', 'sprout/purl'], function (_, purl) {
 			return this;
 		};
 
+		url.replaceState = function (state, title) {
+			if (window.history && window.history.replaceState) {
+				history.replaceState(state, title, this.url());
+			}
+
+			return this;
+		};
+
 		url.url = function (skipEncoding) {
 			var path = [this.data.attr.base, this.data.attr.path],
 				param = this.param(),
