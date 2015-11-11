@@ -44,27 +44,32 @@ define(['sprout/util', 'sprout/purl'], function (_, purl) {
 
 		/**
 		 * Removes the querystirng parameters passed in. Case-insensitive
-		 * @param {String} params A space delimited string of querystring parameters to removed from the url.
+		 * @param {String} params A space delimited string of querystring parameters to remove from the url. If undefined then all parameters are removed.
 		 * @return {url} This url object is returned for chaining.
 		 */
 		url.remove = function (params) {
-			var keysToRemove = [];
+			if (_.isUndefined(params)) {
+				this.data.param.query = {};
+			}
+			else {
+				var keysToRemove = [];
 
-			// Loop through each param to remove
-			_.each(params.split(' '), function (param) {
-				param = param.toLowerCase();
+				// Loop through each param to remove
+				_.each(params.split(' '), function (param) {
+					param = param.toLowerCase();
 
-				// Loop through each existing param to do a case-insensitive comparison
-				_.each(this.data.param.query, function (value, key) {
-					// If the param keys are the same then store this key to be removed after the looping
-					if (param === key.toLowerCase()) {
-						keysToRemove.push(key);
-					}
-				});
-			}, this);
+					// Loop through each existing param to do a case-insensitive comparison
+					_.each(this.data.param.query, function (value, key) {
+						// If the param keys are the same then store this key to be removed after the looping
+						if (param === key.toLowerCase()) {
+							keysToRemove.push(key);
+						}
+					});
+				}, this);
 
-			// Remove the keys that matched
-			this.data.param.query = _.omit(this.data.param.query, keysToRemove);
+				// Remove the keys that matched
+				this.data.param.query = _.omit(this.data.param.query, keysToRemove);
+			}
 
 			return this;
 		};
