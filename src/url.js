@@ -109,25 +109,46 @@ define(['sprout/util', 'sprout/purl'], function (_, purl) {
 			return this;
 		};
 
-		url.url = function (skipEncoding) {
-			var path = [this.data.attr.base, this.data.attr.path],
-				param = this.param(),
-				count = 0;
+		url.url = function (options) {
+			var path = [],
+				param, count;
+
+			options = _.defaults(options || {}, {
+				encode: true,
+				base: true,
+				path: true,
+				params: true
+			});
+
+			// Base
+			if (options.base) {
+				path.push(this.data.attr.base);
+			}
+
+			// Path
+			if (options.path) {
+				path.push(this.data.attr.path);
+			}
 
 			// Querystring
-			if (param !== '') {
-				_.each(param, function (val, key) {
-					if (key !== '') {
-						if (skipEncoding) {
-							path.push(count > 0 ? '&' : '?', key, '=', val);
-						}
-						else {
-							path.push(count > 0 ? '&' : '?', encodeURIComponent(key), '=', encodeURIComponent(val));
-						}
+			if (options.params) {
+				param = this.param();
+				count = 0;
 
-						count += 1;
-					}
-				});
+				if (param !== '') {
+					_.each(param, function (val, key) {
+						if (key !== '') {
+							if (options.encode) {
+								path.push(count > 0 ? '&' : '?', encodeURIComponent(key), '=', encodeURIComponent(val));
+							}
+							else {
+								path.push(count > 0 ? '&' : '?', key, '=', val);
+							}
+
+							count += 1;
+						}
+					});
+				}
 			}
 
 			// Hash/Fragment
