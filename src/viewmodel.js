@@ -138,7 +138,7 @@ define(["sprout/util", "sprout/base", "sprout/database"], function (_, base, dat
         getUrlValue: function (match, name)
         {
             var value = this.get(name);
-            return encodeURIComponent(_.isUndefined(value) ? match : value);
+            return encodeURI(_.isUndefined(value) ? match : value);
         },
 
         /**
