@@ -85,6 +85,20 @@ define(["sprout/util", "sprout/base", "sprout/database"], function (_, base, dat
         rootUrl: "",
 
         /**
+         * The urlEncoder is the function used to encode a value when building the viewmodel's url.
+         * @property
+         * @type Function
+         */
+        urlEncoder: encodeURI,
+        
+        /**
+         * The urlEncoders is an object of key/value pairs to define encoding functions per attribute name (attribute name => encoding function).
+         * @property
+         * @type Object
+         */
+        urlEncoders: null,
+
+        /**
          * The span of time until the viewmodel's data expires after being requested. If the viewmodel fetches data after expiring then it will ignore the cache and get new data from its resource.
          * A value of zero means the data expires immediately or in other words is not cached. If the value is greater than zero then the data is cached.
          * If the value is not a number then the data never expires. By default data never expires.
@@ -137,8 +151,14 @@ define(["sprout/util", "sprout/base", "sprout/database"], function (_, base, dat
          */
         getUrlValue: function (match, name)
         {
-            var value = this.get(name);
-            return encodeURI(_.isUndefined(value) ? match : value);
+            var value = this.get(name),
+                urlEncoder = this.urlEncoder;
+
+            if (this.urlEncoders && this.urlEncoders[name]) {
+                urlEncoder = this.urlEncoders[name];
+            }
+
+            return urlEncoder(_.isUndefined(value) ? match : value);
         },
 
         /**
