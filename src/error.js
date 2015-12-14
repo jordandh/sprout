@@ -317,6 +317,10 @@ define(["module", "sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], f
                         exInfo.stack = ex.stack;
                     }
 
+                    if (ex.info) {
+                        exInfo.info = ex.info;
+                    }
+
                     err.exceptions.push(exInfo);
                 }
             }
