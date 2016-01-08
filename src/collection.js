@@ -196,6 +196,15 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              */
             destructor: function ()
             {
+                // Destroy the items if necessary
+                if (this.destroyItems) {
+                    _.each(this.items, function (item) {
+                        if (item && _.isFunction(item.destroy)) {
+                            item.destroy();
+                        }
+                    });
+                }
+
                 this.items = null;
                 this.itemsById = null;
                 this.itemsByCid = null;
@@ -279,6 +288,14 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              * @type Boolean
              */
             sparse: false,
+
+            /**
+             * Whether or not the items should be destroyed when they are removed from the collection.
+             * An item will be destroyed when removed from the collection or when the collection is destroyed.
+             * @property
+             * @type Boolean
+             */
+            destroyItems: false,
             
             /**
              * Returns an array of the collection's items for JSON stringification. The results of this function can be used as the argument for collection.parse.
@@ -449,6 +466,11 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
                         delete this.itemsById[this.items[index].get("id")];
                         delete this.itemsByCid[item.get("cid")];
                         this.items.splice(index, 1);
+
+                        // Destroy the item if necessary. If this is a move modification then the items are being added back so don't destroy them.
+                        if (this.destroyItems && !options.move && item && _.isFunction(item.destroy)) {
+                            item.destroy();
+                        }
                     }
                 }, this);
 
@@ -524,10 +546,15 @@ define(["sprout/util", "sprout/base", "sprout/model", "sprout/data", "sprout/dom
              */
             reset: createListModifier("reset", function (items)
             {
-                // Detach event handlers
+                // Detach event handlers and destroy items
                 this.each(function (item) {
                     item.detachAfter("sync", afterItemSynced, this);
-                });
+
+                    // Destroy the item if necessary
+                    if (this.destroyItems && item && _.isFunction(item.destroy)) {
+                        item.destroy();
+                    }
+                }, this);
 
                 // Set the items array equal to a new empty array
                 this.items = [];

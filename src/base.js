@@ -375,6 +375,13 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
                 else {
                     valueChanged = changeAttribute.call(this, attribute, name, oldValue, value);
                 }
+
+                if (valueChanged) {
+                    // If the attribute should auto-destroy the value then do so
+                    if (attribute.destroy && _.isObject(oldValue) && _.isFunction(oldValue.destroy)) {
+                        oldValue.destroy();
+                    }
+                }
             }
 
             return valueChanged;

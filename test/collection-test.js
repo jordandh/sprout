@@ -2870,6 +2870,189 @@ TestCase("collection", ["sprout/util", "sprout/collection", "sprout/model"], fun
 			assertSame('col[0] has incorrect index value after sort', 0, col.get('0.index'));
 			assertSame('col[1] has incorrect index value after sort', 1, col.get('1.index'));
 			assertSame('col[2] has incorrect index value after sort', 2, col.get('2.index'));
+		},
+
+		"test collection.destroyItems on collection.destroy": function ()
+		{
+			var col = collection.create();
+			col.destroyItems = true;
+
+			var mod1 = model.create({
+				id: 1
+			});
+			col.add(mod1);
+			
+			var mod2 = model.create({
+				id: 2
+			});
+			col.add(mod2);
+			
+			var mod3 = model.create({
+				id: 3
+			});
+			col.add(mod3);
+
+			assert('mod1 is destroyed before', !mod1.get('destroyed'));
+			assert('mod2 is destroyed before', !mod2.get('destroyed'));
+			assert('mod3 is destroyed before', !mod3.get('destroyed'));
+
+			col.destroy();
+
+			assert('mod1 is not destroyed after', mod1.get('destroyed'));
+			assert('mod2 is not destroyed after', mod2.get('destroyed'));
+			assert('mod3 is not destroyed after', mod3.get('destroyed'));
+		},
+
+		"test collection.destroyItems is false on collection.destroy": function ()
+		{
+			var col = collection.create();
+
+			var mod1 = model.create({
+				id: 1
+			});
+			col.add(mod1);
+			
+			var mod2 = model.create({
+				id: 2
+			});
+			col.add(mod2);
+			
+			var mod3 = model.create({
+				id: 3
+			});
+			col.add(mod3);
+
+			assert('mod1 is destroyed before', !mod1.get('destroyed'));
+			assert('mod2 is destroyed before', !mod2.get('destroyed'));
+			assert('mod3 is destroyed before', !mod3.get('destroyed'));
+
+			col.destroy();
+
+			assert('mod1 is destroyed after', !mod1.get('destroyed'));
+			assert('mod2 is destroyed after', !mod2.get('destroyed'));
+			assert('mod3 is destroyed after', !mod3.get('destroyed'));
+		},
+
+		"test collection.destroyItems on collection.reset": function ()
+		{
+			var col = collection.create();
+			col.destroyItems = true;
+
+			var mod1 = model.create({
+				id: 1
+			});
+			col.add(mod1);
+			
+			var mod2 = model.create({
+				id: 2
+			});
+			col.add(mod2);
+			
+			var mod3 = model.create({
+				id: 3
+			});
+			col.add(mod3);
+
+			assert('mod1 is destroyed before', !mod1.get('destroyed'));
+			assert('mod2 is destroyed before', !mod2.get('destroyed'));
+			assert('mod3 is destroyed before', !mod3.get('destroyed'));
+
+			col.reset(null);
+
+			assert('mod1 is not destroyed after', mod1.get('destroyed'));
+			assert('mod2 is not destroyed after', mod2.get('destroyed'));
+			assert('mod3 is not destroyed after', mod3.get('destroyed'));
+		},
+
+		"test collection.destroyItems is false on collection.reset": function ()
+		{
+			var col = collection.create();
+
+			var mod1 = model.create({
+				id: 1
+			});
+			col.add(mod1);
+			
+			var mod2 = model.create({
+				id: 2
+			});
+			col.add(mod2);
+			
+			var mod3 = model.create({
+				id: 3
+			});
+			col.add(mod3);
+
+			assert('mod1 is destroyed before', !mod1.get('destroyed'));
+			assert('mod2 is destroyed before', !mod2.get('destroyed'));
+			assert('mod3 is destroyed before', !mod3.get('destroyed'));
+
+			col.reset(null);
+
+			assert('mod1 is destroyed after', !mod1.get('destroyed'));
+			assert('mod2 is destroyed after', !mod2.get('destroyed'));
+			assert('mod3 is destroyed after', !mod3.get('destroyed'));
+		},
+
+		"test collection.destroyItems on collection.remove": function ()
+		{
+			var col = collection.create();
+			col.destroyItems = true;
+
+			var mod1 = model.create({
+				id: 1
+			});
+			col.add(mod1);
+			
+			var mod2 = model.create({
+				id: 2
+			});
+			col.add(mod2);
+			
+			var mod3 = model.create({
+				id: 3
+			});
+			col.add(mod3);
+
+			assert('mod1 is destroyed before', !mod1.get('destroyed'));
+			assert('mod2 is destroyed before', !mod2.get('destroyed'));
+			assert('mod3 is destroyed before', !mod3.get('destroyed'));
+
+			col.remove(mod2);
+
+			assert('mod1 is destroyed after', !mod1.get('destroyed'));
+			assert('mod2 is not destroyed after', mod2.get('destroyed'));
+			assert('mod3 is destroyed after', !mod3.get('destroyed'));
+		},
+
+		"test collection.destroyItems is false on collection.remove": function ()
+		{
+			var col = collection.create();
+
+			var mod1 = model.create({
+				id: 1
+			});
+			col.add(mod1);
+			
+			var mod2 = model.create({
+				id: 2
+			});
+			col.add(mod2);
+			
+			var mod3 = model.create({
+				id: 3
+			});
+			col.add(mod3);
+
+			assert('mod1 is destroyed before', !mod1.get('destroyed'));
+			assert('mod2 is destroyed before', !mod2.get('destroyed'));
+			assert('mod3 is destroyed before', !mod3.get('destroyed'));
+
+			col.remove(mod2);
+
+			assert('mod1 is destroyed after', !mod1.get('destroyed'));
+			assert('mod2 is destroyed after', !mod2.get('destroyed'));
+			assert('mod3 is destroyed after', !mod3.get('destroyed'));
 		}
 	};
 });

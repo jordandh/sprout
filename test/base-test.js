@@ -960,6 +960,67 @@ TestCase("base", ["sprout/util", "sprout/base", "sprout/env"], function (_, Base
 			a.set('children', ['a', 'b']);
 			a.set('children', ['a', 'b']);
 		},
+
+		"test base.attribute.destroy does destroy old value on change": function () {
+			expectAsserts(2);
+
+			var Animal = Base.extend({
+				attributes: {
+					head: {
+						destroy: true
+					}
+				}
+			});
+
+			var a = Animal.create();
+			var head = Base.create();
+
+			a.set('head', head);
+
+			assert('head is destroyed', !head.get('destroyed'));
+			a.set('head', null);
+			assert('head is not destroyed', head.get('destroyed'));
+		},
+
+		"test base.attribute.destroy does not call destroy on old value with no destroy method": function () {
+			expectAsserts(2);
+
+			var Animal = Base.extend({
+				attributes: {
+					head: {
+						destroy: true
+					}
+				}
+			});
+
+			var a = Animal.create();
+			var head = {};
+
+			a.set('head', head);
+
+			assertObject('head does not exist before', a.get('head'));
+			a.set('head', null);
+			assertObject('head does not exist after', head);
+		},
+
+		"test base.attribute.destroy is false does not destroy old value on change": function () {
+			expectAsserts(2);
+
+			var Animal = Base.extend({
+				attributes: {
+					head: {}
+				}
+			});
+
+			var a = Animal.create();
+			var head = Base.create();
+
+			a.set('head', head);
+
+			assert('head is destroyed before', !head.get('destroyed'));
+			a.set('head', null);
+			assert('head is destroyed after', !head.get('destroyed'));
+		},
 		
 		"test base.get with no parameters": function ()
 		{
