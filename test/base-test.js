@@ -334,6 +334,29 @@ TestCase("base", ["sprout/util", "sprout/base", "sprout/env"], function (_, Base
 			assertSame("attribute has incorrect value", 1, c.get("test"));
 		},
 
+		"test base.attributes set change event handlers use transformed value": function () {
+			expectAsserts(3);
+
+			var c = Base.create();
+			
+			c.attributes.test = {
+				value: 1,
+				set: function (newValue, oldValue, name) {
+					return "Transformed Value";
+				}
+			};
+
+			c.after("testChange", function (e) {
+				assertSame("attribute has incorrect value in after event", "Transformed Value", e.info.newValue);
+			});
+			
+			assertSame("attribute has incorrect value before set", 1, c.get("test"));
+			
+			c.set("test", 2);
+
+			assertSame("attribute has incorrect value after set", "Transformed Value", c.get("test"));
+		},
+
 		"test base.attributes uses": function () {
 			expectAsserts(11);
 

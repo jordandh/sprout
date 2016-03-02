@@ -253,14 +253,14 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
         /*
          * changeAttribute
          */
-        changeAttribute = function (attribute, name, oldValue, newValue)
+        changeAttribute = function (attribute, name, values)
         {
             var validator = attribute.validator,
                 setter, handler, callback;
 
             // Validate the value
-            if (_.isFunction(validator) && !validator.call(this, newValue, name)) {
-                this.fire("attributeInvalidated", { name: name, newValue: newValue, oldValue: oldValue });
+            if (_.isFunction(validator) && !validator.call(this, values.new, name)) {
+                this.fire("attributeInvalidated", { name: name, newValue: values.new, oldValue: values.old });
                 return false;
             }
 
@@ -268,18 +268,18 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
 
             // Set the value
             if (_.isFunction(setter)) {
-                newValue = setter.call(this, newValue, oldValue, name);
-                if (_.isUndefined(newValue)) {
+                values.new = setter.call(this, values.new, values.old, name);
+                if (_.isUndefined(values.new)) {
                     return false;
                 }
             }
 
-            this.values[name] = newValue;
+            this.values[name] = values.new;
 
             handler = attribute.handler || this;
             callback = handler[name + "Changed"];
             if (_.isFunction(callback)) {
-                callback.call(handler, newValue, oldValue);
+                callback.call(handler, values.new, values.old);
             }
 
             return true;
@@ -373,7 +373,10 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
                     valueChanged = this.fireAttributeChangeEvents(attribute, name, oldValue, value);
                 }
                 else {
-                    valueChanged = changeAttribute.call(this, attribute, name, oldValue, value);
+                    valueChanged = changeAttribute.call(this, attribute, name, {
+                        old: oldValue,
+                        new: value
+                    });
                 }
 
                 if (valueChanged) {
@@ -925,7 +928,7 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
                     event1 = this.events[eventName.toLowerCase()],
                     event2 = this.events.change,
                     valueChanged = false,
-                    e;
+                    values, e;
 
                 if (_.isObject(event1) || _.isObject(event2)) {
                     // Before handlers
@@ -941,7 +944,13 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
                     fireAttributeChange.call(this, "before", e, event2);
 
                     if (!e.preventDefault) {
-                        valueChanged = changeAttribute.call(this, attribute, name, oldValue, e.info.newValue);
+                        values = {
+                            old: oldValue,
+                            new: e.info.newValue
+                        };
+
+                        valueChanged = changeAttribute.call(this, attribute, name, values);
+                        e.info.newValue = values.new; // In case the new value was transformed within changeAttribute
 
                         if (valueChanged) {
                             // On handlers
@@ -959,7 +968,10 @@ define(["sprout/util", "sprout/pubsub", "sprout/env"], function (_, pubsub, env)
                     }
                 }
                 else {
-                    valueChanged = changeAttribute.call(this, attribute, name, oldValue, newValue);
+                    valueChanged = changeAttribute.call(this, attribute, name, {
+                        old: oldValue,
+                        new: newValue
+                    });
                 }
 
                 return valueChanged;
