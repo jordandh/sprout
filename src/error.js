@@ -133,6 +133,7 @@ define(["module", "sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], f
          * Private helper functions
          */
         LocalStorageKey: 'sprout-errors',
+        LocalStorageErrorSetVersionKey: '-version',
 
         getErrorKey: function (error)
         {
@@ -157,6 +158,18 @@ define(["module", "sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], f
             }
             
             return {};
+        },
+
+        getErrorSetVersionKey: function ()
+        {
+            return localStorageErrorStore.LocalStorageKey + localStorageErrorStore.LocalStorageErrorSetVersionKey;
+        },
+
+        getErrorSetVersion: function ()
+        {
+            var errorSetVersion = localStorage[localStorageErrorStore.getErrorSetVersionKey()];
+
+            return _.isUndefined(errorSetVersion) ? null : errorSetVersion;
         },
 
         setErrorStore: function (errorStore)
@@ -235,6 +248,25 @@ define(["module", "sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], f
 
             localStorageErrorStore.setErrorStore(errorStore);
             localStorageErrorStore.pruneErrorStore();
+        },
+
+        clearErrors: function ()
+        {
+            localStorageErrorStore.setErrorStore({});
+        },
+
+        setErrorSetVersion: function (newErrorSetVersion)
+        {
+            // Grab the current version of the error set in the store
+            var errorSetVersion = localStorageErrorStore.getErrorSetVersion();
+
+            // Update the error set version
+            localStorage[localStorageErrorStore.getErrorSetVersionKey()] = newErrorSetVersion;
+
+            // If the error set in the store has a different version then clear out the errors
+            if (errorSetVersion != newErrorSetVersion) { // != on purpose
+                localStorageErrorStore.clearErrors();
+            }
         }
     };
 
