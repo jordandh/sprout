@@ -257,6 +257,11 @@ define(["module", "sprout/pubsub", "sprout/util", "sprout/dom", "sprout/env"], f
 
         setErrorSetVersion: function (newErrorSetVersion)
         {
+            // If localStorage is not supported
+            if (!env.localStorageEnabled()) {
+                return;
+            }
+
             // Grab the current version of the error set in the store
             var errorSetVersion = localStorageErrorStore.getErrorSetVersion();
 
